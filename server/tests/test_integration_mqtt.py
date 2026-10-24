@@ -1,5 +1,6 @@
 """Integración con Mosquitto real: autenticación y ACL por servicio (deploy/mosquitto/acl) y flujo puente <-> pasarela por MQTT."""
 import asyncio
+import os
 import shutil
 import socket
 import subprocess
@@ -28,17 +29,16 @@ def broker():
     d.chmod(0o755)
     for i, u in enumerate(("bridge", "gateway", "recorder", "twin")):
         subprocess.run(["mosquitto_passwd", "-b"] + (["-c"] if i == 0 else []) + [str(pw), u, f"pw-{u}"], check=True)
-    shutil.chown(pw, "mosquitto")                      # como root, Mosquitto cede privilegios y exige que el archivo sea suyo
-    pw.chmod(0o700)
-    acl = d / "acl"                                    # copia dentro del directorio temporal: en CI el repo vive bajo un /home que el usuario mosquitto no puede leer
+    acl = d / "acl"                                    # copia dentro del directorio temporal, junto a passwd
     shutil.copy(DEPLOY / "acl", acl)
-    shutil.chown(acl, "mosquitto")
-    acl.chmod(0o700)
-    (d / "m.conf").write_text(f"allow_anonymous false\npassword_file {pw}\nacl_file {acl}\nlistener {port} 127.0.0.1\n")
-    shutil.chown(d / "m.conf", "mosquitto")            # con umask restrictivo (sudo en CI) el archivo quedaría ilegible para el usuario mosquitto
-    (d / "m.conf").chmod(0o700)
+    conf = d / "m.conf"
+    conf.write_text(f"allow_anonymous false\npassword_file {pw}\nacl_file {acl}\nlistener {port} 127.0.0.1\n")
+    for f in (pw, acl):
+        f.chmod(0o700)
+        if os.geteuid() == 0:                          # como root, Mosquitto cede privilegios y exige que estos archivos sean suyos
+            shutil.chown(f, "mosquitto")
     log = open(d / "mosquitto.log", "wb")
-    p = subprocess.Popen([exe, "-c", str(d / "m.conf")], stdout=log, stderr=subprocess.STDOUT)
+    p = subprocess.Popen([exe, "-c", str(conf)], stdout=log, stderr=subprocess.STDOUT)
     for _ in range(50):
         try:
             socket.create_connection(("127.0.0.1", port), 0.2).close()

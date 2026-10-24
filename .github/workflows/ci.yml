@@ -56,5 +56,5 @@ jobs:
       - run: pip install -r server/requirements.lock pytest pytest-asyncio httpx
       - run: pip install --no-deps -e server
       - name: Mosquitto real (autenticación y ACL)
-        run: sudo env "PATH=$PATH" python -m pytest tests/test_integration_mqtt.py -q
+        run: python -m pytest tests/test_integration_mqtt.py -q
         working-directory: server
