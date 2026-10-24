@@ -35,6 +35,8 @@ def broker():
     shutil.chown(acl, "mosquitto")
     acl.chmod(0o700)
     (d / "m.conf").write_text(f"allow_anonymous false\npassword_file {pw}\nacl_file {acl}\nlistener {port} 127.0.0.1\n")
+    shutil.chown(d / "m.conf", "mosquitto")            # con umask restrictivo (sudo en CI) el archivo quedaría ilegible para el usuario mosquitto
+    (d / "m.conf").chmod(0o700)
     log = open(d / "mosquitto.log", "wb")
     p = subprocess.Popen([exe, "-c", str(d / "m.conf")], stdout=log, stderr=subprocess.STDOUT)
     for _ in range(50):
