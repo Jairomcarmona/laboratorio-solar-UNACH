@@ -1,0 +1,170 @@
+/* Capa de tema (se carga DESPUÉS de styles.css; no reemplaza reglas de estructura).
+ *
+ * Identidad: azul institucional UNACH (marino #002e63, azul #003e93, tomados del logotipo) para la cromía de la interfaz,
+ * y el ámbar solar solo como acento de «sol / módulo B». El verde (módulo A) y el ámbar (módulo B) tienen el mismo valor
+ * en la escena 3D, las curvas, las tablas y el reporte: LAB.config.palette (js/config.js) y --col-a / --col-b (aquí).
+ *
+ * Jerarquía de botones:  .btn.accent = acción principal (una por zona) · .btn = secundaria · .btn.quiet / .chips button / .tbtn = terciaria
+ *                        .btn.danger = acción que detiene o es irreversible · estado activo = relleno + barra inferior (no solo color).
+ * Temas: oscuro (por defecto, la escena 3D es nocturna/neutra) y claro; se elige con el botón de la barra superior,
+ * con ?theme=light|dark o con LAB.theme.set(). */
+
+:root {
+  --unach-navy: #002e63;
+  --unach-blue: #003e93;
+  --brand: #2d6fd6;            /* azul UNACH aclarado para fondos oscuros */
+  --brand-hi: #6ea8ff;
+  --brand-ink: #ffffff;
+  --col-a: #35d07f;            /* módulo A (fijo) */
+  --col-b: #ffb020;            /* módulo B (móvil) */
+  --ring: #9cc4ff;             /* anillo de foco: visible sobre fondo oscuro y sobre la escena */
+  --surface-0: rgba(0, 0, 0, .25);
+  --surface-1: rgba(255, 255, 255, .05);
+  --warn-ink: #ffd48a;
+  --bar-line: linear-gradient(90deg, var(--unach-blue), var(--brand-hi) 55%, var(--col-b));
+  --tx-3: #8aa0b6;             /* antes #6f8499: sube el contraste del texto terciario sobre el vidrio oscuro */
+  --glass: rgba(6, 16, 32, .78);
+  --line: rgba(130, 175, 255, .2);
+  --line-2: rgba(130, 175, 255, .36);
+  --sans: Inter, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e9eff8;
+  --glass: rgba(255, 255, 255, .9);
+  --glass-2: rgba(226, 236, 250, .92);
+  --line: rgba(0, 46, 99, .16);
+  --line-2: rgba(0, 46, 99, .34);
+  --tx: #0b1e3a;
+  --tx-2: #2b4166;
+  --tx-3: #4f6585;
+  --accent: #0a58c9;
+  --solar: #a35f00;
+  --ok: #0f7a45;
+  --bad: #c0262d;
+  --violet: #5b3fd0;
+  --brand: #003e93;
+  --brand-hi: #0a58c9;
+  --ring: #0a58c9;
+  --surface-0: rgba(0, 46, 99, .06);
+  --surface-1: rgba(0, 46, 99, .05);
+  --warn-ink: #6b4200;
+}
+
+/* ---------- tipografía ---------- */
+html, body { font-size: 16px; }
+body { font-feature-settings: "tnum" 1, "cv11" 1; text-rendering: optimizeLegibility; }
+.hint { font-size: 12px; line-height: 1.45; }
+.lbl, label.lbl, .stat label, .env label { letter-spacing: .06em; }
+.panel h3, #logpanel h3 { color: var(--tx); }
+.panel h3::before { content: ''; width: 3px; align-self: stretch; margin: -2px 8px -2px -4px; border-radius: 2px; background: linear-gradient(180deg, var(--brand-hi), var(--unach-blue)); flex: none; }
+.panel h3 { justify-content: flex-start; gap: 0; }
+.panel h3 .fold { margin-left: auto; }
+:root[data-theme="light"] .panel h3::before { background: linear-gradient(180deg, var(--unach-blue), var(--brand-hi)); }
+
+/* ---------- barra superior: horizonte solar ---------- */
+#topbar { position: relative; }
+#topbar::after { content: ''; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--bar-line); opacity: .9; pointer-events: none; }
+
+/* ---------- botones ---------- */
+.btn { border-radius: 8px; min-height: 34px; background: var(--surface-1); border: 1px solid var(--line-2); color: var(--tx); font-weight: 600; box-shadow: none; }
+.btn:hover:not(:disabled) { background: color-mix(in srgb, var(--brand) 22%, transparent); border-color: var(--brand-hi); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn.accent { background: linear-gradient(180deg, #2f6fd6, var(--unach-blue)); border-color: var(--brand-hi); color: var(--brand-ink); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .28), 0 1px 0 rgba(255, 255, 255, .12) inset; }
+.btn.accent:hover:not(:disabled) { background: linear-gradient(180deg, #2563c4, #00357f); }
+.btn.danger { background: linear-gradient(180deg, #d83b3b, #a31f25); border-color: #ff8f8f; color: #fff; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .3); }
+.btn.quiet, .btn.ghost { background: transparent; border-color: transparent; color: var(--tx-2); }
+.btn.quiet:hover:not(:disabled), .btn.ghost:hover:not(:disabled) { background: var(--surface-1); border-color: var(--line-2); color: var(--tx); }
+.btn:disabled { opacity: .5; cursor: not-allowed; border-style: dashed; }
+.btn.on, .seg button.on, .chips button.on, .tbtn.on { background: color-mix(in srgb, var(--accent) 24%, transparent); color: var(--tx); border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+:root:not([data-theme="light"]) .btn.on, :root:not([data-theme="light"]) .seg button.on, :root:not([data-theme="light"]) .chips button.on, :root:not([data-theme="light"]) .tbtn.on { color: #fff; }
+.btn em { background: var(--brand-hi); color: #fff; }
+.seg { border-radius: 9px; background: var(--surface-0); }
+.seg button { border-radius: 7px; }
+.chips button { border-radius: 8px; }
+.chip { border-radius: 10px; }
+
+/* anillo de foco de dos tonos: se ve sobre claro, oscuro y la escena 3D */
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--ring) 28%, transparent); }
+.btn:focus-visible, .seg button:focus-visible, .chips button:focus-visible, .tbtn:focus-visible, .tag:focus-visible, .role:focus-visible { outline-offset: 2px; }
+input:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--ring) !important; outline-offset: 2px; }
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px color-mix(in srgb, var(--ring) 45%, transparent); }
+
+/* ---------- selector de idioma y tema ---------- */
+.seg[aria-label] button[data-lang] { min-width: 34px; letter-spacing: .04em; }
+#themeBtn { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; font-size: 15px; line-height: 1; }
+#themeBtn .ico-light { display: none; }
+:root[data-theme="light"] #themeBtn .ico-dark { display: none; }
+:root[data-theme="light"] #themeBtn .ico-light { display: inline; }
+.portalang { position: fixed; top: 12px; right: 14px; z-index: 30; display: flex; gap: 6px; align-items: center; }
+
+/* ---------- etiquetas 3D: pastillas más compactas y sin solaparse ---------- */
+.tag { font-weight: 600; letter-spacing: 0; padding: 3px 9px 3px 7px; border-radius: 8px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; border-color: color-mix(in srgb, var(--brand-hi) 55%, transparent); background: rgba(5, 16, 34, .8); }
+.tag { transform: translate(-50%, var(--dy, 0px)); }
+.tag::after { height: calc(10px - var(--dy, 0px)); }
+.tag small { display: none; }
+.tag.active small { display: block; }
+.tag.a { border-color: color-mix(in srgb, var(--col-a) 70%, transparent); }
+.tag.b { border-color: color-mix(in srgb, var(--col-b) 75%, transparent); }
+.tag.active { z-index: 20; box-shadow: 0 0 0 2px var(--ring); }
+/* las etiquetas de detalle no compiten con las principales cuando hay muchas a la vez */
+
+/* ---------- módulos A / B con el mismo color en todas partes ---------- */
+.mod.a { border-top-color: var(--col-a); } .mod.b { border-top-color: var(--col-b); }
+.mod.a .pbar i { background: var(--col-a); } .mod.b .pbar i { background: var(--col-b); }
+#abLegend .ca { color: var(--col-a); } #abLegend .cb { color: var(--col-b); }
+.tag.a .dot { background: var(--col-a); box-shadow: 0 0 8px var(--col-a); }
+.tag.b .dot { background: var(--col-b); box-shadow: 0 0 8px var(--col-b); }
+
+/* ---------- modo claro: superficies que en styles.css son oscuras por construcción ---------- */
+:root[data-theme="light"] .glass { box-shadow: 0 8px 28px rgba(0, 46, 99, .16); }
+:root[data-theme="light"] .stat > div, :root[data-theme="light"] .mod, :root[data-theme="light"] .env > div,
+:root[data-theme="light"] #infocard dl, :root[data-theme="light"] .steps li, :root[data-theme="light"] .acq,
+:root[data-theme="light"] .gains .gain, :root[data-theme="light"] .q textarea, :root[data-theme="light"] .numrow input,
+:root[data-theme="light"] input[type=date], :root[data-theme="light"] input[type=text], :root[data-theme="light"] .runspanel { background: var(--surface-0); color: var(--tx); color-scheme: light; }
+:root[data-theme="light"] .statebar span, :root[data-theme="light"] #logList li, :root[data-theme="light"] .pcard, :root[data-theme="light"] .role,
+:root[data-theme="light"] .chips button, :root[data-theme="light"] #tools { background: var(--surface-1); }
+:root[data-theme="light"] .seg { background: rgba(0, 46, 99, .08); }
+:root[data-theme="light"] .seg button.on, :root[data-theme="light"] .chips button.on { color: var(--tx); }
+:root[data-theme="light"] .tbtn:hover, :root[data-theme="light"] .seg button:hover:not(:disabled) { background: rgba(0, 46, 99, .08); }
+:root[data-theme="light"] .btn:hover:not(:disabled) { background: color-mix(in srgb, var(--brand) 12%, white); }
+:root[data-theme="light"] .btn.accent { background: linear-gradient(180deg, #0f5bc9, var(--unach-blue)); color: #fff; }
+:root[data-theme="light"] .pwarn, :root[data-theme="light"] .robanner, :root[data-theme="light"] .simbadge, :root[data-theme="light"] .clockpause { color: var(--warn-ink); }
+:root[data-theme="light"] .hint.warn { color: var(--solar); }
+:root[data-theme="light"] .steps li.ok .c { color: #fff; }
+:root[data-theme="light"] .toast { background: rgba(255, 255, 255, .97); color: var(--tx); }
+:root[data-theme="light"] .brand b, :root[data-theme="light"] .clock b { color: var(--unach-navy); }
+:root[data-theme="light"] .tag { color: #fff; }
+:root[data-theme="light"] #topbar::after { opacity: 1; }
+:root[data-theme="light"] .led.off { background: #8b9bb2; }
+:root[data-theme="light"] .ferr { color: var(--bad); }
+
+/* ---------- accesibilidad ---------- */
+@media (forced-colors: active) {
+  .btn.on, .seg button.on, .chips button.on, .tbtn.on { outline: 2px solid Highlight; }
+  .btn, .seg, .chip { border: 1px solid ButtonText; }
+}
+@media (pointer: coarse) { #themeBtn { width: 44px; height: 44px; } }
+
+/* ---------- modo claro: paneles con fondo fijo, pistas de deslizadores y gráficas ---------- */
+:root[data-theme="light"] #practiceGuide.glass, :root[data-theme="light"] #infocard.glass, :root[data-theme="light"] #logpanel.glass, :root[data-theme="light"] #viewbar.glass { background: rgba(255, 255, 255, .96); }
+:root[data-theme="light"] .tabs button.on, :root[data-theme="light"] #viewtabs button[aria-selected="true"] { color: var(--tx); }
+:root[data-theme="light"] .tabs button { color: var(--tx-2); }
+:root[data-theme="light"] input[type=range] { background: rgba(0, 46, 99, .2); }
+:root[data-theme="light"] input[type=range]::-webkit-slider-thumb { background: #fff; border-color: var(--accent); }
+:root[data-theme="light"] .bar, :root[data-theme="light"] .pbar, :root[data-theme="light"] .progress { background: rgba(0, 46, 99, .14); }
+:root[data-theme="light"] .pbar u, :root[data-theme="light"] .bar u { background: var(--unach-navy); }
+:root[data-theme="light"] .kind, :root[data-theme="light"] #infocard h4 { color: var(--tx); }
+:root[data-theme="light"] #infocard p, :root[data-theme="light"] .pcard p, :root[data-theme="light"] .role span { color: var(--tx-2); }
+:root[data-theme="light"] .btn.accent:disabled { opacity: .55; }
+:root[data-theme="light"] .pwarn, :root[data-theme="light"] .robanner { background: rgba(163, 95, 0, .1); border-color: rgba(163, 95, 0, .5); }
+:root[data-theme="light"] .statebar span.ok { color: var(--ok); } :root[data-theme="light"] .statebar span.warn { color: var(--solar); } :root[data-theme="light"] .statebar span.bad { color: var(--bad); }
+/* las gráficas se dibujan en canvas pensado para fondo oscuro: se mantienen sobre una tarjeta de instrumento oscura en ambos temas */
+:root[data-theme="light"] .chartbox, :root[data-theme="light"] .compassbox canvas { background: #0b1622; border-radius: 10px; }
+:root[data-theme="light"] .chartnote { color: var(--tx-3); }
+:root[data-theme="light"] .modal { background: rgba(0, 30, 70, .45); }
+:root[data-theme="light"] .modal .card, :root[data-theme="light"] dialog.glass { background: rgba(255, 255, 255, .98); color: var(--tx); }
+:root[data-theme="light"] .tbtn { color: var(--tx-2); } :root[data-theme="light"] .tbtn.on { color: var(--tx); }
+:root[data-theme="light"] #freeHud, :root[data-theme="light"] .toast { color: var(--tx); }
+:root[data-theme="light"] table.mini td, :root[data-theme="light"] table.mini th { color: var(--tx); }

@@ -59,7 +59,7 @@
     ['sepL', 'sepR'].forEach((id) => {
       const el = document.getElementById(id), k = sepKey(id), [lo, hi] = LIM[k];
       el.setAttribute('aria-valuemin', String(lo)); el.setAttribute('aria-valuemax', String(hi)); el.setAttribute('aria-valuenow', String(cur(k)));
-      el.setAttribute('aria-valuetext', `${cur(k)} píxeles`);
+      el.setAttribute('aria-valuetext', LAB.t('layout.pixeles', { cur: cur(k) }));
     });
   }
   function resizeTo(id, px) {

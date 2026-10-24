@@ -72,23 +72,23 @@
       picker.register(this.cabinet.resetKey, 'estop');
 
       // etiquetas (posiciones locales respecto del objeto que las contiene)
-      labels.add('moduleA', A.group, V3(0, 1.72, 0), 'Módulo A<small>fijo · referencia</small>', { cls: 'a' });
-      labels.add('moduleB', B.group, V3(0, 3.5, 0), 'Módulo B<small>móvil · 2 ejes</small>', { cls: 'b', track: { object: B.module.root, offset: [0, 0.75, 0] } });
-      labels.add('irrA', A.group, V3(0.0, 1.5, 0.75), 'Irradiancia A', { cls: 'sensor', detail: true });
-      labels.add('irrB', B.group, V3(1.35, 3.0, 0), 'Irradiancia B', { cls: 'sensor', detail: true, track: { object: B.module.irradianceSensor, offset: [0, 0.4, 0] } });
-      labels.add('pyr', S.group, V3(0.36, 2.95, 0), 'Piranómetro', { cls: 'sensor', detail: true });
-      labels.add('anemo', S.group, V3(0, 4.05, 0), 'Anemómetro y veleta', { cls: 'sensor' });
-      labels.add('shield', S.group, V3(-0.28, 2.3, 0), 'Temp. y humedad', { cls: 'sensor', detail: true });
-      labels.add('rain', S.group, V3(0.8, 1.2, 0.4), 'Pluviómetro', { cls: 'sensor', detail: true });
-      labels.add('load', this.load.group, V3(0, 1.85, 0), 'Carga CC programable', { cls: 'load' });
-      labels.add('cabinet', this.cabinet.group, V3(0.6, 3.2, 0), 'Control y adquisición<small>cDAQ · controlador local</small>', { cls: 'ctrl' });
-      labels.add('estop', this.cabinet.group, V3(-0.2, 0.62, 0.45), 'Paro local', { cls: 'safety' });
-      labels.add('cam1', this.cam1.group, V3(0, 3.6, 0), 'Cámara IP 1<small>vista general</small>', { cls: 'sensor' });
-      labels.add('cam2', this.cam2.group, V3(0, 3.6, 0), 'Cámara IP 2<small>vista del seguidor</small>', { cls: 'sensor' });
-      labels.add('azAxis', B.group, V3(-0.95, 1.9, 0.62), 'Eje de azimut', { cls: 'axis', detail: true });
-      labels.add('tiltAxis', B.group, V3(1.45, 2.5, 0), 'Eje de inclinación', { cls: 'axis', detail: true, track: { object: B.tiltGroup, offset: [1.45, 0, 0], local: true } });
-      labels.add('dcA', A.group, V3(0.9, 0.35, 0.9), 'Medición CC (V, I, P, E)', { cls: 'sensor', detail: true });
-      labels.add('dcB', B.group, V3(-0.9, 0.35, 0.9), 'Medición CC (V, I, P, E)', { cls: 'sensor', detail: true });
+      labels.add('moduleA', A.group, V3(0, 1.72, 0), 'lbl.moduleA', { cls: 'a' });
+      labels.add('moduleB', B.group, V3(0, 3.5, 0), 'lbl.moduleB', { cls: 'b', track: { object: B.module.root, offset: [0, 0.75, 0] } });
+      labels.add('irrA', A.group, V3(0.0, 1.5, 0.75), 'lbl.irrA', { cls: 'sensor', detail: true });
+      labels.add('irrB', B.group, V3(1.35, 3.0, 0), 'lbl.irrB', { cls: 'sensor', detail: true, track: { object: B.module.irradianceSensor, offset: [0, 0.4, 0] } });
+      labels.add('pyr', S.group, V3(0.36, 2.95, 0), 'lbl.pyr', { cls: 'sensor', detail: true });
+      labels.add('anemo', S.group, V3(0, 4.05, 0), 'lbl.anemo', { cls: 'sensor' });
+      labels.add('shield', S.group, V3(-0.28, 2.3, 0), 'lbl.shield', { cls: 'sensor', detail: true });
+      labels.add('rain', S.group, V3(0.8, 1.2, 0.4), 'lbl.rain', { cls: 'sensor', detail: true });
+      labels.add('load', this.load.group, V3(0, 1.85, 0), 'lbl.load', { cls: 'load' });
+      labels.add('cabinet', this.cabinet.group, V3(0.6, 3.2, 0), 'lbl.cabinet', { cls: 'ctrl' });
+      labels.add('estop', this.cabinet.group, V3(-0.2, 0.62, 0.45), 'lbl.estop', { cls: 'safety' });
+      labels.add('cam1', this.cam1.group, V3(0, 3.6, 0), 'lbl.cam1', { cls: 'sensor' });
+      labels.add('cam2', this.cam2.group, V3(0, 3.6, 0), 'lbl.cam2', { cls: 'sensor' });
+      labels.add('azAxis', B.group, V3(-0.95, 1.9, 0.62), 'lbl.azAxis', { cls: 'axis', detail: true });
+      labels.add('tiltAxis', B.group, V3(1.45, 2.5, 0), 'lbl.tiltAxis', { cls: 'axis', detail: true, track: { object: B.tiltGroup, offset: [1.45, 0, 0], local: true } });
+      labels.add('dcA', A.group, V3(0.9, 0.35, 0.9), 'lbl.dcA', { cls: 'sensor', detail: true });
+      labels.add('dcB', B.group, V3(-0.9, 0.35, 0.9), 'lbl.dcB', { cls: 'sensor', detail: true });
       this.aidsMode = 'auto'; this.aids = LAB.scene.createAids(this);      // C19: ayudas 3D por tarea (normal, rayo, ángulo de incidencia, azimut)
       this.partRoots.dcA = A.group; this.partRoots.dcB = B.group;
     }
@@ -106,17 +106,17 @@
       const zAB = (L.moduleA[2] + L.moduleB[2]) / 2;
       this.insets = { top: 0 };
       this.viewSpecs = {
-        general: { points: pts(...all), target: V3(gen.c.x, 1.4, zAB - 0.4), dir: norm([0.6, 5.8, 12.4]), fov: 42, margin: 1.08, label: 'General' },
-        moduleA: { points: pts('moduleA'), target: c('moduleA', 0.75), dir: norm([-0.55, 0.28, 1]), fov: 42, margin: 1.12, label: 'Módulo A' },
-        moduleB: { points: pts('moduleB'), target: c('moduleB', 1.8), dir: norm([-0.6, 0.32, 1]), fov: 42, margin: 1.1, label: 'Módulo B' },
-        station: { points: pts('weather'), target: c('weather', 2.1), dir: norm([0.75, 0.2, 1]), fov: 42, margin: 1.1, label: 'Estación' },
-        load: { points: pts('load'), target: c('load', 0.9), dir: norm([-0.5, 0.3, 1]), fov: 42, margin: 1.35, label: 'Carga' },
-        cabinet: { points: pts('cabinet'), target: c('cabinet', 1.2), dir: norm([0.8, 0.2, 0.6]), fov: 42, margin: 1.3, label: 'Gabinete' },
-        aerial: { points: pts(...all, 'cam1', 'cam2'), target: V3(gen.c.x, 0, gen.c.z), dir: norm([0.045, 1, 0.58]), fov: 42, margin: 1.12, label: 'Aérea' },
+        general: { points: pts(...all), target: V3(gen.c.x, 1.4, zAB - 0.4), dir: norm([0.6, 5.8, 12.4]), fov: 42, margin: 1.08, get label() { return LAB.t('world.view_general'); } },
+        moduleA: { points: pts('moduleA'), target: c('moduleA', 0.75), dir: norm([-0.55, 0.28, 1]), fov: 42, margin: 1.12, get label() { return LAB.t('world.view_moduleA'); } },
+        moduleB: { points: pts('moduleB'), target: c('moduleB', 1.8), dir: norm([-0.6, 0.32, 1]), fov: 42, margin: 1.1, get label() { return LAB.t('world.view_moduleB'); } },
+        station: { points: pts('weather'), target: c('weather', 2.1), dir: norm([0.75, 0.2, 1]), fov: 42, margin: 1.1, get label() { return LAB.t('world.view_station'); } },
+        load: { points: pts('load'), target: c('load', 0.9), dir: norm([-0.5, 0.3, 1]), fov: 42, margin: 1.35, get label() { return LAB.t('world.view_load'); } },
+        cabinet: { points: pts('cabinet'), target: c('cabinet', 1.2), dir: norm([0.8, 0.2, 0.6]), fov: 42, margin: 1.3, get label() { return LAB.t('world.view_cabinet'); } },
+        aerial: { points: pts(...all, 'cam1', 'cam2'), target: V3(gen.c.x, 0, gen.c.z), dir: norm([0.045, 1, 0.58]), fov: 42, margin: 1.12, get label() { return LAB.t('world.view_aerial'); } },
         // acercamientos desde "Abrir componente" de las camaras IP (no aparecen en la barra de vistas)
-        camFocus1: { points: pts('cam1'), target: c('cam1', 2.9), dir: norm([0.55, 0.12, 1]), fov: 42, margin: 1.25, label: 'Cámara IP 1' },
-        camFocus2: { points: pts('cam2'), target: c('cam2', 2.9), dir: norm([-0.55, 0.12, 1]), fov: 42, margin: 1.25, label: 'Cámara IP 2' },
-        front: { points: pts('moduleA', 'moduleB', 'load', 'cabinet'), target: V3(gen.c.x, 1.3, zAB), dir: norm([0, 0.1, 1]), fov: 40, margin: 1.1, label: 'Frontal' },
+        camFocus1: { points: pts('cam1'), target: c('cam1', 2.9), dir: norm([0.55, 0.12, 1]), fov: 42, margin: 1.25, get label() { return LAB.t('world.view_camFocus1'); } },
+        camFocus2: { points: pts('cam2'), target: c('cam2', 2.9), dir: norm([-0.55, 0.12, 1]), fov: 42, margin: 1.25, get label() { return LAB.t('world.view_camFocus2'); } },
+        front: { points: pts('moduleA', 'moduleB', 'load', 'cabinet'), target: V3(gen.c.x, 1.3, zAB), dir: norm([0, 0.1, 1]), fov: 40, margin: 1.1, get label() { return LAB.t('world.view_front'); } },
       };
       this.views = this.viewSpecs;
     }

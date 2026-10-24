@@ -239,7 +239,7 @@ input[type=date], input[type=text] { background: rgba(0, 0, 0, .3); border: 1px 
 /* ---------- adaptable ---------- */
 
 /* sin sesion: solo lectura */
-body.nosession #pTracker h3::after, body.nosession #pLoad h3::after { content: '🔒 solo lectura'; font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--solar); margin-left: auto; margin-right: 6px; font-weight: 600; }
+body.nosession #pTracker h3::after, body.nosession #pLoad h3::after { content: var(--ro-label, '🔒 solo lectura'); font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--solar); margin-left: auto; margin-right: 6px; font-weight: 600; }
 .panel h3 .fold { margin-left: 0; }
 
 table.mini { width: 100%; border-collapse: collapse; font: 500 11.5px var(--mono); }

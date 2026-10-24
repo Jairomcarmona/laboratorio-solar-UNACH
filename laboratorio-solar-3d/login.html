@@ -3,25 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Acceso · Laboratorio Remoto Solar UNACH</title>
+<title data-i18n="login.page.acceso_laboratorio_remoto_solar">Acceso · Laboratorio Remoto Solar UNACH</title>
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/portal.css">
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/theme.js"></script>
 </head>
 <body class="portal">
+<div class="portalang"><button type="button" class="btn quiet" id="themeBtn" data-theme-toggle aria-pressed="false" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema claro/oscuro"><span class="ico-dark" aria-hidden="true">☾</span><span class="ico-light" aria-hidden="true">☀</span></button><div class="seg" id="langSwitch" role="group" aria-label="Idioma de la interfaz" data-i18n-attr="aria-label:ui.lang.label"><button type="button" data-lang="es" lang="es" title="Español" aria-pressed="true">ES</button><button type="button" data-lang="en" lang="en" title="English" aria-pressed="false">EN</button></div></div>
 <main class="portalcard glass">
-  <div class="logostrip" role="group" aria-label="Instituciones del proyecto"><img src="assets/logos/unach.png" alt="Universidad Autónoma de Chiapas"><img src="assets/logos/ue-cofinanciado.png" alt="Cofinanciado por la Unión Europea"><img src="assets/logos/eu-colmev.png" alt="EU-COLMEV"><img src="assets/logos/sisdic.png" alt="SISDIC"></div>
-  <h1>Laboratorio Remoto Solar UNACH</h1>
-  <p class="lead">Inicia sesión con tu cuenta institucional para ver el banco fotovoltaico y, con una reserva vigente, operarlo.</p>
+  <div class="logostrip" role="group" aria-label="Instituciones del proyecto" data-i18n-attr="aria-label:login.page.instituciones_del_proyecto"><img src="assets/logos/unach.png" alt="Universidad Autónoma de Chiapas" data-i18n-attr="alt:login.page.universidad_autonoma_de_chiapas"><img src="assets/logos/ue-cofinanciado.png" alt="Cofinanciado por la Unión Europea" data-i18n-attr="alt:login.page.cofinanciado_por_la_union"><img src="assets/logos/eu-colmev.png" alt="EU-COLMEV" data-i18n-attr="alt:login.page.eu_colmev"><img src="assets/logos/sisdic.png" alt="SISDIC" data-i18n-attr="alt:login.page.sisdic"></div>
+  <h1 data-i18n="login.page.laboratorio_remoto_solar_unach">Laboratorio Remoto Solar UNACH</h1>
+  <p class="lead" data-i18n="login.page.inicia_sesion_con_tu">Inicia sesión con tu cuenta institucional para ver el banco fotovoltaico y, con una reserva vigente, operarlo.</p>
   <form id="loginForm" autocomplete="on" novalidate>
-    <label for="user">Usuario</label>
+    <label for="user" data-i18n="login.loginForm.usuario">Usuario</label>
     <input id="user" name="username" type="text" autocomplete="username" required maxlength="64" autofocus>
-    <label for="pass">Contraseña</label>
+    <label for="pass" data-i18n="login.loginForm.contrasena">Contraseña</label>
     <input id="pass" name="password" type="password" autocomplete="current-password" required maxlength="256">
     <p id="msg" class="msg" role="alert" aria-live="assertive" hidden></p>
-    <button class="btn accent" id="go" type="submit">Entrar</button>
+    <button class="btn accent" id="go" type="submit" data-i18n="login.go.entrar">Entrar</button>
   </form>
-  <p class="fine">¿Solo quieres practicar? <a href="index.html?source=sim">Abre el simulador</a>, no necesita cuenta. EU‑COLMEV · WP3 Laboratorios remotos.</p>
+  <p class="fine" data-i18n-html="login.page.solo_quieres_practicar_abre">¿Solo quieres practicar? <a href="index.html?source=sim">Abre el simulador</a>, no necesita cuenta. EU‑COLMEV · WP3 Laboratorios remotos.</p>
 </main>
+<script src="js/config.js"></script>
+<script src="i18n/es.js"></script>
+<script src="i18n/en.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/portal.js"></script>
 </body>
 </html>

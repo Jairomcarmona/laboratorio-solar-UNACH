@@ -22,7 +22,7 @@
     const mkArc = (c) => { const m = new THREE.Mesh(new THREE.BufferGeometry(), mat(c)); m.renderOrder = 20; m.frustumCulled = false; m.userData.key = ''; group.add(m); return m; };
     const aoiArc = mkArc(COL.arc), azArc = mkArc(COL.az);
     const tag = (txt, cls) => { const el = world.labels.add('aid-' + cls, group, V3(), txt, { cls: 'aid ' + cls }); return el; };
-    const tAoi = tag('θ', 'aoi'), tAz = tag('Az', 'az'), tNormal = tag('normal del panel', 'nrm'), tRay = tag('rayo solar', 'ray');
+    const tAoi = tag('θ', 'aoi'), tAz = tag('Az', 'az'), tNormal = tag(LAB.t('aids.normal_del_panel'), 'nrm'), tRay = tag(LAB.t('aids.rayo_solar'), 'ray');
     const setText = (el, t) => { const s = el.querySelector('span'); if (s.textContent !== t) s.textContent = t; };
     const origin = V3(), tmp = V3(), base = V3();
     let want = false, shown = false;
@@ -60,7 +60,7 @@
           ray.setDirection(sv.clone().negate()); ray.position.copy(sv).multiplyScalar(2.3);     // el rayo llega desde el Sol hacia el panel
           setArc(aoiArc, n, sv, 1.1, V3(), `${B.az.toFixed(1)}|${B.tilt.toFixed(1)}|${sun.az.toFixed(1)}|${sun.el.toFixed(1)}`);
           tmp.copy(n).add(sv).normalize().multiplyScalar(1.45); setAt(tAoi, tmp);
-          setText(tAoi, tight ? `θ ${aoi.toFixed(1)}° · el Sol da casi de frente` : (near ? `θ ${aoi.toFixed(1)}° · entre la normal del panel y el rayo` : `θ ${aoi.toFixed(1)}° (ángulo de incidencia)`));
+          setText(tAoi, tight ? LAB.t('aids.el_sol_da_casi', { toFixed: aoi.toFixed(1) }) : (near ? LAB.t('aids.entre_la_normal_del', { toFixed: aoi.toFixed(1) }) : LAB.t('aids.angulo_de_incidencia', { toFixed: aoi.toFixed(1) })));
           setAt(tRay, V3().copy(sv).multiplyScalar(2.5));
         }
         setAt(tNormal, V3().copy(n).multiplyScalar(1.85));
@@ -74,8 +74,8 @@
           if (azArc.geometry) azArc.geometry.dispose(); azArc.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), N, 0.022, 6, false);
         }
         setAt(tAz, V3(...S.sunVector(B.az / 2, 0)).multiplyScalar(1.45).add(rel));
-        setText(tAz, `Az ${B.az.toFixed(0)}° · inclinación ${B.tilt.toFixed(0)}°`);
-        setText(tNormal, 'normal del panel'); setText(tRay, 'rayo solar');
+        setText(tAz, LAB.t('aids.az_inclinacion', { toFixed: B.az.toFixed(0), toFixed2: B.tilt.toFixed(0) }));
+        setText(tNormal, LAB.t('aids.normal_del_panel')); setText(tRay, LAB.t('aids.rayo_solar'));
         void up;
       },
     };

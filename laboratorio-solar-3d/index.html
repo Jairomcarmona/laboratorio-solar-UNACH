@@ -3,151 +3,155 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Laboratorio Solar Remoto UNACH</title>
+  <title data-i18n="index.page.laboratorio_solar_remoto_unach">Laboratorio Solar Remoto UNACH</title>
   <meta name="description" content="Gemelo digital interactivo del laboratorio remoto de energía solar fotovoltaica de la UNACH (EU-COLMEV WP3)">
   <meta name="color-scheme" content="dark">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
 </head>
 <body>
 <div id="glFail" class="modal" role="alertdialog" aria-labelledby="glFailTitle" aria-describedby="glFailText" hidden>
   <div class="card glass">
-    <h2 id="glFailTitle">No se pudieron iniciar los gráficos 3D</h2>
-    <p class="lead" id="glFailText">Este navegador o equipo no ofreció WebGL, que el simulador necesita para dibujar el banco. Tu avance guardado se conserva.</p>
+    <h2 id="glFailTitle" data-i18n="index.glFailTitle.no_se_pudieron_iniciar">No se pudieron iniciar los gráficos 3D</h2>
+    <p class="lead" id="glFailText" data-i18n="index.glFailText.este_navegador_o_equipo">Este navegador o equipo no ofreció WebGL, que el simulador necesita para dibujar el banco. Tu avance guardado se conserva.</p>
     <ul class="lead">
-      <li>Actualiza el navegador (Chrome, Edge, Firefox o Safari recientes) y reinicia la página.</li>
-      <li>Activa la aceleración por hardware en los ajustes del navegador y cierra otras pestañas pesadas.</li>
-      <li>En equipos modestos prueba el modo de calidad baja: añade <code>?q=low</code> a la dirección.</li>
-      <li>Comprueba en <code>about:gpu</code> (Chrome) o en <code>webglreport.com</code> si WebGL está disponible.</li>
+      <li data-i18n="index.glFail.actualiza_el_navegador_chrome">Actualiza el navegador (Chrome, Edge, Firefox o Safari recientes) y reinicia la página.</li>
+      <li data-i18n="index.glFail.activa_la_aceleracion_por">Activa la aceleración por hardware en los ajustes del navegador y cierra otras pestañas pesadas.</li>
+      <li data-i18n-html="index.glFail.en_equipos_modestos_prueba">En equipos modestos prueba el modo de calidad baja: añade <code>?q=low</code> a la dirección.</li>
+      <li data-i18n-html="index.glFail.comprueba_en_about_gpu">Comprueba en <code>about:gpu</code> (Chrome) o en <code>webglreport.com</code> si WebGL está disponible.</li>
     </ul>
     <p class="hint" id="glFailWhy"></p>
-    <div class="row3"><button class="btn accent" type="button" id="glRetry">Reintentar</button><button class="btn" type="button" id="glLow">Reintentar en calidad baja</button></div>
+    <div class="row3"><button class="btn accent" type="button" id="glRetry" data-i18n="index.glRetry.reintentar">Reintentar</button><button class="btn" type="button" id="glLow" data-i18n="index.glLow.reintentar_en_calidad_baja">Reintentar en calidad baja</button></div>
   </div>
 </div>
-<div id="glLost" class="robanner linklost" role="alert" hidden><b>⚠</b> <span>Se perdió el contexto gráfico (la tarjeta de video lo reinició). El simulador sigue calculando; la imagen 3D volverá sola. Si no vuelve, pulsa «Recargar».</span> <button class="btn" type="button" id="glReload">Recargar</button></div>
+<div id="glLost" class="robanner linklost" role="alert" hidden><b>⚠</b> <span data-i18n="index.glLost.se_perdio_el_contexto">Se perdió el contexto gráfico (la tarjeta de video lo reinició). El simulador sigue calculando; la imagen 3D volverá sola. Si no vuelve, pulsa «Recargar».</span> <button class="btn" type="button" id="glReload" data-i18n="index.glReload.recargar">Recargar</button></div>
 <div id="app">
   <header id="topbar" class="glass">
       <div class="brand">
         <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffcf4d"/><stop offset="1" stop-color="#ff8a1f"/></linearGradient></defs><circle cx="16" cy="16" r="6.2" fill="url(#bg1)"/><g stroke="#ffb93b" stroke-width="2" stroke-linecap="round"><path d="M16 3v4M16 25v4M3 16h4M25 16h4M6.8 6.8l2.8 2.8M22.4 22.4l2.8 2.8M25.2 6.8l-2.8 2.8M9.6 22.4l-2.8 2.8"/></g></svg>
-        <div><b>Laboratorio Remoto Solar UNACH</b><span>Gemelo digital · EU-COLMEV WP3</span></div>
+        <div><b data-i18n="index.topbar.laboratorio_remoto_solar_unach">Laboratorio Remoto Solar UNACH</b><span data-i18n="index.topbar.gemelo_digital_eu_colmev">Gemelo digital · EU-COLMEV WP3</span></div>
       </div>
-      <div class="seg" id="sourceSwitch" role="group" aria-label="Fuente de datos">
-        <button class="on" data-src="sim" title="Datos simulados con pvlib">Simulador</button>
-        <button data-src="ws" disabled title="Disponible cuando la página se sirve desde el servidor del laboratorio">Banco real</button>
-        <button data-src="twin" disabled title="Modelo del simulador alimentado con el ambiente medido por el banco">Gemelo</button>
+      <div class="seg" id="sourceSwitch" role="group" aria-label="Fuente de datos" data-i18n-attr="aria-label:index.sourceSwitch.fuente_de_datos">
+        <button class="on" data-src="sim" title="Datos simulados con pvlib" data-i18n="index.sourceSwitch.simulador" data-i18n-attr="title:index.sourceSwitch.datos_simulados_con_pvlib">Simulador</button>
+        <button data-src="ws" disabled title="Disponible cuando la página se sirve desde el servidor del laboratorio" data-i18n="index.sourceSwitch.banco_real" data-i18n-attr="title:index.sourceSwitch.disponible_cuando_la_pagina">Banco real</button>
+        <button data-src="twin" disabled title="Modelo del simulador alimentado con el ambiente medido por el banco" data-i18n="index.sourceSwitch.gemelo" data-i18n-attr="title:index.sourceSwitch.modelo_del_simulador_alimentado">Gemelo</button>
       </div>
       <div class="clock" id="clock">
         <b id="clockTime">--:--:--</b>
         <span id="clockDate">—</span><em id="clockPause" class="clockpause"></em>
       </div>
       <div class="simbadge" id="simBadge" title="Modo simulador: datos calculados con pvlib. Pulsa ? para ver el alcance del modelo."><i></i>SIMULACIÓN</div>
-      <div class="sunchip" id="sunChip" title="Posición solar calculada con el algoritmo validado contra pvlib"><span id="sunIcon">☀</span><span id="sunTxt">—</span></div>
+      <div class="sunchip" id="sunChip" title="Posición solar calculada con el algoritmo validado contra pvlib" data-i18n-attr="title:index.sunChip.posicion_solar_calculada_con"><span id="sunIcon">☀</span><span id="sunTxt">—</span></div>
       <div class="spacer"></div>
-            <button class="chip" id="sessionBtn"><i class="led off"></i><span id="sessionTxt">Sin sesión</span></button>
-      <button class="btn accent" id="btnPractices">Prácticas</button>
-      <button class="btn" id="btnLog">Bitácora <em id="logCount">0</em></button>
-      <button class="btn icon" id="btnHelp" title="Ayuda y atajos (?)" aria-label="Ayuda y atajos de teclado">?</button>
-      <button class="btn icon" id="btnFull" title="Pantalla completa" aria-label="Pantalla completa">⛶</button>
+            <button type="button" class="btn quiet" id="themeBtn" data-theme-toggle aria-pressed="false" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema claro/oscuro"><span class="ico-dark" aria-hidden="true">☾</span><span class="ico-light" aria-hidden="true">☀</span></button>
+            <div class="seg" id="langSwitch" role="group" aria-label="Idioma de la interfaz" data-i18n-attr="aria-label:ui.lang.label"><button type="button" data-lang="es" lang="es" title="Español" aria-pressed="true">ES</button><button type="button" data-lang="en" lang="en" title="English" aria-pressed="false">EN</button></div>
+      <button class="chip" id="sessionBtn"><i class="led off"></i><span id="sessionTxt">Sin sesión</span></button>
+      <button class="btn accent" id="btnPractices" data-i18n="index.btnPractices.practicas">Prácticas</button>
+      <button class="btn" id="btnLog"><span data-i18n="index.btnLog.bitacora">Bitácora</span> <em id="logCount">0</em></button>
+      <button class="btn icon" id="btnHelp" title="Ayuda y atajos (?)" aria-label="Ayuda y atajos de teclado" data-i18n-attr="title:index.btnHelp.ayuda_y_atajos;aria-label:index.btnHelp.ayuda_y_atajos_de">?</button>
+      <button class="btn icon" id="btnFull" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-attr="title:index.btnFull.pantalla_completa;aria-label:index.btnFull.pantalla_completa">⛶</button>
     </header>
-  <nav id="viewtabs" role="tablist" aria-label="Secciones" aria-orientation="horizontal">
-    <button role="tab" data-view="scene" id="vtScene" aria-controls="stagecell">Escena</button>
-    <button role="tab" data-view="controls" id="vtControls" aria-controls="left">Controles</button>
-    <button role="tab" data-view="data" id="vtData" aria-controls="right">Datos</button>
-    <button role="tab" data-view="practice" id="vtPractice" aria-controls="sidePractice">Práctica</button>
+  <nav id="viewtabs" role="tablist" aria-label="Secciones" aria-orientation="horizontal" data-i18n-attr="aria-label:index.viewtabs.secciones">
+    <button role="tab" data-view="scene" id="vtScene" aria-controls="stagecell" data-i18n="index.vtScene.escena">Escena</button>
+    <button role="tab" data-view="controls" id="vtControls" aria-controls="left" data-i18n="index.vtControls.controles">Controles</button>
+    <button role="tab" data-view="data" id="vtData" aria-controls="right" data-i18n="index.vtData.datos">Datos</button>
+    <button role="tab" data-view="practice" id="vtPractice" aria-controls="sidePractice" data-i18n="index.vtPractice.practica">Práctica</button>
   </nav>
   <aside id="left" class="col">
-      <div id="linkBanner" class="robanner linklost" role="status" hidden><b>⚠</b> <span>Enlace con el banco cortado (simulado). Lo que ves es el estado de la simulación local, no telemetría recibida del banco. Si el enlace sigue cortado, el watchdog llevará el seguidor a posición segura y bloqueará la operación.</span></div>
+      <div id="linkBanner" class="robanner linklost" role="status" hidden><b>⚠</b> <span data-i18n="index.linkBanner.enlace_con_el_banco">Enlace con el banco cortado (simulado). Lo que ves es el estado de la simulación local, no telemetría recibida del banco. Si el enlace sigue cortado, el watchdog llevará el seguidor a posición segura y bloqueará la operación.</span></div>
       <div id="roBanner" class="robanner" role="status" hidden><b>🔒</b> <span id="roTxt"></span></div>
       <section class="panel glass" id="pTracker">
-        <h3>Seguidor · Módulo B <button class="fold" aria-label="Plegar">–</button></h3>
+        <h3><span data-i18n="index.pTracker.seguidor_modulo_b">Seguidor · Módulo B</span> <button class="fold" aria-label="Plegar" data-i18n-attr="aria-label:index.pTracker.plegar">–</button></h3>
         <div class="body">
           <div class="row2 stat">
-            <div><label>Azimut</label><b id="trAz">—</b><small id="trAzT">objetivo —</small></div>
-            <div><label>Inclinación</label><b id="trTilt">—</b><small id="trTiltT">objetivo —</small></div>
+            <div><label data-i18n="index.pTracker.azimut">Azimut</label><b id="trAz">—</b><small id="trAzT">objetivo —</small></div>
+            <div><label data-i18n="index.pTracker.inclinacion">Inclinación</label><b id="trTilt">—</b><small id="trTiltT">objetivo —</small></div>
           </div>
           <div id="trState" class="statebar"></div>
-          <label class="lbl">Modo de control</label>
+          <label class="lbl" data-i18n="index.pTracker.modo_de_control">Modo de control</label>
           <div class="seg wide" id="trModes">
-            <button data-mode="manual">Manual</button><button data-mode="astro">Astronómico</button><button data-mode="sensor">Sensores</button><button data-mode="fixed">Fijo</button>
+            <button data-mode="manual" data-i18n="index.trModes.manual">Manual</button><button data-mode="astro" data-i18n="index.trModes.astronomico">Astronómico</button><button data-mode="sensor" data-i18n="index.trModes.sensores">Sensores</button><button data-mode="fixed" data-i18n="index.trModes.fijo">Fijo</button>
           </div>
-          <label class="lbl">Ejes activos</label>
+          <label class="lbl" data-i18n="index.pTracker.ejes_activos">Ejes activos</label>
           <div class="seg wide" id="trAxes">
-            <button data-axes="both">Dos ejes</button><button data-axes="az">Solo azimut</button><button data-axes="tilt">Solo inclinación</button>
+            <button data-axes="both" data-i18n="index.trAxes.dos_ejes">Dos ejes</button><button data-axes="az" data-i18n="index.trAxes.solo_azimut">Solo azimut</button><button data-axes="tilt" data-i18n="index.trAxes.solo_inclinacion">Solo inclinación</button>
           </div>
-          <div class="slider"><label for="azSlider">Azimut <output id="azOut">180°</output></label><input type="range" id="azSlider" min="60" max="300" step="1" value="180"></div>
-          <div class="slider"><label for="tiltSlider">Inclinación <output id="tiltOut">17°</output></label><input type="range" id="tiltSlider" min="0" max="100" step="1" value="17"></div>
+          <div class="slider"><label for="azSlider"><span data-i18n="index.pTracker.azimut">Azimut</span> <output id="azOut">180°</output></label><input type="range" id="azSlider" min="60" max="300" step="1" value="180"></div>
+          <div class="slider"><label for="tiltSlider"><span data-i18n="index.pTracker.inclinacion">Inclinación</span> <output id="tiltOut">17°</output></label><input type="range" id="tiltSlider" min="0" max="100" step="1" value="17"></div>
           <div class="numcmd" id="trNum">
-            <label>Orden numérica <small>(se valida en el controlador)</small></label>
-            <div class="numrow"><input type="number" id="numAz" step="0.1" placeholder="Az °" aria-label="Azimut en grados"><input type="number" id="numTilt" step="0.1" placeholder="Incl °" aria-label="Inclinación en grados"><button class="btn accent" id="btnNumGo">Enviar</button></div>
+            <label data-i18n-html="index.trNum.orden_numerica_se_valida">Orden numérica <small>(se valida en el controlador)</small></label>
+            <div class="numrow"><input type="number" id="numAz" step="0.1" placeholder="Az °" aria-label="Azimut en grados" data-i18n-attr="aria-label:index.numAz.azimut_en_grados;placeholder:index.numAz.az"><input type="number" id="numTilt" step="0.1" placeholder="Incl °" aria-label="Inclinación en grados" data-i18n-attr="aria-label:index.numTilt.inclinacion_en_grados;placeholder:index.numTilt.incl"><button class="btn accent" id="btnNumGo" data-i18n="index.btnNumGo.enviar">Enviar</button></div>
           </div>
           <div class="chips" id="trPresets">
-            <button data-az="180" data-tilt="0">Horizontal</button><button data-az="180" data-tilt="17">Lat. 17°</button><button data-az="120" data-tilt="45">Este 45°</button><button data-az="240" data-tilt="45">Oeste 45°</button><button data-az="180" data-tilt="90">Vertical</button>
+            <button data-az="180" data-tilt="0" data-i18n="index.trPresets.horizontal">Horizontal</button><button data-az="180" data-tilt="17" data-i18n="index.trPresets.lat_17">Lat. 17°</button><button data-az="120" data-tilt="45" data-i18n="index.trPresets.este_45">Este 45°</button><button data-az="240" data-tilt="45" data-i18n="index.trPresets.oeste_45">Oeste 45°</button><button data-az="180" data-tilt="90" data-i18n="index.trPresets.vertical">Vertical</button>
           </div>
           <p class="hint" id="trHint">Rango autorizado: azimut 90°–270°, inclinación 0°–90°. Los comandos fuera de rango se rechazan.</p>
         </div>
       </section>
 
       <section class="panel glass" id="pLoad">
-        <h3>Carga CC programable <button class="fold" aria-label="Plegar">–</button></h3>
+        <h3><span data-i18n="index.pLoad.carga_cc_programable">Carga CC programable</span> <button class="fold" aria-label="Plegar" data-i18n-attr="aria-label:index.pLoad.plegar">–</button></h3>
         <div class="body">
           <div class="seg wide wrap" id="loadModes">
-            <button data-mode="mppt" data-gloss-hint="mppt">MPPT</button><button data-mode="cv">Tensión</button><button data-mode="cr">Resistencia</button><button data-mode="oc">Abierto</button><button data-mode="sc">Cortocirc.</button>
+            <button data-mode="mppt" data-gloss-hint="mppt" data-i18n="index.loadModes.mppt">MPPT</button><button data-mode="cv" data-i18n="index.loadModes.tension">Tensión</button><button data-mode="cr" data-i18n="index.loadModes.resistencia">Resistencia</button><button data-mode="oc" data-i18n="index.loadModes.abierto">Abierto</button><button data-mode="sc" data-i18n="index.loadModes.cortocirc">Cortocirc.</button>
           </div>
           <div class="slider" id="loadSliderWrap"><label for="loadSp"><span id="loadSpLabel">Tensión</span> <output id="loadSpOut">82 % Voc</output></label><input type="range" id="loadSp" min="5" max="100" step="1" value="82"></div>
-          <div class="numrow" id="loadNumRow"><input type="number" id="loadNum" step="0.1" aria-label="Valor de consigna"><span id="loadNumUnit">% Voc</span><button class="btn" id="btnLoadNum">Aplicar</button></div>
+          <div class="numrow" id="loadNumRow"><input type="number" id="loadNum" step="0.1" aria-label="Valor de consigna" data-i18n-attr="aria-label:index.loadNum.valor_de_consigna"><span id="loadNumUnit">% Voc</span><button class="btn" id="btnLoadNum" data-i18n="index.btnLoadNum.aplicar">Aplicar</button></div>
           <button class="btn wide accent" id="btnSweep">Barrido I‑V automático (10 s)</button>
-          <p class="hint">El barrido fija el tiempo en ×1 y recorre la tensión de 0 a Voc en ambos módulos al mismo tiempo.</p>
+          <p class="hint" data-i18n="index.pLoad.el_barrido_fija_el">El barrido fija el tiempo en ×1 y recorre la tensión de 0 a Voc en ambos módulos al mismo tiempo.</p>
         </div>
       </section>
 
       <section class="panel glass" id="pSafety">
-        <h3>Seguridad y enlace <button class="fold" aria-label="Plegar">–</button></h3>
+        <h3><span data-i18n="index.pSafety.seguridad_y_enlace">Seguridad y enlace</span> <button class="fold" aria-label="Plegar" data-i18n-attr="aria-label:index.pSafety.plegar">–</button></h3>
         <div class="body">
           <div class="safebadge" id="safeBadge"><i class="lamp green"></i><div><b id="safeState">Normal</b><small id="safeDetail">Todos los enclavamientos cumplidos</small></div></div>
-          <div class="gauge"><label>Viento <output id="windOut">0 m/s</output></label><div class="bar"><i id="windBar"></i><u id="windThr"></u></div></div>
+          <div class="gauge"><label><span data-i18n="index.pSafety.viento">Viento</span> <output id="windOut">0 m/s</output></label><div class="bar"><i id="windBar"></i><u id="windThr"></u></div></div>
           <div class="row3">
-            <button class="btn danger" id="btnEstop">Paro de emergencia</button>
-            <button class="btn" id="btnReset" title="Solo el técnico en sitio puede restablecer">Restablecer (técnico)</button>
+            <button class="btn danger" id="btnEstop" data-i18n="index.btnEstop.paro_de_emergencia">Paro de emergencia</button>
+            <button class="btn" id="btnReset" title="Solo el técnico en sitio puede restablecer" data-i18n="index.btnReset.restablecer_tecnico" data-i18n-attr="title:index.btnReset.solo_el_tecnico_en">Restablecer (técnico)</button>
           </div>
           <div class="row3">
             <button class="btn" id="btnComms">Cortar enlace</button>
-            <button class="btn" id="btnAck">Reconocer falla</button>
+            <button class="btn" id="btnAck" data-i18n="index.btnAck.reconocer_falla">Reconocer falla</button>
           </div>
-          <p class="hint" id="safeHint">Los límites de protección los gestiona el controlador local.</p>
+          <p class="hint" id="safeHint" data-i18n="index.safeHint.los_limites_de_proteccion">Los límites de protección los gestiona el controlador local.</p>
         </div>
       </section>
     </aside>
-  <div class="sep" id="sepL" role="separator" aria-orientation="vertical" aria-label="Ajustar el ancho del panel de controles" aria-controls="left" tabindex="0"></div>
-  <main id="stagecell" aria-label="Escena 3D del laboratorio">
+  <div class="sep" id="sepL" role="separator" aria-orientation="vertical" aria-label="Ajustar el ancho del panel de controles" aria-controls="left" tabindex="0" data-i18n-attr="aria-label:index.sepL.ajustar_el_ancho_del"></div>
+  <main id="stagecell" aria-label="Escena 3D del laboratorio" data-i18n-attr="aria-label:index.stagecell.escena_3d_del_laboratorio">
     <div id="stage"></div>
     <div id="overlay">
       <nav id="viewbar" class="glass">
       <div class="seg" id="viewSeg"></div>
       <span class="sep"></span>
-      <button class="btn" id="btnCam1">Cámara 1</button><button class="btn" id="btnCam2">Cámara 2</button>
+      <button class="btn" id="btnCam1" data-i18n="index.btnCam1.camara_1">Cámara 1</button><button class="btn" id="btnCam2" data-i18n="index.btnCam2.camara_2">Cámara 2</button>
       <span class="sep"></span>
-      <div id="tools" role="group" aria-label="Herramientas de vista">
-        <button class="tbtn" id="btnPip" title="Imagen de la cámara 2 en un recuadro"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg></button>
+      <div id="tools" role="group" aria-label="Herramientas de vista" data-i18n-attr="aria-label:index.tools.herramientas_de_vista">
+        <button class="tbtn" id="btnPip" title="Imagen de la cámara 2 en un recuadro" data-i18n-attr="title:index.btnPip.imagen_de_la_camara"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg></button>
         <button class="tbtn" id="btnLabels" title="Etiquetas: principales / todas / ninguna (L)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/></svg></button>
-        <button class="tbtn" id="btnFree" title="Cámara libre: W A S D, Q/E, arrastrar (F)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button>
-        <button class="tbtn" id="btnClean" title="Vista limpia: oculta paneles (H)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
-        <button class="tbtn" id="btnOrbit" title="Rotación automática"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></button>
-        <button class="tbtn" id="btnAids" title="Ayudas 3D" aria-label="Ayudas 3D"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V6M12 6l-3 3M12 6l3 3"/><path d="M5 20l6-4"/><path d="M8 12a5 5 0 0 1 4-3"/></svg><span class="tl" id="aidsTxt">Auto</span></button>
-        <button class="tbtn" id="btnQuality" title="Calidad gráfica"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><small id="qTxt">Auto</small></button>
+        <button class="tbtn" id="btnFree" title="Cámara libre: W A S D, Q/E, arrastrar (F)" data-i18n-attr="title:index.btnFree.camara_libre_w_a"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button>
+        <button class="tbtn" id="btnClean" title="Vista limpia: oculta paneles (H)" data-i18n-attr="title:index.btnClean.vista_limpia_oculta_paneles"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button class="tbtn" id="btnOrbit" title="Rotación automática" data-i18n-attr="title:index.btnOrbit.rotacion_automatica"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></button>
+        <button class="tbtn" id="btnAids" title="Ayudas 3D" aria-label="Ayudas 3D" data-i18n-attr="title:index.btnAids.ayudas_3d;aria-label:index.btnAids.ayudas_3d"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V6M12 6l-3 3M12 6l3 3"/><path d="M5 20l6-4"/><path d="M8 12a5 5 0 0 1 4-3"/></svg><span class="tl" id="aidsTxt">Auto</span></button>
+        <button class="tbtn" id="btnQuality" title="Calidad gráfica" data-i18n-attr="title:index.btnQuality.calidad_grafica"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><small id="qTxt">Auto</small></button>
       </div>
     </nav>
       <div id="midcol">
     <div id="practiceGuide" class="glass" hidden></div>
     <div id="infocard" class="glass" hidden>
-      <button class="x" aria-label="Cerrar">×</button>
+      <button class="x" aria-label="Cerrar" data-i18n-attr="aria-label:index.infocard.cerrar">×</button>
       <span class="kind" id="icKind"></span>
       <h4 id="icTitle"></h4>
       <p id="icText"></p>
       <dl id="icLive"></dl>
-      <div class="row3"><button class="btn" id="icFocus">Acercar cámara</button><button class="btn" id="icCam" hidden>Ver cámara</button></div>
+      <div class="row3"><button class="btn" id="icFocus" data-i18n="index.icFocus.acercar_camara">Acercar cámara</button><button class="btn" id="icCam" hidden data-i18n="index.icCam.ver_camara">Ver cámara</button></div>
     </div>
     <div id="logpanel" class="glass" hidden>
-      <h3>Bitácora de la sesión <button class="x" aria-label="Cerrar">×</button></h3>
-      <div class="chips" id="logFilter"><button class="on" data-f="all">Todo</button><button data-f="cmd">Comandos</button><button data-f="warn">Alertas</button></div>
+      <h3><span data-i18n="index.logpanel.bitacora_de_la_sesion">Bitácora de la sesión</span> <button class="x" aria-label="Cerrar" data-i18n-attr="aria-label:index.logpanel.cerrar">×</button></h3>
+      <div class="chips" id="logFilter"><button class="on" data-f="all" data-i18n="index.logFilter.todo">Todo</button><button data-f="cmd" data-i18n="index.logFilter.comandos">Comandos</button><button data-f="warn" data-i18n="index.logFilter.alertas">Alertas</button></div>
       <ol id="logList"></ol>
     </div>
 
@@ -155,153 +159,153 @@
     </div>
     
     <div id="povOverlay" hidden>
-      <div class="rec"><i></i><b id="povName">CÁM 1</b><span id="povTime">—</span></div>
-      <button class="btn" id="povExit">Salir de la cámara</button>
+      <div class="rec"><i></i><b id="povName" data-i18n="app.cam_1_vista_general">CÁM 1</b><span id="povTime">—</span></div>
+      <button class="btn" id="povExit" data-i18n="index.povExit.salir_de_la_camara">Salir de la cámara</button>
       <div class="povmeta" id="povMeta"></div>
     </div>
-    <div id="freeHud" class="glass" hidden><b>Cámara libre</b> · <kbd>W A S D</kbd> mover · <kbd>Q</kbd>/<kbd>E</kbd> bajar/subir · arrastra para mirar · <kbd>Shift</kbd> rápido · rueda = velocidad · <kbd>F</kbd> o <kbd>Esc</kbd> salir</div>
+    <div id="freeHud" class="glass" hidden data-i18n-html="index.freeHud.camara_libre_w_a"><b>Cámara libre</b> · <kbd>W A S D</kbd> mover · <kbd>Q</kbd>/<kbd>E</kbd> bajar/subir · arrastra para mirar · <kbd>Shift</kbd> rápido · rueda = velocidad · <kbd>F</kbd> o <kbd>Esc</kbd> salir</div>
   </main>
-  <div class="sep" id="sepR" role="separator" aria-orientation="vertical" aria-label="Ajustar el ancho del panel de datos" aria-controls="right" tabindex="0"></div>
+  <div class="sep" id="sepR" role="separator" aria-orientation="vertical" aria-label="Ajustar el ancho del panel de datos" aria-controls="right" tabindex="0" data-i18n-attr="aria-label:index.sepR.ajustar_el_ancho_del"></div>
   <aside id="right" class="col">
       <section class="panel glass" id="pData">
-        <h3>Telemetría en vivo <button class="fold" aria-label="Plegar">–</button></h3>
+        <h3><span data-i18n="index.pData.telemetria_en_vivo">Telemetría en vivo</span> <button class="fold" aria-label="Plegar" data-i18n-attr="aria-label:index.pData.plegar">–</button></h3>
         <div class="body">
           <div class="cmp">
             <div class="mod a" id="cardA">
-              <header><b>A</b><span>fijo · 180° / 17°</span></header>
+              <header><b>A</b><span data-i18n="index.cardA.fijo_180_17">fijo · 180° / 17°</span></header>
               <div class="big"><b id="pA">0</b><small>W</small></div>
               <div class="pbar"><i id="pAbar"></i><u id="pAmax"></u></div>
-              <dl><dt>G</dt><dd id="gA">0</dd><dt>T celda</dt><dd id="tA">0</dd><dt>V</dt><dd id="vA">0</dd><dt>I</dt><dd id="iA">0</dd><dt>E</dt><dd id="eA">0</dd><dt>η</dt><dd id="etaA">0</dd></dl>
+              <dl><dt>G</dt><dd id="gA">0</dd><dt data-i18n="index.cardA.t_celda">T celda</dt><dd id="tA">0</dd><dt>V</dt><dd id="vA">0</dd><dt>I</dt><dd id="iA">0</dd><dt>E</dt><dd id="eA">0</dd><dt>η</dt><dd id="etaA">0</dd></dl>
             </div>
             <div class="gains">
-              <div class="gain" id="diffBadge"><small>Diferencia de potencia ahora</small><b id="diffTxt">—</b><em>P_B/P_A − 1</em></div>
-              <div class="gain" id="gainBadge"><small>Ganancia de energía de esta corrida</small><b id="gainTxt">—</b><em>E_B/E_A − 1</em></div>
+              <div class="gain" id="diffBadge"><small data-i18n="index.diffBadge.diferencia_de_potencia_ahora">Diferencia de potencia ahora</small><b id="diffTxt">—</b><em>P_B/P_A − 1</em></div>
+              <div class="gain" id="gainBadge"><small data-i18n="index.gainBadge.ganancia_de_energia_de">Ganancia de energía de esta corrida</small><b id="gainTxt">—</b><em>E_B/E_A − 1</em></div>
             </div>
             <div class="mod b" id="cardB">
               <header><b>B</b><span id="bOrient">móvil</span></header>
               <div class="big"><b id="pB">0</b><small>W</small></div>
               <div class="pbar"><i id="pBbar"></i><u id="pBmax"></u></div>
-              <dl><dt>G</dt><dd id="gB">0</dd><dt>T celda</dt><dd id="tB">0</dd><dt>V</dt><dd id="vB">0</dd><dt>I</dt><dd id="iB">0</dd><dt>E</dt><dd id="eB">0</dd><dt>η</dt><dd id="etaB">0</dd></dl>
+              <dl><dt>G</dt><dd id="gB">0</dd><dt data-i18n="index.cardB.t_celda">T celda</dt><dd id="tB">0</dd><dt>V</dt><dd id="vB">0</dd><dt>I</dt><dd id="iB">0</dd><dt>E</dt><dd id="eB">0</dd><dt>η</dt><dd id="etaB">0</dd></dl>
             </div>
           </div>
-          <div class="envwrap"><div class="compassbox"><canvas id="compass" width="200" height="200" aria-label="Rosa de los vientos"></canvas><div class="cleg"><span><i style="background:#2fb4ff"></i>viento</span><span><i style="background:#ffd34d"></i>Sol</span><span><i style="background:#ffb020"></i>B</span><span><i style="background:#35d07f"></i>A</span></div></div>
+          <div class="envwrap"><div class="compassbox"><canvas id="compass" width="200" height="200" aria-label="Rosa de los vientos" data-i18n-attr="aria-label:index.compass.rosa_de_los_vientos"></canvas><div class="cleg"><span data-i18n-html="index.pData.viento"><i style="background:#2fb4ff"></i>viento</span><span data-i18n-html="index.pData.sol"><i style="background:#ffd34d"></i>Sol</span><span><i style="background:#ffb020"></i>B</span><span><i style="background:#35d07f"></i>A</span></div></div>
           <div class="env">
-            <div><label data-gloss="ghi" tabindex="0" role="button" title="¿Qué es la GHI? (glosario)">GHI</label><b id="eGhi">0</b><small>W/m²</small></div>
-            <div><label data-gloss="dni" tabindex="0" role="button" title="DNI: valor derivado del modelo, no medido por el piranómetro (glosario)">DNI</label><b id="eDni">0</b><small>W/m²</small></div>
-            <div><label>T amb</label><b id="eTa">0</b><small>°C</small></div>
-            <div><label>HR</label><b id="eRh">0</b><small>%</small></div>
-            <div><label>Viento ahora</label><b id="eWind">0</b><small>m/s <span id="eWindSet"></span></small></div>
-            <div><label>Lluvia</label><b id="eRain">0</b><small>mm</small></div>
+            <div><label data-gloss="ghi" tabindex="0" role="button" title="¿Qué es la GHI? (glosario)" data-i18n="index.pData.ghi" data-i18n-attr="title:index.pData.que_es_la_ghi">GHI</label><b id="eGhi">0</b><small>W/m²</small></div>
+            <div><label data-gloss="dni" tabindex="0" role="button" title="DNI: valor derivado del modelo, no medido por el piranómetro (glosario)" data-i18n="index.pData.dni" data-i18n-attr="title:index.pData.dni_valor_derivado_del">DNI</label><b id="eDni">0</b><small>W/m²</small></div>
+            <div><label data-i18n="index.pData.t_amb">T amb</label><b id="eTa">0</b><small>°C</small></div>
+            <div><label data-i18n="index.pData.hr">HR</label><b id="eRh">0</b><small>%</small></div>
+            <div><label data-i18n="index.pData.viento_ahora">Viento ahora</label><b id="eWind">0</b><small>m/s <span id="eWindSet"></span></small></div>
+            <div><label data-i18n="index.pData.lluvia">Lluvia</label><b id="eRain">0</b><small data-i18n="index.pData.mm">mm</small></div>
           </div></div>
-          <div class="tabs" id="chartTabs" role="tablist" aria-label="Gráfica">
-            <button class="on" data-tab="power" role="tab" aria-selected="true">Potencia</button><button data-tab="day" role="tab" aria-selected="false">Día</button><button data-tab="iv" role="tab" aria-selected="false">I‑V / P‑V</button><button data-tab="energy" role="tab" aria-selected="false">Energía</button><button data-tab="run" role="tab" aria-selected="false">Corrida</button><button data-tab="analysis" role="tab" aria-selected="false">Análisis</button>
+          <div class="tabs" id="chartTabs" role="tablist" aria-label="Gráfica" data-i18n-attr="aria-label:index.chartTabs.grafica">
+            <button class="on" data-tab="power" role="tab" aria-selected="true" data-i18n="index.chartTabs.potencia">Potencia</button><button data-tab="day" role="tab" aria-selected="false" data-i18n="index.chartTabs.dia">Día</button><button data-tab="iv" role="tab" aria-selected="false">I‑V / P‑V</button><button data-tab="energy" role="tab" aria-selected="false" data-i18n="index.chartTabs.energia">Energía</button><button data-tab="run" role="tab" aria-selected="false" data-i18n="index.chartTabs.corrida">Corrida</button><button data-tab="analysis" role="tab" aria-selected="false" data-i18n="index.chartTabs.analisis">Análisis</button>
           </div>
-          <div id="chartNote" class="chartnote"></div><div class="chartbox"><canvas id="chart" role="img" aria-label="Gráfica de la pestaña seleccionada. Hay una tabla equivalente debajo."></canvas></div>
+          <div id="chartNote" class="chartnote"></div><div class="chartbox"><canvas id="chart" role="img" aria-label="Gráfica de la pestaña seleccionada. Hay una tabla equivalente debajo." data-i18n-attr="aria-label:ui.chart.aria"></canvas></div>
           <div id="runPane" hidden></div>
           <div id="analysisPane" hidden></div>
           <div id="sweepPane" hidden></div>
-          <details id="chartTableWrap" class="tablewrap"><summary>Ver los datos de la gráfica como tabla</summary><table id="chartTable" class="mini"></table></details>
-          <div class="acq" id="acqBox" role="group" aria-label="Adquisición de datos">
+          <details id="chartTableWrap" class="tablewrap"><summary data-i18n="index.chartTableWrap.ver_los_datos_de">Ver los datos de la gráfica como tabla</summary><table id="chartTable" class="mini"></table></details>
+          <div class="acq" id="acqBox" role="group" aria-label="Adquisición de datos" data-i18n-attr="aria-label:index.acqBox.adquisicion_de_datos">
             <div class="acqhead"><b id="acqState" class="acqstate">■ Sin corrida</b><span id="acqCount" class="acqcount"></span></div>
-            <div class="row3"><button class="btn accent" id="btnAcq" aria-pressed="false">Iniciar adquisición</button><button class="btn" id="btnNewRun" title="Crea una corrida nueva y vacía (detiene la actual)">Corrida nueva</button></div>
+            <div class="row3"><button class="btn accent" id="btnAcq" aria-pressed="false">Iniciar adquisición</button><button class="btn" id="btnNewRun" title="Crea una corrida nueva y vacía (detiene la actual)" data-i18n="index.btnNewRun.corrida_nueva" data-i18n-attr="title:index.btnNewRun.crea_una_corrida_nueva">Corrida nueva</button></div>
             <p class="hint" id="acqBasis"></p>
-            <div class="row3"><button class="btn" id="btnCsv" title="Descarga la corrida actual (o la última de la sesión)">Descargar CSV</button><button class="btn" id="btnRuns" aria-expanded="false" aria-controls="runsPanel">Corridas guardadas…</button></div>
+            <div class="row3"><button class="btn" id="btnCsv" title="Descarga la corrida actual (o la última de la sesión)" data-i18n="index.btnCsv.descargar_csv" data-i18n-attr="title:index.btnCsv.descarga_la_corrida_actual">Descargar CSV</button><button class="btn" id="btnRuns" aria-expanded="false" aria-controls="runsPanel" data-i18n="index.btnRuns.corridas_guardadas">Corridas guardadas…</button></div>
             <div id="runsPanel" class="runspanel" hidden><div id="runsList"></div></div>
-            <div class="row3"><button class="btn" id="btnResetE" title="Abre un nuevo segmento de integración; no borra las muestras">Energía a cero (nuevo segmento)</button><button class="btn" id="btnResetRain" title="Solo pone a cero el acumulado de lluvia">Lluvia a cero</button></div>
+            <div class="row3"><button class="btn" id="btnResetE" title="Abre un nuevo segmento de integración; no borra las muestras" data-i18n="index.btnResetE.energia_a_cero_nuevo" data-i18n-attr="title:index.btnResetE.abre_un_nuevo_segmento">Energía a cero (nuevo segmento)</button><button class="btn" id="btnResetRain" title="Solo pone a cero el acumulado de lluvia" data-i18n="index.btnResetRain.lluvia_a_cero" data-i18n-attr="title:index.btnResetRain.solo_pone_a_cero">Lluvia a cero</button></div>
           </div>
         </div>
       </section>
     </aside>
-  <section id="sidePractice" class="col" aria-label="Práctica" tabindex="-1">
+  <section id="sidePractice" class="col" aria-label="Práctica" tabindex="-1" data-i18n-attr="aria-label:index.sidePractice.practica">
       <div id="practiceHolder"></div>
-      <div id="practiceEmpty" class="panel glass emptyp"><h3>Práctica guiada</h3><div class="body"><p class="hint">No hay una guía abierta. Abre el listado para empezar, continuar o consultar una práctica.</p><button class="btn accent" id="btnPracticesSide">Abrir listado de prácticas</button></div></div>
+      <div id="practiceEmpty" class="panel glass emptyp"><h3>Práctica guiada</h3><div class="body"><p class="hint" data-i18n="index.practiceEmpty.no_hay_una_guia">No hay una guía abierta. Abre el listado para empezar, continuar o consultar una práctica.</p><button class="btn accent" id="btnPracticesSide" data-i18n="index.btnPracticesSide.abrir_listado_de_practicas">Abrir listado de prácticas</button></div></div>
     </section>
   <footer id="dock" class="glass">
       <div class="grp" id="gTime">
         <button class="btn icon" id="btnPlay" title="Pausar / reanudar" aria-label="Pausar">❚❚</button>
         <div class="seg" id="speedSeg"><button data-s="1">×1</button><button data-s="10">×10</button><button data-s="60">×60</button><button data-s="600">×600</button><button data-s="3600">×3600</button></div>
-        <input type="date" id="dateIn" aria-label="Fecha">
-        <div class="solarclock"><input type="range" id="timeSlider" min="0" max="1439" step="1" value="630" aria-label="Hora del día"><div class="ticks"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div></div>
-        <div class="chips"><button id="qDawn">Amanecer</button><button id="qNoon">Mediodía</button><button id="qDusk">Atardecer</button><button id="qNow">Ahora</button></div>
+        <input type="date" id="dateIn" aria-label="Fecha" data-i18n-attr="aria-label:index.dateIn.fecha">
+        <div class="solarclock"><input type="range" id="timeSlider" min="0" max="1439" step="1" value="630" aria-label="Hora del día" data-i18n-attr="aria-label:index.timeSlider.hora_del_dia"><div class="ticks"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div></div>
+        <div class="chips"><button id="qDawn" data-i18n="index.qDawn.amanecer">Amanecer</button><button id="qNoon" data-i18n="index.qNoon.mediodia">Mediodía</button><button id="qDusk" data-i18n="index.qDusk.atardecer">Atardecer</button><button id="qNow" data-i18n="index.qNow.ahora">Ahora</button></div>
       </div>
       <div class="grp" id="gWeather">
-        <div class="slider inline"><label for="cloudSlider">Nubes <output id="cloudOut">12 %</output></label><input type="range" id="cloudSlider" min="0" max="100" value="12"></div>
-        <div class="slider inline"><label for="windSlider">Viento medio (consigna) <output id="windSetOut">3.2 m/s</output></label><input type="range" id="windSlider" min="0" max="22" step="0.2" value="3.2"></div>
-        <button class="btn" id="btnGust">Ráfaga</button>
+        <div class="slider inline"><label for="cloudSlider"><span data-i18n="index.gWeather.nubes">Nubes</span> <output id="cloudOut">12 %</output></label><input type="range" id="cloudSlider" min="0" max="100" value="12"></div>
+        <div class="slider inline"><label for="windSlider"><span data-i18n="index.gWeather.viento_medio_consigna">Viento medio (consigna)</span> <output id="windSetOut">3.2 m/s</output></label><input type="range" id="windSlider" min="0" max="22" step="0.2" value="3.2"></div>
+        <button class="btn" id="btnGust" data-i18n="index.btnGust.rafaga">Ráfaga</button>
         <button class="btn" id="btnRain">Lluvia</button>
       </div>
     </footer>
 </div>
 <div id="practiceDrawer" class="glass" hidden></div>
 <div id="overviewDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="ovTitle" hidden>
-  <div class="card glass widecard"><button class="x" type="button" aria-label="Cerrar la vista de todos los pasos">×</button><div id="ovBody"></div></div>
+  <div class="card glass widecard"><button class="x" type="button" aria-label="Cerrar la vista de todos los pasos" data-i18n-attr="aria-label:index.overviewDlg.cerrar_la_vista_de">×</button><div id="ovBody"></div></div>
 </div>
 <div id="glossDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="glossTitle" hidden>
-  <div class="card glass widecard"><button class="x" type="button" aria-label="Cerrar el glosario">×</button><div id="glossBody"></div></div>
+  <div class="card glass widecard"><button class="x" type="button" aria-label="Cerrar el glosario" data-i18n-attr="aria-label:index.glossDlg.cerrar_el_glosario">×</button><div id="glossBody"></div></div>
 </div>
 <div id="tourPop" class="tourpop glass" role="dialog" aria-modal="false" aria-labelledby="tourTitle" hidden>
   <b id="tourTitle"></b><p id="tourText"></p>
-  <div class="row3"><button class="btn" type="button" id="tourPrev">Anterior</button><button class="btn accent" type="button" id="tourNext">Siguiente</button><button class="btn" type="button" id="tourSkip">Omitir recorrido</button></div>
+  <div class="row3"><button class="btn" type="button" id="tourPrev" data-i18n="index.tourPrev.anterior">Anterior</button><button class="btn accent" type="button" id="tourNext">Siguiente</button><button class="btn" type="button" id="tourSkip" data-i18n="index.tourSkip.omitir_recorrido">Omitir recorrido</button></div>
 </div>
 <div id="reportDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="rpTitle" hidden>
-  <div class="card glass widecard"><button class="x" type="button" aria-label="Cerrar la vista del reporte">×</button>
-    <h2 id="rpTitle">Reporte de la práctica</h2><p class="hint" id="rpNote"></p>
-    <div class="row3"><button class="btn accent" type="button" id="rpPrint">Imprimir o guardar como PDF</button><button class="btn" type="button" id="rpHtml">Descargar (.html)</button><button class="btn" type="button" id="rpMd">Descargar (.md)</button></div>
-    <iframe id="rpFrame" title="Vista previa del reporte" sandbox="allow-modals allow-same-origin"></iframe>
+  <div class="card glass widecard"><button class="x" type="button" aria-label="Cerrar la vista del reporte" data-i18n-attr="aria-label:index.reportDlg.cerrar_la_vista_del">×</button>
+    <h2 id="rpTitle" data-i18n="report.dialog_title">Reporte de la práctica</h2><p class="hint" id="rpNote"></p>
+    <div class="row3"><button class="btn accent" type="button" id="rpPrint" data-i18n="index.rpPrint.imprimir_o_guardar_como">Imprimir o guardar como PDF</button><button class="btn" type="button" id="rpHtml" data-i18n="index.rpHtml.descargar_html">Descargar (.html)</button><button class="btn" type="button" id="rpMd" data-i18n="index.rpMd.descargar_md">Descargar (.md)</button></div>
+    <iframe id="rpFrame" title="Vista previa del reporte" sandbox="allow-modals allow-same-origin" data-i18n-attr="title:index.rpFrame.vista_previa_del_reporte"></iframe>
   </div>
 </div>
 <div id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
 <div id="liveRegion" class="sr" aria-live="polite" aria-atomic="true"></div>
 <div id="helpDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
       <div class="card glass helpcard">
-        <button class="x" aria-label="Cerrar la ayuda">×</button>
-        <h2 id="helpTitle">Ayuda</h2>
-        <h4>Proyecto</h4>
-        <div class="logostrip" role="group" aria-label="Instituciones del proyecto"><img src="assets/logos/unach.png" alt="Universidad Autónoma de Chiapas"><img src="assets/logos/ue-cofinanciado.png" alt="Cofinanciado por la Unión Europea"><img src="assets/logos/eu-colmev.png" alt="EU-COLMEV"><img src="assets/logos/sisdic.png" alt="Secretaría para la Inclusión Social y Diversidad Cultural (SISDIC)"></div>
-        <p class="hint">Laboratorio remoto solar de la UNACH · EU‑COLMEV WP3 · Grant Agreement 101235270.</p>
-        <h4>Acerca del simulador</h4>
+        <button class="x" aria-label="Cerrar la ayuda" data-i18n-attr="aria-label:index.helpDlg.cerrar_la_ayuda">×</button>
+        <h2 id="helpTitle" data-i18n="index.helpTitle.ayuda">Ayuda</h2>
+        <h4 data-i18n="index.helpDlg.proyecto">Proyecto</h4>
+        <div class="logostrip" role="group" aria-label="Instituciones del proyecto" data-i18n-attr="aria-label:index.helpDlg.instituciones_del_proyecto"><img src="assets/logos/unach.png" alt="Universidad Autónoma de Chiapas" data-i18n-attr="alt:index.helpDlg.universidad_autonoma_de_chiapas"><img src="assets/logos/ue-cofinanciado.png" alt="Cofinanciado por la Unión Europea" data-i18n-attr="alt:index.helpDlg.cofinanciado_por_la_union"><img src="assets/logos/eu-colmev.png" alt="EU-COLMEV" data-i18n-attr="alt:index.helpDlg.eu_colmev"><img src="assets/logos/sisdic.png" alt="Secretaría para la Inclusión Social y Diversidad Cultural (SISDIC)" data-i18n-attr="alt:index.helpDlg.secretaria_para_la_inclusion"></div>
+        <p class="hint" data-i18n="index.helpDlg.laboratorio_remoto_solar_de">Laboratorio remoto solar de la UNACH · EU‑COLMEV WP3 · Grant Agreement 101235270.</p>
+        <h4 data-i18n="index.helpDlg.acerca_del_simulador">Acerca del simulador</h4>
         <ul>
-          <li>Posición solar y recurso con pvlib, módulo con modelo de un diodo y temperatura de celda con modelo de Faiman, calculados en tu navegador para Tuxtla Gutiérrez.</li>
-          <li>Los roles (Estudiante, Docente, Visitante) definen qué comandos puedes enviar durante la sesión.</li>
-          <li>El ruido de medición es reproducible: el mismo escenario con la misma semilla produce los mismos resultados.</li>
+          <li data-i18n="index.helpDlg.posicion_solar_y_recurso">Posición solar y recurso con pvlib, módulo con modelo de un diodo y temperatura de celda con modelo de Faiman, calculados en tu navegador para Tuxtla Gutiérrez.</li>
+          <li data-i18n="index.helpDlg.los_roles_estudiante_docente">Los roles (Estudiante, Docente, Visitante) definen qué comandos puedes enviar durante la sesión.</li>
+          <li data-i18n="index.helpDlg.el_ruido_de_medicion">El ruido de medición es reproducible: el mismo escenario con la misma semilla produce los mismos resultados.</li>
         </ul>
-        <h4>Alcance del modelo</h4>
+        <h4 data-i18n="index.helpDlg.alcance_del_modelo">Alcance del modelo</h4>
         <ul>
-          <li>Modela irradiancia, viento y nubosidad sintéticos, módulos sin sombreado parcial ni suciedad, y un seguidor de dos ejes con sus enclavamientos.</li>
-          <li>Los parámetros del módulo (≈ 500 Wp, 2.28 × 1.13 m), los coeficientes térmicos, las velocidades de los motores y los umbrales de seguridad corresponden a una configuración de referencia.</li>
-          <li>Los límites de protección (viento ≥ 14 m/s, reanudación con &lt; 10 m/s durante 120 s simulados, watchdog de 6 s y rangos de movimiento) los gestiona el controlador local y no se modifican desde la interfaz.</li>
-          <li>La adquisición registra una muestra por segundo de tiempo real del navegador.</li>
+          <li data-i18n="index.helpDlg.modela_irradiancia_viento_y">Modela irradiancia, viento y nubosidad sintéticos, módulos sin sombreado parcial ni suciedad, y un seguidor de dos ejes con sus enclavamientos.</li>
+          <li data-i18n="index.helpDlg.los_parametros_del_modulo">Los parámetros del módulo (≈ 500 Wp, 2.28 × 1.13 m), los coeficientes térmicos, las velocidades de los motores y los umbrales de seguridad corresponden a una configuración de referencia.</li>
+          <li data-i18n="index.helpDlg.los_limites_de_proteccion">Los límites de protección (viento ≥ 14 m/s, reanudación con &lt; 10 m/s durante 120 s simulados, watchdog de 6 s y rangos de movimiento) los gestiona el controlador local y no se modifican desde la interfaz.</li>
+          <li data-i18n="index.helpDlg.la_adquisicion_registra_una">La adquisición registra una muestra por segundo de tiempo real del navegador.</li>
         </ul>
-        <h4>Atajos de teclado</h4>
+        <h4 data-i18n="index.helpDlg.atajos_de_teclado">Atajos de teclado</h4>
         <dl class="keys">
-          <dt><kbd>Espacio</kbd></dt><dd>Pausar o reanudar el <b>reloj solar</b> (el banco, el seguidor y los enclavamientos siguen activos)</dd>
-          <dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Vistas de cámara (1 = Restaurar vista general)</dd>
-          <dt><kbd>L</kbd> · <kbd>H</kbd> · <kbd>F</kbd></dt><dd>Etiquetas · vista limpia · cámara libre</dd>
-          <dt><kbd>W A S D</kbd> <kbd>Q</kbd> <kbd>E</kbd></dt><dd>En cámara libre: mover, bajar, subir (<kbd>Shift</kbd> = rápido)</dd>
-          <dt><kbd>Esc</kbd></dt><dd>Cierra la capa superior abierta (ventana, panel, cámara)</dd>
-          <dt><kbd>?</kbd></dt><dd>Esta ayuda</dd>
+          <dt><kbd data-i18n="index.helpDlg.espacio">Espacio</kbd></dt><dd data-i18n-html="index.helpDlg.pausar_o_reanudar_el">Pausar o reanudar el <b>reloj solar</b> (el banco, el seguidor y los enclavamientos siguen activos)</dd>
+          <dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd data-i18n="index.helpDlg.vistas_de_camara_1">Vistas de cámara (1 = Restaurar vista general)</dd>
+          <dt><kbd>L</kbd> · <kbd>H</kbd> · <kbd>F</kbd></dt><dd data-i18n="index.helpDlg.etiquetas_vista_limpia_camara">Etiquetas · vista limpia · cámara libre</dd>
+          <dt><kbd>W A S D</kbd> <kbd>Q</kbd> <kbd>E</kbd></dt><dd data-i18n-html="index.helpDlg.en_camara_libre_mover">En cámara libre: mover, bajar, subir (<kbd>Shift</kbd> = rápido)</dd>
+          <dt><kbd data-i18n="index.helpDlg.esc">Esc</kbd></dt><dd data-i18n="index.helpDlg.cierra_la_capa_superior">Cierra la capa superior abierta (ventana, panel, cámara)</dd>
+          <dt><kbd>?</kbd></dt><dd data-i18n="index.helpDlg.esta_ayuda">Esta ayuda</dd>
         </dl>
-        <p class="hint">Los atajos se ignoran mientras escribes o usas un botón, control deslizante o campo, y con Ctrl, Alt o Meta pulsados.</p>
-        <div class="row3"><button class="btn" type="button" id="helpTour">Recorrido de 1 minuto</button><button class="btn" type="button" id="helpGloss">Glosario</button></div>
-        <button class="btn accent" data-close>Entendido</button>
+        <p class="hint" data-i18n="index.helpDlg.los_atajos_se_ignoran">Los atajos se ignoran mientras escribes o usas un botón, control deslizante o campo, y con Ctrl, Alt o Meta pulsados.</p>
+        <div class="row3"><button class="btn" type="button" id="helpTour" data-i18n="index.helpTour.recorrido_de_1_minuto">Recorrido de 1 minuto</button><button class="btn" type="button" id="helpGloss" data-i18n="index.helpGloss.glosario">Glosario</button></div>
+        <button class="btn accent" data-close data-i18n="index.helpDlg.entendido">Entendido</button>
       </div>
     </div>
 <div id="loginModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle" hidden>
       <div class="card glass">
-<div class="logostrip" role="group" aria-label="Instituciones del proyecto"><img src="assets/logos/unach.png" alt="Universidad Autónoma de Chiapas"><img src="assets/logos/ue-cofinanciado.png" alt="Cofinanciado por la Unión Europea"><img src="assets/logos/eu-colmev.png" alt="EU-COLMEV"><img src="assets/logos/sisdic.png" alt="Secretaría para la Inclusión Social y Diversidad Cultural (SISDIC)"></div>
+<div class="logostrip" role="group" aria-label="Instituciones del proyecto" data-i18n-attr="aria-label:index.loginModal.instituciones_del_proyecto"><img src="assets/logos/unach.png" alt="Universidad Autónoma de Chiapas" data-i18n-attr="alt:index.loginModal.universidad_autonoma_de_chiapas"><img src="assets/logos/ue-cofinanciado.png" alt="Cofinanciado por la Unión Europea" data-i18n-attr="alt:index.loginModal.cofinanciado_por_la_union"><img src="assets/logos/eu-colmev.png" alt="EU-COLMEV" data-i18n-attr="alt:index.loginModal.eu_colmev"><img src="assets/logos/sisdic.png" alt="Secretaría para la Inclusión Social y Diversidad Cultural (SISDIC)" data-i18n-attr="alt:index.loginModal.secretaria_para_la_inclusion"></div>
         <div class="hero">
           <svg viewBox="0 0 32 32" width="44" height="44" aria-hidden="true"><circle cx="16" cy="16" r="6.2" fill="#ffb93b"/><g stroke="#ffb93b" stroke-width="2" stroke-linecap="round"><path d="M16 3v4M16 25v4M3 16h4M25 16h4M6.8 6.8l2.8 2.8M22.4 22.4l2.8 2.8M25.2 6.8l-2.8 2.8M9.6 22.4l-2.8 2.8"/></g></svg>
-          <div><h2 id="loginTitle">Laboratorio Remoto Solar UNACH</h2><p>Gemelo digital interactivo del banco fotovoltaico de la Facultad de Ciencias en Física y Matemáticas.</p></div>
+          <div><h2 id="loginTitle" data-i18n="index.loginTitle.laboratorio_remoto_solar_unach">Laboratorio Remoto Solar UNACH</h2><p data-i18n="index.loginModal.gemelo_digital_interactivo_del">Gemelo digital interactivo del banco fotovoltaico de la Facultad de Ciencias en Física y Matemáticas.</p></div>
         </div>
-        <p class="lead">Estás en el <b>modo simulador</b>: los datos se calculan con modelos de <b>pvlib</b> para Tuxtla Gutiérrez y las reglas de seguridad son las mismas que tendrá el banco real. Practica aquí antes de reservar tiempo en el laboratorio físico. Elige un rol para comenzar.</p>
-        <label class="lbl" for="userName">Tu nombre (opcional)</label>
-        <input type="text" id="userName" placeholder="Estudiante UNACH" maxlength="40" autocomplete="off">
+        <p class="lead" data-i18n-html="index.loginModal.estas_en_el_modo">Estás en el <b>modo simulador</b>: los datos se calculan con modelos de <b>pvlib</b> para Tuxtla Gutiérrez y las reglas de seguridad son las mismas que tendrá el banco real. Practica aquí antes de reservar tiempo en el laboratorio físico. Elige un rol para comenzar.</p>
+        <label class="lbl" for="userName" data-i18n="index.loginModal.tu_nombre_opcional">Tu nombre (opcional)</label>
+        <input type="text" id="userName" placeholder="Estudiante UNACH" maxlength="40" autocomplete="off" data-i18n-attr="placeholder:index.userName.estudiante_unach">
         <div class="roles">
-          <button class="role" data-role="student"><b>Estudiante</b><span>Opera el banco y realiza las prácticas</span></button>
-          <button class="role" data-role="teacher"><b>Docente</b><span>Mismos permisos, para demostrar en clase</span></button>
-          <button class="role" data-role="visitor"><b>Visitante</b><span>Solo observar: sin comandos</span></button>
+          <button class="role" data-role="student"><b data-i18n="index.loginModal.estudiante">Estudiante</b><span data-i18n="index.loginModal.opera_el_banco_y">Opera el banco y realiza las prácticas</span></button>
+          <button class="role" data-role="teacher"><b data-i18n="index.loginModal.docente">Docente</b><span data-i18n="index.loginModal.mismos_permisos_para_demostrar">Mismos permisos, para demostrar en clase</span></button>
+          <button class="role" data-role="visitor"><b data-i18n="index.loginModal.visitante">Visitante</b><span data-i18n="index.loginModal.solo_observar_sin_comandos">Solo observar: sin comandos</span></button>
         </div>
-        <p class="fine">EU‑COLMEV · WP3 Laboratorios remotos · Grant Agreement 101235270</p>
+        <p class="fine" data-i18n="index.loginModal.eu_colmev_wp3_laboratorios">EU‑COLMEV · WP3 Laboratorios remotos · Grant Agreement 101235270</p>
       </div>
     </div>
 
@@ -321,6 +325,9 @@
 
   <!-- Configuración y datos generados con pvlib -->
   <script src="js/config.js"></script>
+  <script src="i18n/es.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/deploy.js"></script>
   <script src="data/pvlib_tuxtla.js"></script>
 
