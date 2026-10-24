@@ -1,0 +1,10 @@
+{
+  "t": "cmd",
+  "v": 1,
+  "id": "c1",
+  "type": "load.set",
+  "args": {
+    "mode": "cr",
+    "setpoint": 1000
+  }
+}

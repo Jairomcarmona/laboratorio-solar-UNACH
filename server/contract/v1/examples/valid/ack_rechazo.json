@@ -1,0 +1,8 @@
+{
+  "id": "c1",
+  "ok": false,
+  "ts": 1792825800000,
+  "kind": "interlock",
+  "reason": "Azimut fuera de rango",
+  "field": "az"
+}

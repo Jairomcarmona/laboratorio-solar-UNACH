@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/event.schema.json",
+  "title": "Evento (event) v1",
+  "type": "object",
+  "required": [
+    "ts",
+    "level",
+    "src",
+    "code",
+    "msg"
+  ],
+  "properties": {
+    "ts": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    },
+    "level": {
+      "$ref": "defs.schema.json#/$defs/level"
+    },
+    "src": {
+      "type": "string",
+      "maxLength": 32
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_.]+$"
+    },
+    "msg": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "data": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

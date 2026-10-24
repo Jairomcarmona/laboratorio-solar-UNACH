@@ -1,0 +1,408 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/cmd.schema.json",
+  "title": "Comando del navegador (cmd) v1. Los rangos finos viven en el puente y en el PLC.",
+  "type": "object",
+  "required": [
+    "t",
+    "v",
+    "id",
+    "type"
+  ],
+  "properties": {
+    "t": {
+      "const": "cmd"
+    },
+    "v": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "defs.schema.json#/$defs/id"
+    },
+    "type": {
+      "$ref": "defs.schema.json#/$defs/cmdType"
+    },
+    "args": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "session.start"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "$ref": "defs.schema.json#/$defs/role"
+              },
+              "user": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "profileId": {
+                "type": "string",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "role"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "session.end"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "why": {
+                "type": "string",
+                "maxLength": 120
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "acq.start"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "acq.stop"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "reason": {
+                "type": "string",
+                "maxLength": 120
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "acq.newRun"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "practiceId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 32
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "tracker.target"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "az": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 360
+              },
+              "tilt": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 90
+              }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "az"
+                ]
+              },
+              {
+                "required": [
+                  "tilt"
+                ]
+              }
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "tracker.mode"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "$ref": "defs.schema.json#/$defs/trackerMode"
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "tracker.locks"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "lockAz": {
+                "type": "boolean"
+              },
+              "lockTilt": {
+                "type": "boolean"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "load.set"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "$ref": "defs.schema.json#/$defs/loadMode"
+              },
+              "setpoint": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "load.sweep"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "load.sweep.abort"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "safety.estop"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "who": {
+                "type": "string",
+                "maxLength": 40
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "safety.ack"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
+}

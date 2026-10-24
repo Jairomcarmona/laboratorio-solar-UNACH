@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/envelope.schema.json",
+  "title": "Sobre del WebSocket del navegador",
+  "type": "object",
+  "required": [
+    "t",
+    "v"
+  ],
+  "properties": {
+    "t": {
+      "enum": [
+        "tele",
+        "state",
+        "event",
+        "ack",
+        "sweep",
+        "twin",
+        "hello",
+        "bye",
+        "cmd",
+        "hb"
+      ]
+    },
+    "v": {
+      "const": 1
+    }
+  },
+  "additionalProperties": true
+}

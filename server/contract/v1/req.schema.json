@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/req.schema.json",
+  "title": "Comando ya autorizado por la pasarela (cmd/req). sessionId, user y role los pone la pasarela, nunca el navegador.",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "sessionId",
+    "user",
+    "role",
+    "type"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "defs.schema.json#/$defs/id"
+    },
+    "ts": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    },
+    "sessionId": {
+      "$ref": "defs.schema.json#/$defs/id"
+    },
+    "user": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "role": {
+      "$ref": "defs.schema.json#/$defs/role"
+    },
+    "type": {
+      "$ref": "defs.schema.json#/$defs/cmdType"
+    },
+    "args": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

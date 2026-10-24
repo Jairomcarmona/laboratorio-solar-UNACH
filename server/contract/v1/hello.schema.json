@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/hello.schema.json",
+  "title": "hello: primer mensaje tras conectar el WebSocket",
+  "type": "object",
+  "required": [
+    "t",
+    "v",
+    "user",
+    "role",
+    "control"
+  ],
+  "properties": {
+    "t": {
+      "const": "hello"
+    },
+    "v": {
+      "const": 1
+    },
+    "user": {
+      "type": "string"
+    },
+    "role": {
+      "$ref": "defs.schema.json#/$defs/role"
+    },
+    "control": {
+      "type": "boolean",
+      "description": "true si esta sesión tiene el control; las demás reciben telemetría en solo lectura"
+    },
+    "state": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "serverTime": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    }
+  },
+  "additionalProperties": true
+}

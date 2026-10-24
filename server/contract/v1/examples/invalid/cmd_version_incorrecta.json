@@ -1,0 +1,7 @@
+{
+  "t": "cmd",
+  "v": 2,
+  "id": "c1",
+  "type": "safety.ack",
+  "args": {}
+}

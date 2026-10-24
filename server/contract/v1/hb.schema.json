@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/hb.schema.json",
+  "title": "Latido hb/gateway",
+  "type": "object",
+  "required": [
+    "ts"
+  ],
+  "properties": {
+    "ts": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    },
+    "sessionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

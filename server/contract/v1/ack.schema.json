@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/ack.schema.json",
+  "title": "Acuse (cmd/ack): exactamente uno por comando",
+  "type": "object",
+  "required": [
+    "id",
+    "ok",
+    "ts"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "defs.schema.json#/$defs/id"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "ts": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    },
+    "kind": {
+      "enum": [
+        "validation",
+        "interlock",
+        "unsupported",
+        "internal",
+        "timeout",
+        "auth"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "field": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "ok": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "kind",
+          "reason"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "pvlibVersion": "0.16.1",
+  "site": {
+    "name": "FCFM-UNACH, Tuxtla Gutierrez",
+    "lat": 16.7516,
+    "lon": -93.1161,
+    "alt": 530.0
+  },
+  "tz": "Etc/GMT+6",
+  "sdm": {
+    "IL": 12.918808562953476,
+    "Io": 7.555678224321452e-12,
+    "a": 1.7590284643936631,
+    "Rs": 0.21070143550842582,
+    "Rsh": 144.51122761848117,
+    "EgRef": 1.121,
+    "dEgdT": -0.0002677,
+    "Vmp": 41.4,
+    "Imp": 12.08,
+    "Voc": 49.5,
+    "Isc": 12.9,
+    "alphaIsc": 0.0061920000000000005,
+    "betaVoc": -0.12869999999999998,
+    "gammaPmp": -0.30530791878316643,
+    "betaVocPct": -0.2609426836258738,
+    "effRel200": 0.9823897419686692,
+    "cellsEff": 66,
+    "Wp": 500
+  },
+  "thermal": {
+    "u0": 25.0,
+    "u1": 6.84,
+    "C": 9300.0,
+    "deltaT": 3.0,
+    "fuente": "Faiman (coeficientes por defecto de pvlib, temperatura de MODULO); C = 11.1 kg/m2 x 840 J/(kg K) (masa por defecto de pvlib.temperature.prilliman x calor especifico del vidrio), PROVISIONAL: la recalibra O2; deltaT = tabla Sandia, vidrio/polimero estructura abierta"
+  },
+  "iam": {
+    "model": "martin_ruiz",
+    "ar": 0.16,
+    "fuente": "pvlib.iam.martin_ruiz, a_r = 0.16 (valor tipico), PROVISIONAL hasta medir"
+  },
+  "albedo": {
+    "value": 0.3,
+    "fuente": "supuesto de azotea de concreto claro, PROVISIONAL (S28 lo calibra con datos)"
+  },
+  "sensors": {
+    "poaA": {
+      "type": "refcell",
+      "epsCal": 0.0,
+      "alpha": 0.0005,
+      "noise": 0.004
+    },
+    "poaB": {
+      "type": "refcell",
+      "epsCal": 0.0,
+      "alpha": 0.0005,
+      "noise": 0.004
+    },
+    "fuente": "PROVISIONAL sin hoja de datos de sensor (alpha 0.05 %/K, ruido 0.4 %); O1 los reemplaza"
+  },
+  "module": {
+    "areaM2": 2.583252,
+    "Wp": 500
+  }
+}

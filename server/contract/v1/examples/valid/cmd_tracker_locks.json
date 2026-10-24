@@ -1,0 +1,10 @@
+{
+  "t": "cmd",
+  "v": 1,
+  "id": "c1",
+  "type": "tracker.locks",
+  "args": {
+    "lockAz": true,
+    "lockTilt": false
+  }
+}

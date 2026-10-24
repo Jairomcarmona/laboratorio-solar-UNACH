@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/sweep.schema.json",
+  "title": "Barrido I-V (labsolar-sweep), igual al del simulador",
+  "type": "object",
+  "required": [
+    "kind",
+    "id",
+    "status",
+    "pts"
+  ],
+  "properties": {
+    "kind": {
+      "const": "labsolar-sweep"
+    },
+    "id": {
+      "$ref": "defs.schema.json#/$defs/id"
+    },
+    "status": {
+      "enum": [
+        "running",
+        "complete",
+        "interrupted"
+      ]
+    },
+    "cause": {
+      "type": "string"
+    },
+    "sessionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "runId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "startSimMs": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    },
+    "endSimMs": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    },
+    "pts": {
+      "type": "object",
+      "required": [
+        "A",
+        "B"
+      ],
+      "properties": {
+        "A": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "v",
+              "i",
+              "p"
+            ],
+            "properties": {
+              "v": {
+                "type": "number"
+              },
+              "i": {
+                "type": "number"
+              },
+              "p": {
+                "type": "number"
+              },
+              "g": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "B": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "v",
+              "i",
+              "p"
+            ],
+            "properties": {
+              "v": {
+                "type": "number"
+              },
+              "i": {
+                "type": "number"
+              },
+              "p": {
+                "type": "number"
+              },
+              "g": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "cond": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

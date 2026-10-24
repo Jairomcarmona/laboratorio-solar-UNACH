@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/state.schema.json",
+  "title": "Estado (state) v1: retenido, al cambiar",
+  "type": "object",
+  "required": [
+    "ts",
+    "safety",
+    "appliedMode"
+  ],
+  "properties": {
+    "ts": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    },
+    "safety": {
+      "$ref": "defs.schema.json#/$defs/safetyState"
+    },
+    "appliedMode": {
+      "$ref": "defs.schema.json#/$defs/appliedMode"
+    },
+    "controlSession": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "id de la sesión con control, null si nadie"
+    },
+    "bridge": {
+      "enum": [
+        "online",
+        "offline"
+      ]
+    },
+    "plc": {
+      "enum": [
+        "online",
+        "offline",
+        "fake"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

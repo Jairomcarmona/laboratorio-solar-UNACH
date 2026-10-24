@@ -1,0 +1,10 @@
+{
+  "t": "cmd",
+  "v": 1,
+  "id": "c1",
+  "type": "acq.newRun",
+  "args": {
+    "label": "B1 mañana",
+    "practiceId": "b1"
+  }
+}

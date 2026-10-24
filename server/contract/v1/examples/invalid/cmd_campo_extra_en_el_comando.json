@@ -1,0 +1,8 @@
+{
+  "t": "cmd",
+  "v": 1,
+  "id": "c1",
+  "type": "safety.ack",
+  "args": {},
+  "role": "teacher"
+}

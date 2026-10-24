@@ -1,0 +1,16 @@
+{
+  "ts": 1792825800000,
+  "A": {
+    "pExp": 250.0,
+    "res": -3.0,
+    "resPct": -1.2
+  },
+  "B": {
+    "pExp": null,
+    "res": null,
+    "resPct": null
+  },
+  "flags": [
+    "underperform_B"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/tele.schema.json",
+  "title": "Telemetría (tele) v1. Se admiten campos adicionales (compatibilidad hacia adelante).",
+  "type": "object",
+  "required": [
+    "ts",
+    "source",
+    "quality",
+    "env",
+    "A",
+    "B",
+    "tracker",
+    "safety",
+    "load"
+  ],
+  "properties": {
+    "ts": {
+      "$ref": "defs.schema.json#/$defs/ms"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "creciente; un salto indica muestras perdidas"
+    },
+    "source": {
+      "enum": [
+        "real",
+        "fake",
+        "sim",
+        "replay",
+        "twin"
+      ]
+    },
+    "quality": {
+      "$ref": "defs.schema.json#/$defs/quality"
+    },
+    "env": {
+      "$ref": "defs.schema.json#/$defs/env"
+    },
+    "A": {
+      "$ref": "defs.schema.json#/$defs/module"
+    },
+    "B": {
+      "$ref": "defs.schema.json#/$defs/module"
+    },
+    "tracker": {
+      "$ref": "defs.schema.json#/$defs/tracker"
+    },
+    "safety": {
+      "$ref": "defs.schema.json#/$defs/safety"
+    },
+    "load": {
+      "$ref": "defs.schema.json#/$defs/load"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,9 @@
+{
+  "t": "cmd",
+  "v": 1,
+  "id": "c1",
+  "type": "tracker.target",
+  "args": {
+    "az": 400
+  }
+}

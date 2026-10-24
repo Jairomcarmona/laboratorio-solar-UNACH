@@ -1,0 +1,416 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labsolar.unach.mx/contract/v1/defs.schema.json",
+  "title": "Definiciones comunes del contrato v1",
+  "$defs": {
+    "ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "milisegundos UTC desde la época, reloj del borde"
+    },
+    "numOrNull": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "level": {
+      "enum": [
+        "info",
+        "ok",
+        "warn",
+        "bad",
+        "cmd"
+      ]
+    },
+    "safetyState": {
+      "enum": [
+        "NORMAL",
+        "WIND_STOW",
+        "COMMS_STOW",
+        "ESTOP",
+        "FAULT"
+      ]
+    },
+    "appliedMode": {
+      "enum": [
+        "manual",
+        "astro",
+        "sensor",
+        "fixed",
+        "night",
+        "stow",
+        "estop"
+      ]
+    },
+    "loadMode": {
+      "enum": [
+        "mppt",
+        "cv",
+        "cr",
+        "oc",
+        "sc"
+      ]
+    },
+    "trackerMode": {
+      "enum": [
+        "manual",
+        "astro",
+        "sensor",
+        "fixed"
+      ]
+    },
+    "role": {
+      "enum": [
+        "visitor",
+        "student",
+        "teacher",
+        "tech",
+        "admin"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9_.:-]+$"
+    },
+    "quality": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "stale",
+          "sensor_range",
+          "shade_mutual",
+          "clock_skew",
+          "derived"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "module": {
+      "type": "object",
+      "required": [
+        "poa",
+        "tback",
+        "v",
+        "i",
+        "p",
+        "wh"
+      ],
+      "properties": {
+        "poa": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tback": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "v": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "i": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "p": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "wh": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "poaTrue": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "beam": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tcell": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "curve": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "az": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tilt": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "shadeFrac": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "description": "Medidas de un módulo. En modo real poaTrue, beam, tcell y curve son null."
+    },
+    "env": {
+      "type": "object",
+      "required": [
+        "ta",
+        "wind"
+      ],
+      "properties": {
+        "ghi": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "dni": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "dhi": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ta": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rh": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "wind": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "windDir": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rainRate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "tracker": {
+      "type": "object",
+      "required": [
+        "az",
+        "tilt",
+        "appliedMode"
+      ],
+      "properties": {
+        "az": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tilt": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "targetAz": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "targetTilt": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "appliedMode": {
+          "$ref": "defs.schema.json#/$defs/appliedMode"
+        },
+        "mode": {
+          "$ref": "defs.schema.json#/$defs/trackerMode"
+        },
+        "lockAz": {
+          "type": "boolean"
+        },
+        "lockTilt": {
+          "type": "boolean"
+        },
+        "moving": {
+          "type": "object",
+          "properties": {
+            "az": {
+              "type": "boolean"
+            },
+            "tilt": {
+              "type": "boolean"
+            }
+          }
+        },
+        "limit": {
+          "type": "object",
+          "properties": {
+            "az": {
+              "enum": [
+                -1,
+                0,
+                1
+              ]
+            },
+            "tilt": {
+              "enum": [
+                -1,
+                0,
+                1
+              ]
+            }
+          }
+        },
+        "blockCause": {
+          "type": "string"
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "required": [
+        "state",
+        "canOperate"
+      ],
+      "properties": {
+        "state": {
+          "$ref": "defs.schema.json#/$defs/safetyState"
+        },
+        "canOperate": {
+          "type": "boolean"
+        },
+        "blockReason": {
+          "type": "string"
+        },
+        "estop": {
+          "type": "boolean"
+        },
+        "windStow": {
+          "type": "boolean"
+        },
+        "watchdog": {
+          "type": "boolean"
+        }
+      }
+    },
+    "load": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "defs.schema.json#/$defs/loadMode"
+        },
+        "setpoint": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "sweeping": {
+          "type": "boolean"
+        },
+        "sweepT": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "sweepSeconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "cmdType": {
+      "enum": [
+        "session.start",
+        "session.end",
+        "acq.start",
+        "acq.stop",
+        "acq.newRun",
+        "tracker.target",
+        "tracker.mode",
+        "tracker.locks",
+        "load.set",
+        "load.sweep",
+        "load.sweep.abort",
+        "safety.estop",
+        "safety.ack"
+      ]
+    },
+    "unsupportedCmdType": {
+      "enum": [
+        "sim.speed",
+        "sim.play",
+        "sim.time",
+        "sim.cloud",
+        "sim.wind",
+        "sim.gust",
+        "sim.rain",
+        "sim.seed",
+        "sim.comms",
+        "sim.resetEnergy",
+        "sim.resetRain",
+        "scenario.apply",
+        "safety.reset",
+        "acq.discard",
+        "fault.inject",
+        "fault.clear"
+      ]
+    }
+  }
+}

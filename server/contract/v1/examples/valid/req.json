@@ -1,0 +1,11 @@
+{
+  "id": "c1",
+  "ts": 1792825800000,
+  "sessionId": "ses_1",
+  "user": "ana",
+  "role": "student",
+  "type": "tracker.target",
+  "args": {
+    "az": 180
+  }
+}
