@@ -6,7 +6,7 @@ const ROOT = path.resolve(__dirname, '..');
 global.window = global;
 const fakeLS = { _d: {}, full: false, getItem(k) { return k in this._d ? this._d[k] : null; }, setItem(k, v) { if (this.full && !k.includes('__t')) { const e = new Error('quota'); e.name = 'QuotaExceededError'; throw e; } this._d[k] = String(v); }, removeItem(k) { delete this._d[k]; } };
 global.localStorage = fakeLS;
-for (const f of ['js/config.js', 'data/pvlib_tuxtla.js', 'js/sim/solar.js', 'js/sim/pvmodel.js', 'js/sim/sensors.js', 'js/sim/shade.js', 'js/sim/weather.js', 'js/sim/control.js', 'js/sim/safety.js', 'js/core/validate.js', 'js/core/exporters.js', 'js/core/analysis.js', 'js/core/store.js', 'js/sim/engine.js']) vm.runInThisContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), { filename: f });
+for (const f of ['js/config.js', 'data/pvlib_tuxtla.js', 'js/sim/solar.js', 'js/sim/pvmodel.js', 'js/sim/sensors.js', 'js/sim/shade.js', 'js/sim/weather.js', 'js/sim/control.js', 'js/sim/safety.js', 'js/core/validate.js', 'js/core/exporters.js', 'js/core/calibration.js', 'js/core/analysis.js', 'js/core/store.js', 'js/sim/engine.js']) vm.runInThisContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), { filename: f });
 
 const t = new T('Dominio');
 const mk = () => { const e = new LAB.sim.Engine(); return e; };

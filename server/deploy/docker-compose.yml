@@ -1,0 +1,157 @@
+# Servidor del Laboratorio Solar Remoto. Solo Nginx publica puertos (80/443). Todo lo demás vive en redes internas.
+#   docker compose --env-file .env up -d
+# Redes: "front" (nginx <-> pasarela/cámaras), "core" (mqtt, base de datos y servicios), "field" (solo el puente, hacia el PLC).
+name: labsolar
+
+x-py: &py
+  build: { context: .., dockerfile: deploy/Dockerfile }
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: labsolar
+      POSTGRES_USER: labsolar
+      POSTGRES_PASSWORD: ${LABSOLAR_DB_PASSWORD:?define LABSOLAR_DB_PASSWORD}
+    volumes: [dbdata:/var/lib/postgresql/data]
+    networks: [core]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U labsolar"], interval: 10s, timeout: 3s, retries: 10 }
+
+  migrate:
+    <<: *py
+    command: ["labsolar-gateway", "migrate"]
+    restart: "no"
+    environment: &dbenv
+      LABSOLAR_DB_URL: postgresql://labsolar:${LABSOLAR_DB_PASSWORD}@db:5432/labsolar
+    depends_on: { db: { condition: service_healthy } }
+    networks: [core]
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/acl:/mosquitto/config/acl:ro
+      - ./mosquitto/passwd:/mosquitto/config/passwd:ro
+      - ./certs/mqtt:/mosquitto/certs:ro
+      - mqttdata:/mosquitto/data
+    networks: [core]            # sin "ports": no se publica en el host
+
+  gateway:
+    <<: *py
+    command: ["labsolar-gateway", "serve", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *dbenv
+      LABSOLAR_BANK: ${LABSOLAR_BANK}
+      LABSOLAR_ADMIN_USER: ${LABSOLAR_ADMIN_USER}
+      LABSOLAR_ADMIN_PASSWORD: ${LABSOLAR_ADMIN_PASSWORD}
+      LABSOLAR_ALLOWED_ORIGINS: ${LABSOLAR_ALLOWED_ORIGINS}
+      LABSOLAR_COOKIE_SECURE: ${LABSOLAR_COOKIE_SECURE:-true}
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "8883"
+      MQTT_TLS: "true"
+      MQTT_CAFILE: /certs/ca.crt
+      MQTT_USER: gateway
+      MQTT_PASSWORD: ${MQTT_PASSWORD_GATEWAY}
+    volumes: [./certs/mqtt/ca.crt:/certs/ca.crt:ro]
+    depends_on: { migrate: { condition: service_completed_successfully }, mosquitto: { condition: service_started } }
+    networks: [core, front]
+
+  recorder:
+    <<: *py
+    command: ["labsolar-recorder"]
+    environment:
+      <<: *dbenv
+      LABSOLAR_BANK: ${LABSOLAR_BANK}
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "8883"
+      MQTT_TLS: "true"
+      MQTT_CAFILE: /certs/ca.crt
+      MQTT_USER: recorder
+      MQTT_PASSWORD: ${MQTT_PASSWORD_RECORDER}
+    volumes: [./certs/mqtt/ca.crt:/certs/ca.crt:ro]
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    networks: [core]
+
+  twin:
+    <<: *py
+    command: ["labsolar-twin"]
+    environment:
+      LABSOLAR_BANK: ${LABSOLAR_BANK}
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "8883"
+      MQTT_TLS: "true"
+      MQTT_CAFILE: /certs/ca.crt
+      MQTT_USER: twin
+      MQTT_PASSWORD: ${MQTT_PASSWORD_TWIN}
+    volumes: [./certs/mqtt/ca.crt:/certs/ca.crt:ro]
+    networks: [core]
+
+  bridge:
+    <<: *py
+    command: ["labsolar-bridge", "--config", "/config/bridge.yaml"]
+    environment:
+      MQTT_USER: bridge
+      MQTT_PASSWORD: ${MQTT_PASSWORD_BRIDGE}
+      PLC_HOST: ${PLC_HOST}
+    volumes: [./bridge.yaml:/config/bridge.yaml:ro, ./certs/mqtt/ca.crt:/certs/ca.crt:ro]
+    networks: [core, field]     # única pieza con pie en la red de campo (PLC). El PLC no tiene ruta a internet.
+
+  mediamtx:
+    image: bluenviron/mediamtx:1
+    restart: unless-stopped
+    environment:
+      CAM1_HOST: ${CAM1_HOST}
+      CAM1_USER: ${CAM1_USER}
+      CAM1_PASSWORD: ${CAM1_PASSWORD}
+      CAM2_HOST: ${CAM2_HOST}
+      CAM2_USER: ${CAM2_USER}
+      CAM2_PASSWORD: ${CAM2_PASSWORD}
+    volumes: [./mediamtx.yml:/mediamtx.yml:ro]
+    networks: [front, cams]
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/proxy_params:/etc/nginx/proxy_params:ro
+      - ./certs/web:/etc/nginx/certs:ro
+      - ../../laboratorio-solar-3d:/usr/share/nginx/html:ro
+      - ./site/deploy.js:/usr/share/nginx/html/js/deploy.js:ro
+      - certbot:/var/www/certbot
+    depends_on: [gateway, mediamtx]
+    networks: [front]
+
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    environment:
+      PGHOST: db
+      PGUSER: labsolar
+      PGPASSWORD: ${LABSOLAR_DB_PASSWORD}
+      PGDATABASE: labsolar
+      RETENTION_DAYS: "30"
+    volumes: [./scripts/backup.sh:/backup.sh:ro, backups:/backups]
+    depends_on: { db: { condition: service_healthy } }
+    networks: [core]
+
+networks:
+  front: {}
+  core: { internal: true }
+  field: { internal: true }     # hacia el PLC: el administrador de red la enlaza a la VLAN de campo (ver SEGURIDAD-Y-DESPLIEGUE.md)
+  cams: { internal: true }
+
+volumes:
+  dbdata: {}
+  mqttdata: {}
+  backups: {}
+  certbot: {}

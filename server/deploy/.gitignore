@@ -1,0 +1,4 @@
+mosquitto/passwd
+certs/
+.env
+secrets.env

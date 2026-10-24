@@ -101,7 +101,10 @@ class Repo:
                                                                         db.bookings.c.start_at < end, db.bookings.c.end_at > start))).first()
             if clash:
                 return None
-            res = c.execute(sa.insert(db.bookings).values(user_id=uid, bank=bank, start_at=start, end_at=end, created_by=created_by, cancelled=False, created_at=db.utcnow()))
+            try:
+                res = c.execute(sa.insert(db.bookings).values(user_id=uid, bank=bank, start_at=start, end_at=end, created_by=created_by, cancelled=False, created_at=db.utcnow()))
+            except sa.exc.IntegrityError:              # la restricción de exclusión de PostgreSQL atrapó una carrera entre dos peticiones
+                return None
             return _row(c.execute(sa.select(db.bookings).where(db.bookings.c.id == res.inserted_primary_key[0])).first())
 
     def list_bookings(self, uid: int | None, since: dt.datetime | None = None, until: dt.datetime | None = None) -> list[dict]:

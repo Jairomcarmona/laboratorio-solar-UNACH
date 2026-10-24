@@ -194,10 +194,11 @@
             <div><label>Lluvia</label><b id="eRain">0</b><small>mm</small></div>
           </div></div>
           <div class="tabs" id="chartTabs" role="tablist" aria-label="Gráfica">
-            <button class="on" data-tab="power" role="tab" aria-selected="true">Potencia</button><button data-tab="day" role="tab" aria-selected="false">Día</button><button data-tab="iv" role="tab" aria-selected="false">I‑V / P‑V</button><button data-tab="energy" role="tab" aria-selected="false">Energía</button><button data-tab="run" role="tab" aria-selected="false">Corrida</button>
+            <button class="on" data-tab="power" role="tab" aria-selected="true">Potencia</button><button data-tab="day" role="tab" aria-selected="false">Día</button><button data-tab="iv" role="tab" aria-selected="false">I‑V / P‑V</button><button data-tab="energy" role="tab" aria-selected="false">Energía</button><button data-tab="run" role="tab" aria-selected="false">Corrida</button><button data-tab="analysis" role="tab" aria-selected="false">Análisis</button>
           </div>
           <div id="chartNote" class="chartnote"></div><div class="chartbox"><canvas id="chart" role="img" aria-label="Gráfica de la pestaña seleccionada. Hay una tabla equivalente debajo."></canvas></div>
           <div id="runPane" hidden></div>
+          <div id="analysisPane" hidden></div>
           <div id="sweepPane" hidden></div>
           <details id="chartTableWrap" class="tablewrap"><summary>Ver los datos de la gráfica como tabla</summary><table id="chartTable" class="mini"></table></details>
           <div class="acq" id="acqBox" role="group" aria-label="Adquisición de datos">
@@ -333,6 +334,7 @@
   <script src="js/sim/safety.js"></script>
   <script src="js/core/validate.js"></script>
   <script src="js/core/exporters.js"></script>
+  <script src="js/core/calibration.js"></script>
   <script src="js/core/analysis.js"></script>
   <script src="js/core/store.js"></script>
   <script src="js/sim/engine.js"></script>
@@ -356,6 +358,7 @@
   <script src="js/ui/layout.js"></script>
   <script src="js/ui/charts.js"></script>
   <script src="js/ui/runview.js"></script>
+  <script src="js/ui/analysisview.js"></script>
   <script src="js/ui/report.js"></script>
   <script src="js/ui/practices.js"></script>
   <script src="js/ui/onboarding.js"></script>

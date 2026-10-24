@@ -15,7 +15,8 @@ from .app import RecorderApp
 async def run() -> None:
     bank = os.environ.get("LABSOLAR_BANK", "lab1")
     engine = db.make_engine(os.environ["LABSOLAR_DB_URL"])
-    db.init_db(engine)
+    if os.environ["LABSOLAR_DB_URL"].startswith("sqlite"):
+        db.init_db(engine)                              # con PostgreSQL el esquema lo crea «labsolar-gateway migrate»
     bus = bus_from_config({"kind": "mqtt", "host": os.environ.get("MQTT_HOST", "mosquitto"), "port": int(os.environ.get("MQTT_PORT", "1883")),
                            "username": os.environ.get("MQTT_USER"), "password": os.environ.get("MQTT_PASSWORD")}, client_id="recorder")
     await bus.start()

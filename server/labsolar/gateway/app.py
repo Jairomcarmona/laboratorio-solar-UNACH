@@ -67,7 +67,8 @@ def create_app(settings: Settings | None = None, bus: Bus | None = None, repo: R
     engine = None
     if repo is None:
         engine = db.make_engine(cfg.db_url)
-        db.init_db(engine)
+        if cfg.db_url.startswith("sqlite"):
+            db.init_db(engine)                      # desarrollo; con PostgreSQL el esquema lo crea «labsolar-gateway migrate» (Alembic)
         repo = Repo(engine)
     the_bus = bus or bus_from_config(cfg.mqtt, client_id="gateway")
     hub = Hub(the_bus, repo, cfg)
@@ -105,6 +106,11 @@ def create_app(settings: Settings | None = None, bus: Bus | None = None, repo: R
         resp.headers.setdefault("Referrer-Policy", "same-origin")
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Cache-Control", "no-store")
+        resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+        if cfg.cookie_secure:
+            resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+        if cfg.csp:
+            resp.headers.setdefault("Content-Security-Policy", cfg.csp)
         return resp
 
     # ------------------------------------------------------------------ autenticación

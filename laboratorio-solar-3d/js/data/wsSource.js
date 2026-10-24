@@ -14,6 +14,7 @@
   const S = LAB.sim.solar;
   const cfg = LAB.config;
   const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   // para lo que dibuja la interfaz: «sin dato» es NaN, que no revienta toFixed()
   const LAMP = { NORMAL: 'green', WIND_STOW: 'amber', COMMS_STOW: 'amber', ESTOP: 'red', FAULT: 'red' };
   const OPERATE_ROLES = ['student', 'teacher', 'tech'];
 
@@ -26,10 +27,10 @@
     const c = m.curve && typeof m.curve === 'object' ? m.curve : emptyCurve();
     const p = num(m.p);
     return {
-      az: num(m.az) != null ? m.az : fixed ? fixed.az : null, tilt: num(m.tilt) != null ? m.tilt : fixed ? fixed.tilt : null,
-      poa, poaTrue: poaTrue != null ? poaTrue : poa, beam: num(m.beam), circ: null, aoi: null, shadeFrac: num(m.shadeFrac) || 0,
-      tcell: num(m.tcell), tback: num(m.tback), v: num(m.v), i: num(m.i), p, wh: num(m.wh) || 0,
-      voc: num(c.voc), isc: num(c.isc), vmp: num(c.vmp), imp: num(c.imp), pmp: num(c.pmp),
+      az: num(m.az) != null ? m.az : fixed ? fixed.az : NaN, tilt: num(m.tilt) != null ? m.tilt : fixed ? fixed.tilt : NaN,
+      poa: nan(poa), poaTrue: nan(poaTrue != null ? poaTrue : poa), beam: nan(m.beam), circ: NaN, aoi: NaN, shadeFrac: num(m.shadeFrac) || 0,
+      tcell: nan(m.tcell), tback: nan(m.tback), v: nan(m.v), i: nan(m.i), p: nan(p), wh: num(m.wh) || 0,
+      voc: nan(c.voc), isc: nan(c.isc), vmp: nan(c.vmp), imp: nan(c.imp), pmp: nan(c.pmp),
       eff: poa != null && poa > 20 && p != null ? p / (poa * cfg.module.area) * 100 : 0,
       curve: { ...emptyCurve(), ...c },
     };
@@ -64,22 +65,22 @@
       clock: { playing: ctx.source === 'replay' ? ctx.playing !== false : true, speed: ctx.speed || 1, simMs: ts, tzHours: cfg.site.tzHours },
       settings: { cloud: null, windBase: null, rainLevel: 0, speed: 1, clockPlaying: true, seed: null, scenarioId: null },
       sun: { az: sun.az, el: sun.el, zenith: sun.zenith, vec: sunVec },
-      env: { ghi: num(e.ghi), dni: num(e.dni), dhi: num(e.dhi), ta: num(e.ta), rh: num(e.rh), wind: num(e.wind), windDir: num(e.windDir), cloud: null,
+      env: { ghi: nan(e.ghi), dni: nan(e.dni), dhi: nan(e.dhi), ta: nan(e.ta), rh: nan(e.rh), wind: nan(e.wind), windDir: nan(e.windDir), cloud: NaN,
         rain: (num(e.rainRate) || 0) > 0, rainLevel: 0, rainRate: num(e.rainRate) || 0, rainMm: 0 },
       A, B,
       comparison: {
-        powerDiffPct: A.p != null && B.p != null && A.p >= 5 ? (B.p / A.p - 1) * 100 : null,
+        powerDiffPct: Number.isFinite(A.p) && Number.isFinite(B.p) && A.p >= 5 ? (B.p / A.p - 1) * 100 : null,
         energyGainPct: A.wh >= 1 ? (B.wh / A.wh - 1) * 100 : null,
         netGainPct: A.wh >= 1 ? (B.wh / A.wh - 1) * 100 : null,
-        powerNote: A.p != null && A.p >= 5 ? '' : 'P_A < 5 W: sin referencia',
+        powerNote: Number.isFinite(A.p) && A.p >= 5 ? '' : 'P_A < 5 W: sin referencia',
         energyNote: A.wh >= 1 ? '' : 'E_A < 1 Wh: sin referencia suficiente',
       },
       energy: { A: A.wh, B: B.wh, motor: 0, startedSimMs: ctx.energyStart || ts, resets: 0 },
       load: { mode: ld.mode || 'oc', setpoint: num(ld.setpoint), sweeping: !!ld.sweeping, sweepT: num(ld.sweepT) || 0, sweepSeconds: num(ld.sweepSeconds) || cfg.sweepSeconds },
       tracker: {
         mode: tr.mode || 'manual', requestedMode: tr.mode || 'manual', appliedMode: tr.appliedMode || 'manual', blockCause: tr.blockCause || '',
-        lockAz: !!tr.lockAz, lockTilt: !!tr.lockTilt, az: num(tr.az), tilt: num(tr.tilt), targetAz: num(tr.targetAz) != null ? tr.targetAz : num(tr.az),
-        targetTilt: num(tr.targetTilt) != null ? tr.targetTilt : num(tr.tilt), vAz, vTilt, moving: { az: !!moving.az, tilt: !!moving.tilt }, powerW: 0, motorWh: 0,
+        lockAz: !!tr.lockAz, lockTilt: !!tr.lockTilt, az: nan(tr.az), tilt: nan(tr.tilt), targetAz: num(tr.targetAz) != null ? tr.targetAz : nan(tr.az),
+        targetTilt: num(tr.targetTilt) != null ? tr.targetTilt : nan(tr.tilt), vAz, vTilt, moving: { az: !!moving.az, tilt: !!moving.tilt }, powerW: 0, motorWh: 0,
         sensor: { lock: false, state: 'IDLE', errX: 0, errY: 0 }, stowing: state === 'WIND_STOW' || state === 'COMMS_STOW', limits: { azMin: cfg.tracker.azMin, azMax: cfg.tracker.azMax, tiltMin: cfg.tracker.tiltMin, tiltMax: cfg.tracker.tiltMax },
       },
       safety: {
@@ -142,13 +143,13 @@
       if (this._histT < 0.25) return;
       this._histT = 0;
       const h = this.history, push = (k, v) => { h[k].push(v == null ? NaN : v); if (h[k].length > 480) h[k].shift(); };
-      push('t', t.simMs); push('pA', t.A.p); push('pB', t.B.p); push('gA', t.A.poaTrue); push('gB', t.B.poaTrue); push('tA', t.A.tcell != null ? t.A.tcell : t.A.tback);
-      push('tB', t.B.tcell != null ? t.B.tcell : t.B.tback); push('az', t.B.az != null ? t.B.az : t.tracker.az); push('tilt', t.B.tilt != null ? t.B.tilt : t.tracker.tilt);
+      push('t', t.simMs); push('pA', t.A.p); push('pB', t.B.p); push('gA', t.A.poaTrue); push('gB', t.B.poaTrue); push('tA', Number.isFinite(t.A.tcell) ? t.A.tcell : t.A.tback);
+      push('tB', Number.isFinite(t.B.tcell) ? t.B.tcell : t.B.tback); push('az', Number.isFinite(t.B.az) ? t.B.az : t.tracker.az); push('tilt', Number.isFinite(t.B.tilt) ? t.B.tilt : t.tracker.tilt);
       push('wind', t.env.wind); push('ta', t.env.ta); push('motor', 0);
       const lt = t.local, key = `${lt.year}-${lt.month}-${lt.day}`, d = this.day;
       if (d.key !== key) { d.key = key; d.t = []; d.pA = []; d.pB = []; d.eA = []; d.eB = []; d.lastT = -1; }
       if (d.lastT < 0 || lt.hours - d.lastT >= 1 / 60 || lt.hours < d.lastT) {
-        d.lastT = lt.hours; d.t.push(lt.hours); d.pA.push(t.A.p == null ? NaN : t.A.p); d.pB.push(t.B.p == null ? NaN : t.B.p); d.eA.push(t.A.wh); d.eB.push(t.B.wh);
+        d.lastT = lt.hours; d.t.push(lt.hours); d.pA.push(t.A.p); d.pB.push(t.B.p); d.eA.push(t.A.wh); d.eB.push(t.B.wh);
       }
     }
     getRun(id) { return this.runs.find((r) => r.id === id) || null; }

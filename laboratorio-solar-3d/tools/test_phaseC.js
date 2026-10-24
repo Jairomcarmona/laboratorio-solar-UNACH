@@ -5,7 +5,7 @@ const { T } = require('./lib/harness.js');
 const ROOT = process.env.LAB_ROOT || path.resolve(__dirname, '..');
 global.window = global;
 global.localStorage = { _d: {}, getItem(k) { return k in this._d ? this._d[k] : null; }, setItem(k, v) { this._d[k] = String(v); }, removeItem(k) { delete this._d[k]; } };
-for (const f of ['js/config.js', 'data/pvlib_tuxtla.js', 'js/sim/solar.js', 'js/sim/pvmodel.js', 'js/sim/sensors.js', 'js/sim/shade.js', 'js/sim/weather.js', 'js/sim/control.js', 'js/sim/safety.js', 'js/core/validate.js', 'js/core/exporters.js', 'js/core/analysis.js', 'js/core/store.js', 'js/sim/engine.js'])
+for (const f of ['js/config.js', 'data/pvlib_tuxtla.js', 'js/sim/solar.js', 'js/sim/pvmodel.js', 'js/sim/sensors.js', 'js/sim/shade.js', 'js/sim/weather.js', 'js/sim/control.js', 'js/sim/safety.js', 'js/core/validate.js', 'js/core/exporters.js', 'js/core/calibration.js', 'js/core/analysis.js', 'js/core/store.js', 'js/sim/engine.js'])
   vm.runInThisContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), { filename: f });
 const t = new T('Fase C dominio');
 const SC = () => ({ id: 'p3-claro-v1', simMs: LAB.fromLocal(2026, 10, 23, 7, 0), cloud: 0.1, windBase: 3.2, seed: 20261023, az: 180, tilt: 17, speed: 600 });

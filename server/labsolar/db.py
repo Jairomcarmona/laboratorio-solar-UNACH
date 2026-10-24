@@ -162,3 +162,22 @@ def init_db(engine: sa.Engine) -> None:
 
 def new_token() -> str:
     return secrets.token_urlsafe(32)
+
+
+def migrate(url: str, revision: str = "head") -> None:
+    """Lleva la base al esquema actual con Alembic (lo que se usa en producción; init_db es solo para pruebas y desarrollo)."""
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+
+    root = Path(__file__).resolve().parent.parent
+    cfg = Config(str(root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(root / "migrations"))
+    engine = make_engine(url)
+    try:
+        with engine.begin() as conn:
+            cfg.attributes["connection"] = conn
+            command.upgrade(cfg, revision)
+    finally:
+        engine.dispose()

@@ -20,6 +20,7 @@ def main() -> None:
     s = sub.add_parser("serve")
     s.add_argument("--host", default="0.0.0.0")
     s.add_argument("--port", type=int, default=8000)
+    sub.add_parser("migrate", help="aplica las migraciones de la base (Alembic) a LABSOLAR_DB_URL")
     cu = sub.add_parser("create-user", help="crea una cuenta (la contraseña se pide por teclado o LABSOLAR_NEW_PASSWORD)")
     cu.add_argument("username")
     cu.add_argument("role", choices=ROLES)
@@ -27,13 +28,16 @@ def main() -> None:
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     cfg = Settings.from_env()
+    if a.cmd == "migrate":
+        db.migrate(cfg.db_url)
+        print("Base de datos al día.")
+        return
     if a.cmd == "create-user":
         pw = os.environ.get("LABSOLAR_NEW_PASSWORD") or getpass.getpass("Contraseña: ")
         if len(pw) < cfg.password_min_len:
             sys.exit(f"La contraseña debe tener al menos {cfg.password_min_len} caracteres")
-        engine = db.make_engine(cfg.db_url)
-        db.init_db(engine)
-        repo = Repo(engine)
+        db.migrate(cfg.db_url)
+        repo = Repo(db.make_engine(cfg.db_url))
         if repo.user_by_name(a.username):
             sys.exit("Ese usuario ya existe")
         repo.create_user(a.username, hash_password(pw), a.role, a.name)

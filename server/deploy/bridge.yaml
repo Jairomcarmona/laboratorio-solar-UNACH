@@ -1,0 +1,17 @@
+# Configuración del puente en producción. Selecciona el controlador y la adquisición reales.
+bank: lab1
+tele_period_s: 1.0
+bus:
+  kind: mqtt
+  host: mosquitto
+  port: 8883
+  tls: true
+  cafile: /certs/ca.crt
+controller:
+  driver: modbus          # modbus | opcua   (el PLC definitivo se confirma; ver docs/REGISTROS.md — mapa provisional)
+  host: ${PLC_HOST}
+  port: 502
+  unit: 1
+daq:
+  driver: nidaqmx         # nidaqmx | mqtt   (cDAQ-9184: la compatibilidad con Linux debe verificarse; alternativa: mqtt desde un equipo Windows)
+  channels: {}            # se completa con el cableado real (docs/REGISTROS.md)

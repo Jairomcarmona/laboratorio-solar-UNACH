@@ -1,7 +1,7 @@
 /* Sombra mutua entre los modulos A y B (S6): oclusion GEOMETRICA analitica, sin Three.js.
  * Para un modulo receptor se toma una malla de 7x5 puntos sobre su cara, se lanza el rayo hacia el Sol y se comprueba si
  * cruza el rectangulo del otro modulo. Mide solo geometria: NO entra al modelo electrico (eso es O4).
- * Ejes de escena: +X este, +Y arriba, -Z norte (igual que solar.js). Las posiciones salen de LAB.config.layout. */
+ * Ejes de escena: +X este, +Y arriba, -Z norte (igual que solar.js). Las posiciones salen de LAB.config.shadeSites(). */
 (function () {
   'use strict';
   const { D2R } = LAB.util;
@@ -22,12 +22,12 @@
 
   /** Centros de los modulos segun la distribucion y la orientacion actual (B: sobre el eje de inclinacion) */
   function rectA() {
-    const L = LAB.config.layout, f = LAB.config.fixed, m = LAB.config.module;
+    const L = LAB.config.shadeSites(), f = LAB.config.fixed, m = LAB.config.module;
     const yc = 0.58 + (m.short / 2) * Math.sin(f.tilt * D2R);
     return rect([L.moduleA[0], L.moduleA[1] + yc, L.moduleA[2]], f.az, f.tilt);
   }
   function rectB(az, tilt) {
-    const L = LAB.config.layout, E = LAB.config.envelopes(L);
+    const L = LAB.config.shadeSites(), E = { axisY: L.axisY };
     const n = S.normalVector(az, tilt), off = 0.1;     // 0.062 + 0.02 + espesor/2 sobre los rieles
     return rect([L.moduleB[0] + off * n[0], E.axisY + off * n[1], L.moduleB[2] + off * n[2]], az, tilt);
   }
