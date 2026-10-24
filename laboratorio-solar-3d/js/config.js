@@ -101,6 +101,8 @@
     };
   };
   cfg.envelopes = envelopes;
+  /** Posiciones que necesita el modelo de sombra mutua. El motor de simulación no lee la distribución espacial directamente (prueba E20): la recibe de aquí. */
+  cfg.shadeSites = () => ({ moduleA: cfg.layout.moduleA, moduleB: cfg.layout.moduleB, axisY: envelopes(cfg.layout).axisY });
 
   LAB.util = {
     D2R, R2D: 180 / Math.PI,
