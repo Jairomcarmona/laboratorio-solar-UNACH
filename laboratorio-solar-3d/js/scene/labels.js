@@ -7,88 +7,88 @@
   /** Informacion didactica de cada componente + variables en vivo que se muestran en la ficha. */
   const INFO = {
     moduleA: {
-      title: 'Módulo A · fijo de referencia', kind: 'Generación', color: '#35d07f',
-      text: 'Módulo comercial de ~500 Wp con inclinación fija (≈ latitud) orientado al sur. Es la referencia contra la que se compara el módulo móvil: cualquier diferencia de energía se debe a la orientación y al seguimiento.',
-      live: (t) => [['Irradiancia plano', fmt(t.A.poa, 0) + ' W/m²'], ['Temp. de celda', fmt(t.A.tcell, 1) + ' °C'], ['Potencia', fmt(t.A.p, 0) + ' W'], ['Energía', fmt(t.A.wh, 1) + ' Wh']],
+      get title() { return LAB.t('labels.modulo_a_fijo_de'); }, get kind() { return LAB.t('labels.kind_generacion'); }, get color() { return LAB.config.palette.A; },
+      get text() { return LAB.t('labels.modulo_comercial_de_500'); },
+      live: (t) => [[LAB.t('labels.irradiancia_plano'), fmt(t.A.poa, 0) + ' W/m²'], [LAB.t('labels.temp_de_celda'), fmt(t.A.tcell, 1) + ' °C'], [LAB.t('labels.potencia'), fmt(t.A.p, 0) + ' W'], [LAB.t('labels.energia'), fmt(t.A.wh, 1) + ' Wh']],
     },
     moduleB: {
-      title: 'Módulo B · móvil de dos ejes', kind: 'Generación', color: '#ffb020',
-      text: 'Módulo idéntico al A sobre un seguidor de dos ejes con realimentación de posición. Puede trabajar con ambos ejes, bloquear uno (práctica de azimut o de inclinación) o seguir al Sol de forma astronómica o por sensores.',
-      live: (t) => [['Azimut', fmt(t.B.az, 1) + '°'], ['Inclinación', fmt(t.B.tilt, 1) + '°'], ['Irradiancia en el plano', fmt(t.B.poa, 0) + ' W/m²'], ['Potencia', fmt(t.B.p, 0) + ' W'], ['Diferencia de potencia vs. A', t.comparison.powerDiffPct == null ? 'No disponible' : fmt(t.comparison.powerDiffPct, 1) + ' %']],
+      get title() { return LAB.t('labels.modulo_b_movil_de'); }, get kind() { return LAB.t('labels.kind_generacion'); }, get color() { return LAB.config.palette.B; },
+      get text() { return LAB.t('labels.modulo_identico_al_a'); },
+      live: (t) => [[LAB.t('labels.azimut'), fmt(t.B.az, 1) + '°'], [LAB.t('labels.inclinacion'), fmt(t.B.tilt, 1) + '°'], [LAB.t('labels.irradiancia_en_el_plano'), fmt(t.B.poa, 0) + ' W/m²'], [LAB.t('labels.potencia'), fmt(t.B.p, 0) + ' W'], [LAB.t('labels.diferencia_de_potencia_vs'), t.comparison.powerDiffPct == null ? LAB.t('labels.no_disponible') : fmt(t.comparison.powerDiffPct, 1) + ' %']],
     },
     irrA: {
-      title: 'Sensor de irradiancia · plano de A', kind: 'Medición', color: '#2fb4ff',
-      text: 'Mide la irradiancia en el mismo plano del módulo (W/m²). Es lo que permite comparar los módulos de forma justa, porque cada uno recibe una irradiancia distinta según su orientación.',
-      live: (t) => [['Irradiancia', fmt(t.A.poa, 0) + ' W/m²'], ['Ángulo de incidencia', fmt(t.A.aoi, 1) + '°']],
+      get title() { return LAB.t('labels.sensor_de_irradiancia_plano'); }, get kind() { return LAB.t('labels.kind_medicion'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.mide_la_irradiancia_en'); },
+      live: (t) => [[LAB.t('labels.irradiancia'), fmt(t.A.poa, 0) + ' W/m²'], [LAB.t('labels.angulo_de_incidencia'), fmt(t.A.aoi, 1) + '°']],
     },
     irrB: {
-      title: 'Sensor de irradiancia · plano de B', kind: 'Medición', color: '#2fb4ff',
-      text: 'Igual que el del módulo A pero montado sobre la parte móvil: se inclina junto con el panel y sigue midiendo en su plano.',
-      live: (t) => [['Irradiancia', fmt(t.B.poa, 0) + ' W/m²'], ['Ángulo de incidencia', fmt(t.B.aoi, 1) + '°']],
+      get title() { return LAB.t('labels.sensor_de_irradiancia_plano_2'); }, get kind() { return LAB.t('labels.kind_medicion'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.igual_que_el_del'); },
+      live: (t) => [[LAB.t('labels.irradiancia'), fmt(t.B.poa, 0) + ' W/m²'], [LAB.t('labels.angulo_de_incidencia'), fmt(t.B.aoi, 1) + '°']],
     },
     pyr: {
-      title: 'Piranómetro (referencia ambiental)', kind: 'Meteorología', color: '#2fb4ff',
-      text: 'Mide la irradiancia global horizontal (GHI). Sirve como referencia meteorológica y permite detectar nubes o suciedad al compararla con los sensores de plano. La DNI y la DHI NO las mide este sensor: son valores derivados del modelo del simulador.',
-      live: (t) => [['GHI (medida simulada)', fmt(t.env.ghi, 0) + ' W/m²'], ['DNI (derivada del modelo)', fmt(t.env.dni, 0) + ' W/m²'], ['DHI (derivada del modelo)', fmt(t.env.dhi, 0) + ' W/m²']],
+      get title() { return LAB.t('labels.piranometro_referencia_ambiental'); }, get kind() { return LAB.t('labels.kind_meteorologia'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.mide_la_irradiancia_global'); },
+      live: (t) => [[LAB.t('labels.ghi_medida_simulada'), fmt(t.env.ghi, 0) + ' W/m²'], [LAB.t('labels.dni_derivada_del_modelo'), fmt(t.env.dni, 0) + ' W/m²'], [LAB.t('labels.dhi_derivada_del_modelo'), fmt(t.env.dhi, 0) + ' W/m²']],
     },
     anemo: {
-      title: 'Anemómetro y veleta', kind: 'Meteorología', color: '#2fb4ff',
-      text: 'Velocidad y dirección del viento. Con rachas fuertes el controlador local lleva el seguidor a posición segura (horizontal) para proteger la estructura.',
-      live: (t) => [['Velocidad', fmt(t.env.wind, 1) + ' m/s'], ['Dirección (de donde sopla)', fmt(t.env.windDir, 0) + '°'], ['Umbral de seguridad', LAB.config.safety.windStow + ' m/s']],
+      get title() { return LAB.t('labels.anemometro_y_veleta'); }, get kind() { return LAB.t('labels.kind_meteorologia'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.velocidad_y_direccion_del'); },
+      live: (t) => [[LAB.t('labels.velocidad'), fmt(t.env.wind, 1) + ' m/s'], [LAB.t('labels.direccion_de_donde_sopla'), fmt(t.env.windDir, 0) + '°'], [LAB.t('labels.umbral_de_seguridad'), LAB.config.safety.windStow + ' m/s']],
     },
     shield: {
-      title: 'Temperatura y humedad relativa', kind: 'Meteorología', color: '#2fb4ff',
-      text: 'Sensor protegido por un abrigo de placas apiladas para evitar que el Sol caliente la lectura. La temperatura ambiente determina cuánto se calienta el módulo.',
-      live: (t) => [['Temp. ambiente', fmt(t.env.ta, 1) + ' °C'], ['Humedad relativa', fmt(t.env.rh, 0) + ' %']],
+      get title() { return LAB.t('labels.temperatura_y_humedad_relativa'); }, get kind() { return LAB.t('labels.kind_meteorologia'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.sensor_protegido_por_un'); },
+      live: (t) => [[LAB.t('labels.temp_ambiente'), fmt(t.env.ta, 1) + ' °C'], [LAB.t('labels.humedad_relativa'), fmt(t.env.rh, 0) + ' %']],
     },
     rain: {
-      title: 'Pluviómetro', kind: 'Meteorología', color: '#2fb4ff',
-      text: 'Registra la lluvia acumulada. Se usa para interpretar caídas de irradiancia y como apoyo a decisiones de seguridad.',
-      live: (t) => [['Estado', t.env.rain ? 'Lloviendo · ' + LAB.sim.RAIN_LEVELS[t.env.rainLevel].name.toLowerCase() : 'Seco'], ['Intensidad', fmt(t.env.rainRate, 1) + ' mm/h'], ['Acumulado', fmt(t.env.rainMm, 2) + ' mm']],
+      get title() { return LAB.t('labels.pluviometro'); }, get kind() { return LAB.t('labels.kind_meteorologia'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.registra_la_lluvia_acumulada'); },
+      live: (t) => [[LAB.t('labels.estado'), t.env.rain ? LAB.t('labels.lloviendo') + LAB.sim.RAIN_LEVELS[t.env.rainLevel].name.toLowerCase() : LAB.t('labels.seco')], [LAB.t('labels.intensidad'), fmt(t.env.rainRate, 1) + ' mm/h'], [LAB.t('labels.acumulado'), fmt(t.env.rainMm, 2) + ' mm']],
     },
     load: {
-      title: 'Carga electrónica programable CC', kind: 'Caracterización', color: '#a98bff',
-      text: 'Impone el punto de operación a cada módulo (tensión, resistencia, cortocircuito o seguimiento del punto de máxima potencia) y permite barridos automáticos para obtener la curva I-V. Los estados son predefinidos y limitados por el sistema.',
-      live: (t) => [['Modo', { oc: 'Circuito abierto', sc: 'Cortocircuito', cv: 'Tensión const.', cr: 'Resistencia', mppt: 'MPPT' }[t.load.mode] || t.load.mode], ['P total', fmt(t.A.p + t.B.p, 0) + ' W']],
+      get title() { return LAB.t('labels.carga_electronica_programable_cc'); }, get kind() { return LAB.t('labels.kind_caracterizacion'); }, color: '#a98bff',
+      get text() { return LAB.t('labels.impone_el_punto_de'); },
+      live: (t) => [[LAB.t('labels.modo'), { oc: LAB.t('labels.circuito_abierto'), sc: LAB.t('labels.cortocircuito'), cv: LAB.t('labels.tension_const'), cr: LAB.t('labels.resistencia'), mppt: 'MPPT' }[t.load.mode] || t.load.mode], [LAB.t('labels.p_total'), fmt(t.A.p + t.B.p, 0) + ' W']],
     },
     cabinet: {
-      title: 'Gabinete de control y adquisición', kind: 'Control local', color: '#ff6b6b',
-      text: 'Aloja el NI cDAQ-9184 con LabVIEW 2016 (por confirmar en inventario), el controlador local, drivers y relés, y las protecciones CC. Los límites críticos de seguridad viven aquí y no se pueden cambiar desde la web.',
-      live: (t) => [['Estado de seguridad', { NORMAL: 'Normal', WIND_STOW: 'Posición segura (viento)', COMMS_STOW: 'Posición segura (watchdog)', ESTOP: 'Paro de emergencia' }[t.safety.state]], ['Latencia del enlace', fmt(t.comms.latency, 0) + ' ms']],
+      get title() { return LAB.t('labels.gabinete_de_control_y'); }, get kind() { return LAB.t('labels.kind_control_local'); }, color: '#ff6b6b',
+      get text() { return LAB.t('labels.aloja_el_ni_cdaq'); },
+      live: (t) => [[LAB.t('labels.estado_de_seguridad'), { NORMAL: LAB.t('labels.normal'), WIND_STOW: LAB.t('labels.posicion_segura_viento'), COMMS_STOW: LAB.t('labels.posicion_segura_watchdog'), ESTOP: LAB.t('labels.paro_de_emergencia') }[t.safety.state]], [LAB.t('labels.latencia_del_enlace'), fmt(t.comms.latency, 0) + ' ms']],
     },
     estop: {
-      title: 'Paro de emergencia local', kind: 'Seguridad', color: '#ff4d4d',
-      text: 'Corta la energía de los motores y desconecta la carga. Solo se restablece en sitio con la llave. Haz clic en el botón rojo para accionarlo (en la práctica real solo lo haría personal en el lugar).',
-      live: (t) => [['Estado', t.safety.estop ? 'ACCIONADO' : 'Normal']],
+      get title() { return LAB.t('labels.paro_de_emergencia_local'); }, get kind() { return LAB.t('labels.kind_seguridad'); }, color: '#ff4d4d',
+      get text() { return LAB.t('labels.corta_la_energia_de'); },
+      live: (t) => [[LAB.t('labels.estado'), t.safety.estop ? LAB.t('labels.accionado') : LAB.t('labels.normal')]],
     },
     cam1: {
-      title: 'Cámara IP 1 · vista general', kind: 'Observación', color: '#2fb4ff',
-      text: 'Permite verificar visualmente el estado del banco durante la sesión. Haz clic en "Ver cámara" para ver su imagen simulada.',
-      live: () => [['Resolución', '1080p · 15 fps (simulado)']],
+      get title() { return LAB.t('labels.camara_ip_1_vista'); }, get kind() { return LAB.t('labels.kind_observacion'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.permite_verificar_visualmente_el'); },
+      live: () => [[LAB.t('labels.resolucion'), '1080p · 15 fps (simulado)']],
     },
     cam2: {
-      title: 'Cámara IP 2 · vista del seguidor', kind: 'Observación', color: '#2fb4ff',
-      text: 'Apunta al módulo móvil: sirve para confirmar con la imagen el movimiento que reporta la telemetría.',
-      live: (t) => [['Posición del seguidor', `${fmt(t.B.az, 0)}° / ${fmt(t.B.tilt, 0)}°`]],
+      get title() { return LAB.t('labels.camara_ip_2_vista'); }, get kind() { return LAB.t('labels.kind_observacion'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.apunta_al_modulo_movil'); },
+      live: (t) => [[LAB.t('labels.posicion_del_seguidor'), `${fmt(t.B.az, 0)}° / ${fmt(t.B.tilt, 0)}°`]],
     },
     azAxis: {
-      title: 'Eje de azimut (giro horizontal)', kind: 'Movimiento', color: '#2fb4ff',
-      text: 'Motorreductor con realimentación de posición. Rango autorizado de 90° a 270° (este–sur–oeste) con finales de carrera por hardware y software.',
-      live: (t) => [['Azimut', fmt(t.tracker.az, 1) + '°'], ['Objetivo', fmt(t.tracker.targetAz, 1) + '°'], ['Rango', `${t.tracker.limits.azMin}°–${t.tracker.limits.azMax}°`]],
+      get title() { return LAB.t('labels.eje_de_azimut_giro'); }, get kind() { return LAB.t('labels.kind_movimiento'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.motorreductor_con_realimentacion_de'); },
+      live: (t) => [[LAB.t('labels.azimut'), fmt(t.tracker.az, 1) + '°'], [LAB.t('labels.objetivo'), fmt(t.tracker.targetAz, 1) + '°'], [LAB.t('labels.rango'), `${t.tracker.limits.azMin}°–${t.tracker.limits.azMax}°`]],
     },
     tiltAxis: {
-      title: 'Eje de inclinación (elevación)', kind: 'Movimiento', color: '#35d07f',
-      text: 'Actuador lineal que inclina el panel de 0° (horizontal, posición segura) a 90°. Con el eje de azimut bloqueado se hace la práctica de inclinación.',
-      live: (t) => [['Inclinación', fmt(t.tracker.tilt, 1) + '°'], ['Objetivo', fmt(t.tracker.targetTilt, 1) + '°'], ['Rango', `${t.tracker.limits.tiltMin}°–${t.tracker.limits.tiltMax}°`]],
+      get title() { return LAB.t('labels.eje_de_inclinacion_elevacion'); }, get kind() { return LAB.t('labels.kind_movimiento'); }, color: '#35d07f',
+      get text() { return LAB.t('labels.actuador_lineal_que_inclina'); },
+      live: (t) => [[LAB.t('labels.inclinacion'), fmt(t.tracker.tilt, 1) + '°'], [LAB.t('labels.objetivo'), fmt(t.tracker.targetTilt, 1) + '°'], [LAB.t('labels.rango'), `${t.tracker.limits.tiltMin}°–${t.tracker.limits.tiltMax}°`]],
     },
     dcA: {
-      title: 'Medición eléctrica CC · módulo A', kind: 'Medición', color: '#2fb4ff',
-      text: 'Transductores aislados de tensión y corriente. A partir de ellos se calculan potencia y energía del módulo.',
+      get title() { return LAB.t('labels.medicion_electrica_cc_modulo'); }, get kind() { return LAB.t('labels.kind_medicion'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.transductores_aislados_de_tension'); },
       live: (t) => [['V', fmt(t.A.v, 1) + ' V'], ['I', fmt(t.A.i, 2) + ' A'], ['P', fmt(t.A.p, 0) + ' W']],
     },
     dcB: {
-      title: 'Medición eléctrica CC · módulo B', kind: 'Medición', color: '#2fb4ff',
-      text: 'Misma instrumentación que el módulo A, sincronizada con ella para poder comparar potencia y energía.',
+      get title() { return LAB.t('labels.medicion_electrica_cc_modulo_2'); }, get kind() { return LAB.t('labels.kind_medicion'); }, color: '#2fb4ff',
+      get text() { return LAB.t('labels.misma_instrumentacion_que_el'); },
       live: (t) => [['V', fmt(t.B.v, 1) + ' V'], ['I', fmt(t.B.i, 2) + ' A'], ['P', fmt(t.B.p, 0) + ' W']],
     },
   };
@@ -112,16 +112,19 @@
       const el = document.createElement('button');
       el.className = 'tag' + (opts.cls ? ' ' + opts.cls : '');
       el.type = 'button';
-      el.innerHTML = `<i class="dot"></i><span>${text}</span>`;
+      const key = /^lbl\./.test(text) ? text : null;      // las etiquetas fijas se guardan por clave para poder retraducirlas
+      el.innerHTML = `<i class="dot"></i><span>${key ? LAB.t(key) : text}</span>`;
       el.dataset.part = partId;
       el.addEventListener('click', (e) => { e.stopPropagation(); if (this.onClick) this.onClick(partId); });
       wrap.appendChild(el);
       const obj = new THREE.CSS2DObject(wrap);
       obj.position.copy(localPos);
       parent.add(obj);
-      this.items.push({ el, wrap, obj, partId, detail: !!opts.detail, track: opts.track || null, parent });
+      this.items.push({ el, wrap, obj, partId, key, detail: !!opts.detail, track: opts.track || null, parent });
       return el;
     }
+    /** Vuelve a escribir las etiquetas con el idioma activo */
+    relabel() { this.items.forEach((i) => { if (i.key) i.el.innerHTML = `<i class="dot"></i><span>${LAB.t(i.key)}</span>`; }); }
     setMode(mode) {
       this.mode = mode;
       this.renderer.domElement.style.display = mode === 'off' ? 'none' : '';
@@ -141,10 +144,38 @@
         let o = 1;
         if (it.detail && this.mode !== 'all' && !it.active) o = 1 - LAB.util.smoothstep(6.5, 9.5, d);
         if (!it.detail) o = 1 - LAB.util.smoothstep(38, 60, d);
+        it.d = d; it.o = o;
         it.el.style.opacity = o.toFixed(2);
         it.el.style.visibility = o < 0.05 ? 'hidden' : 'visible';
       }
+      if ((this.frame = (this.frame || 0) + 1) % 4 === 0) this.declutter(camera);
       this.renderer.render(this.scene, camera);
+    }
+    /** Evita que las etiquetas se pisen: por prioridad (activa, principales, cercanas) cada una sube hasta quedar libre;
+     *  si no cabe, se atenúa (nunca la activa). Se calcula con la geometría real de las pastillas en pantalla. */
+    declutter(camera) {
+      const dom = this.renderer.domElement, W = dom.clientWidth, H = dom.clientHeight;
+      if (!W || !H) return;
+      const vis = this.items.filter((i) => i.o > 0.05 && i.el.offsetWidth > 0);
+      vis.sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0) || (a.detail ? 1 : 0) - (b.detail ? 1 : 0) || a.d - b.d);
+      const placed = [], v = new THREE.Vector3();
+      const hit = (r) => placed.some((p) => r.x0 < p.x1 && r.x1 > p.x0 && r.y0 < p.y1 && r.y1 > p.y0);
+      for (const it of vis) {
+        it.obj.getWorldPosition(v); v.project(camera);
+        if (v.z > 1) { it.el.style.setProperty('--dy', '0px'); continue; }
+        const sx = (v.x * 0.5 + 0.5) * W, sy = (-v.y * 0.5 + 0.5) * H, w = it.el.offsetWidth, h = it.el.offsetHeight;
+        let dy = 0, ok = false;
+        for (let k = 0; k < 4; k++) {
+          const r = { x0: sx - w / 2, x1: sx + w / 2, y0: sy - 14 - h + dy, y1: sy - 14 + dy };
+          if (!hit(r)) { placed.push(r); ok = true; break; }
+          dy -= h + 4;
+        }
+        if (!ok && !it.active) { it.el.style.opacity = '0'; it.el.style.pointerEvents = 'none'; it.el.style.setProperty('--dy', '0px'); continue; }
+        if (!ok) { dy = 0; placed.push({ x0: sx - w / 2, x1: sx + w / 2, y0: sy - 14 - h, y1: sy - 14 }); }
+        it.el.style.pointerEvents = '';
+        it.el.style.setProperty('--dy', dy + 'px');
+      }
+      this.items.forEach((i) => { if (!(i.o > 0.05)) i.el.style.setProperty('--dy', '0px'); });
     }
     /** La etiqueta del objeto seleccionado pasa al frente y no se atenua por distancia en detalle */
     setActive(partId) { this.items.forEach((i) => { const on = i.partId === partId; i.el.classList.toggle('active', on); i.wrap.style.zIndex = on ? '20' : ''; i.active = on; }); }

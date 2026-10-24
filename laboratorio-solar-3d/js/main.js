@@ -12,7 +12,7 @@
     if (!renderer.getContext()) throw new Error('El navegador devolvió un contexto WebGL vacío');
   } catch (err) {
     // C20: sin WebGL no se puede dibujar el banco; se explica con claridad y se ofrece reintentar, sin pantalla en blanco
-    const box = document.getElementById('glFail'); if (box) { box.hidden = false; const w = document.getElementById('glFailWhy'); if (w) w.textContent = 'Detalle técnico: ' + String(err && err.message || err).slice(0, 200); }
+    const box = document.getElementById('glFail'); if (box) { box.hidden = false; const w = document.getElementById('glFailWhy'); if (w) w.textContent = LAB.t('main.detalle') + String(err && err.message || err).slice(0, 200); }
     const go = (q) => { const u = new URL(location.href); u.searchParams.delete('glfail'); if (q) u.searchParams.set('q', q); location.href = u.href; };
     const r = document.getElementById('glRetry'), l = document.getElementById('glLow'); if (r) r.onclick = () => go(); if (l) l.onclick = () => go('low');
     if (r) r.focus();
@@ -180,7 +180,7 @@
 
   function handlePart(id, press) {
     if (id === 'estop' && press) {
-      if (source.telemetry.safety.estop) { LAB.ui.toast && LAB.ui.toast('Para restablecer el paro usa la llave en el panel de seguridad (solo técnico en sitio).'); }
+      if (source.telemetry.safety.estop) { LAB.ui.toast && LAB.ui.toast(LAB.t('main.restablecer_llave')); }
       else source.send({ type: 'safety.estop', who: 'Operador en sitio (clic en el paro)' });
     }
     world.select(id);
@@ -201,12 +201,12 @@
   renderer.domElement.addEventListener('webglcontextlost', (e) => {
     e.preventDefault(); glLost = true;
     const b = document.getElementById('glLost'); if (b) b.hidden = false;
-    source.log('warn', 'Se perdió el contexto gráfico (WebGL). La simulación sigue; el dibujo se reanuda al restaurarlo.', 'Gráficos');
+    source.log('warn', LAB.t('main.contexto_perdido'), 'Gráficos');
   });
   renderer.domElement.addEventListener('webglcontextrestored', () => {
     glLost = false; const b = document.getElementById('glLost'); if (b) b.hidden = true;
     renderer.shadowMap.needsUpdate = true; applyQuality(quality.level);
-    source.log('ok', 'Contexto gráfico restaurado: el dibujo se reanudó.', 'Gráficos');
+    source.log('ok', LAB.t('main.contexto_restaurado'), 'Gráficos');
   });
   { const rl = document.getElementById('glReload'); if (rl) rl.addEventListener('click', () => location.reload()); }
 
@@ -252,7 +252,7 @@
   if (source.kind === 'replay') {
     source.on('auth', () => { location.href = ((LAB.deploy && LAB.deploy.loginUrl) || 'login.html') + '?next=' + encodeURIComponent(location.pathname + location.search); });
     if (params.get('run')) source.loadFromServer(params.get('run'), { apiBase: (LAB.deploy && LAB.deploy.apiBase) || '' });
-    else source.log('warn', 'Falta el parámetro run=ID de la corrida a reproducir.', 'Reproducción');
+    else source.log('warn', LAB.t('main.falta_run'), 'Reproducción');
   }
   if (netSource) {
     netSource.on('auth', () => { location.href = ((LAB.deploy && LAB.deploy.loginUrl) || 'login.html') + '?next=' + encodeURIComponent(location.pathname + location.search); });

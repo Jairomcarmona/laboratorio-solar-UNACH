@@ -48,8 +48,8 @@
         ctx.fillStyle = '#06141f'; ctx.fillRect(0, 0, 512, 360);
         ctx.fillStyle = '#0d2a40'; ctx.fillRect(0, 0, 512, 44);
         ctx.fillStyle = '#7fd4ff'; ctx.font = '600 22px "JetBrains Mono", monospace'; ctx.textAlign = 'left';
-        const names = { oc: 'CIRCUITO ABIERTO', sc: 'CORTOCIRCUITO', cv: 'TENSIÓN CONST.', cr: 'RESISTENCIA CTE', mppt: 'SEGUIM. MPP' };
-        ctx.fillText('MODO ' + (L.sweeping ? 'BARRIDO I-V' : names[L.mode] || L.mode), 14, 30);
+        const names = { oc: LAB.t('equip.oc'), sc: LAB.t('equip.sc'), cv: LAB.t('equip.cv'), cr: LAB.t('equip.cr'), mppt: LAB.t('equip.mppt') };
+        ctx.fillText(LAB.t('equip.modo', { m: L.sweeping ? LAB.t('equip.barrido') : names[L.mode] || L.mode }), 14, 30);
         const row = (label, m, y, c) => {
           ctx.fillStyle = c; ctx.font = '700 22px "JetBrains Mono", monospace'; ctx.fillText(label, 14, y);
           ctx.fillStyle = '#e8f6ff'; ctx.font = '500 20px "JetBrains Mono", monospace';
@@ -59,11 +59,11 @@
           ctx.fillStyle = '#0d2a40'; ctx.fillRect(14, y + 10, 484, 12);
           ctx.fillStyle = c; ctx.fillRect(14, y + 10, 484 * frac, 12);
         };
-        row('A', A, 102, '#35d07f'); row('B', B, 182, '#ffb020');
+        row('A', A, 102, LAB.config.palette.A); row('B', B, 182, LAB.config.palette.B);
         ctx.fillStyle = '#7fd4ff'; ctx.font = '500 18px "JetBrains Mono", monospace';
         const g = (v) => (Number.isFinite(v) ? v.toFixed(0) : '--');
         ctx.fillText(`Pa+Pb ${g(A.p + B.p)} W   Pmax ${g(A.pmp + B.pmp)} W`, 14, 260);
-        ctx.fillText(tel.safety.estop ? '⚠ CARGA DESCONECTADA (PARO)' : 'Carga conectada · protección CC OK', 14, 300);
+        ctx.fillText(tel.safety.estop ? LAB.t('equip.desconectada') : LAB.t('equip.conectada'), 14, 300);
         ctx.fillStyle = tel.safety.estop ? '#ff4d4d' : '#35d07f'; ctx.fillRect(14, 316, 484, 6);
         tex.needsUpdate = true;
       },

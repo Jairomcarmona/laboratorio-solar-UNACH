@@ -24,7 +24,14 @@
     views: ['general', 'moduleA', 'moduleB', 'station', 'load', 'cabinet', 'aerial'],
     roles: ['visitor', 'student', 'teacher'],        // roles de demostracion admitidos por URL y por el acceso
 
-    site: { name: 'FCFM-UNACH, Tuxtla Gutiérrez, Chiapas', lat: 16.7516, lon: -93.1161, alt: 530, tzHours: -6,
+    // UBICACION DEL SITIO: unico lugar de configuracion (posicion solar, hora local, reportes y etiquetas lo leen de aqui).
+    // PROVISIONAL: coordenadas aproximadas de Tuxtla Gutierrez. Las del edificio se MIDEN EN SITIO (GNSS en la azotea) y se
+    // cambian aqui, con ?lat=&lon=&alt=&tz= en la URL (pruebas) o con LAB.config.setSite({...}). Al medirlas, poner measured: true.
+    // La tabla de cielo despejado (data/pvlib_tuxtla.js) se genero para las coordenadas de 'LAB.data.pvlib.site': si se cambian
+    // mas de ~0.05 grados o 50 m, regenerarla con tools/gen_pvlib_data.py (LAB.config.siteStatus() lo avisa).
+    site: { name: 'FCFM-UNACH, Tuxtla Gutiérrez, Chiapas', lat: 16.7516, lon: -93.1161, alt: 530,
+      tz: 'America/Mexico_City', tzHours: -6,      // zona IANA y su desfase estandar (Chiapas ya no usa horario de verano)
+      measured: false,                  // false = coordenadas aproximadas por confirmar en sitio
       albedo: 0.3 },                    // PROVISIONAL: azotea de concreto claro; S28 lo calibra con datos medidos
 
     // Modulo comercial ~500 Wp (se refina con LAB.data.pvlib.sdm si esta disponible)
@@ -79,6 +86,10 @@
       rose: [-1.2, 6.1],                 // rosa de los vientos pintada (x, z)
       roof: { w: 26, d: 18, h: 0.45 },
     },
+
+    /** Colores de los módulos: una sola fuente para escena 3D, curvas, tablas y reporte (el CSS usa --col-a/--col-b con los mismos valores).
+     *  print = tono más oscuro del mismo matiz para el reporte sobre fondo blanco. */
+    palette: { A: '#35d07f', B: '#ffb020', Aprint: '#1a9e5b', Bprint: '#b87400', brand: '#003e93', brandDeep: '#002e63' },
 
     colors: {
       uni: 0x0b3b6f, accent: 0x2fb4ff, solar: 0xffb020, ok: 0x35d07f, warn: 0xffb020, bad: 0xff4d4d,
@@ -139,9 +150,52 @@
     },
   };
 
-  // Textos: centralizados para poder anadir otros idiomas (es por defecto)
-  LAB.i18n = { lang: 'es', dict: { es: {}, en: {} } };
-  LAB.t = (key, fallback) => (LAB.i18n.dict[LAB.i18n.lang][key] ?? LAB.i18n.dict.es[key] ?? fallback ?? key);
+  /** Valida y aplica cambios a cfg.site. Devuelve {ok, errors:[claves de i18n], site}. No muta nada si algo no es valido. */
+  cfg.setSite = (patch = {}) => {
+    const errors = [], next = Object.assign({}, cfg.site);
+    const num = (k, lo, hi) => {
+      if (patch[k] === undefined || patch[k] === null || patch[k] === '') return;
+      const v = Number(patch[k]);
+      if (!Number.isFinite(v) || v < lo || v > hi) errors.push('site.err.' + k); else next[k] = v;
+    };
+    num('lat', -90, 90); num('lon', -180, 180); num('alt', -430, 9000);
+    if (patch.tz !== undefined && patch.tz !== null && patch.tz !== '') {
+      const off = cfg.tzOffsetHours(String(patch.tz));
+      if (off === null) errors.push('site.err.tz'); else { next.tz = String(patch.tz); next.tzHours = off; }
+    }
+    if (patch.tzHours !== undefined && patch.tz === undefined) {
+      const h = Number(patch.tzHours); if (!Number.isFinite(h) || h < -12 || h > 14) errors.push('site.err.tzHours'); else next.tzHours = h;
+    }
+    if (patch.name) next.name = String(patch.name).slice(0, 120);
+    if (patch.measured !== undefined) next.measured = !!patch.measured;
+    if (errors.length) return { ok: false, errors, site: cfg.site };
+    Object.assign(cfg.site, next);
+    return { ok: true, errors: [], site: cfg.site };
+  };
+  /** Desfase UTC estandar (invierno, sin horario de verano) de una zona IANA; null si el navegador no la conoce */
+  cfg.tzOffsetHours = (tz) => {
+    try {
+      const f = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+      const at = (m) => { const p = {}; f.formatToParts(new Date(m)).forEach((x) => { p[x.type] = +x.value; }); return (Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - m) / 3600000; };
+      const a = at(Date.UTC(2026, 0, 15, 12)), b = at(Date.UTC(2026, 6, 15, 12));
+      return Math.min(a, b);
+    } catch (e) { return null; }
+  };
+  /** Estado de la ubicacion: aproximada o medida, y si la tabla de cielo despejado corresponde a estas coordenadas */
+  cfg.siteStatus = () => {
+    const ref = LAB.data && LAB.data.pvlib && LAB.data.pvlib.site, s = cfg.site;
+    const tableMatches = !ref || (Math.abs(ref.lat - s.lat) <= 0.05 && Math.abs(ref.lon - s.lon) <= 0.05 && Math.abs(ref.alt - s.alt) <= 50);
+    return { measured: !!s.measured, tableMatches };
+  };
+  // Cambios por URL (solo para pruebas y demostraciones; los valores invalidos se ignoran y se conservan los de arriba)
+  cfg.siteUrlErrors = [];
+  if (typeof location !== 'undefined' && location.search) {
+    try {
+      const q = new URLSearchParams(location.search), patch = {};
+      ['lat', 'lon', 'alt', 'tz'].forEach((k) => { if (q.get(k) !== null) patch[k] = q.get(k); });
+      if (Object.keys(patch).length) cfg.siteUrlErrors = cfg.setSite(patch).errors;
+    } catch (e) { /* sin URL: nada que aplicar */ }
+  }
 
   /** Hora local del sitio a partir de milisegundos UTC (sin depender de la zona del navegador) */
   LAB.localTime = (ms) => {

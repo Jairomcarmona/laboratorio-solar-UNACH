@@ -4,11 +4,11 @@
   'use strict';
   const { fmt } = LAB.util;
   const el = (tag, attrs, ...kids) => { const n = document.createElement(tag); Object.entries(attrs || {}).forEach(([k, v]) => { if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else n.setAttribute(k, v); }); kids.forEach((c) => c && n.appendChild(c)); return n; };
-  const KINDS = [
-    ['iscVsG', 'Isc – G', 'Corriente de cortocircuito contra irradiancia: casi una recta por el origen. Necesita muestras con la carga en cortocircuito.'],
-    ['vocVsT', 'Voc – T', 'Tensión de circuito abierto contra temperatura de celda: pendiente negativa (coeficiente de Voc). Necesita muestras en circuito abierto.'],
-    ['thermalVsWind', '(T−Ta)/G – viento', 'Qué tanto se calienta la celda por W/m² según el viento. Solo con irradiancia estable (|ΔG| < 20 W/m² en 5 min) y G > 400 W/m².'],
-    ['dailyPR', 'PR diario', 'Rendimiento global (performance ratio) por día, sin y con corrección por temperatura.'],
+  const KINDS = () => [
+    ['iscVsG', LAB.t('anaview.isc_g'), LAB.t('anaview.corriente_de_cortocircuito_contra')],
+    ['vocVsT', LAB.t('anaview.voc_t'), LAB.t('anaview.tension_de_circuito_abierto')],
+    ['thermalVsWind', LAB.t('anaview.t_ta_g_viento'), LAB.t('anaview.que_tanto_se_calienta')],
+    ['dailyPR', LAB.t('anaview.pr_diario'), LAB.t('anaview.rendimiento_global_performance_ratio')],
   ];
   const pad = { l: 46, r: 12, t: 12, b: 28 };
 
@@ -19,16 +19,16 @@
     }
     build() {
       const r = this.root; r.textContent = '';
-      this.sel = el('select', { id: 'anSelect', 'aria-label': 'Corrida a analizar' });
+      this.sel = el('select', { id: 'anSelect', 'aria-label': LAB.t('anaview.corrida_a_analizar') });
       this.sel.addEventListener('change', () => { this.runId = this.sel.value; this.render(); });
-      this.modSel = el('select', { id: 'anMod', 'aria-label': 'Módulo' }); [['B', 'Módulo B'], ['A', 'Módulo A']].forEach(([v, t]) => this.modSel.appendChild(el('option', { value: v, text: t })));
+      this.modSel = el('select', { id: 'anMod', 'aria-label': LAB.t('anaview.modulo') }); [['B', LAB.t('anaview.modulo_b')], ['A', LAB.t('anaview.modulo_a')]].forEach(([v, t]) => this.modSel.appendChild(el('option', { value: v, text: t })));
       this.modSel.addEventListener('change', () => { this.mod = this.modSel.value; this.render(); });
-      const tabs = el('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Tipo de análisis', id: 'anTabs' });
-      KINDS.forEach(([k, t]) => { const b = el('button', { type: 'button', role: 'tab', 'data-k': k, text: t, 'aria-selected': String(k === this.kind) }); b.addEventListener('click', () => { this.kind = k; this.cursor = null; this.render(); }); tabs.appendChild(b); });
+      const tabs = el('div', { class: 'tabs', role: 'tablist', 'aria-label': LAB.t('anaview.tipo_de_analisis'), id: 'anTabs' });
+      KINDS().forEach(([k, t]) => { const b = el('button', { type: 'button', role: 'tab', 'data-k': k, text: t, 'aria-selected': String(k === this.kind) }); b.addEventListener('click', () => { this.kind = k; this.cursor = null; this.render(); }); tabs.appendChild(b); });
       const tools = el('div', { class: 'rvtools', role: 'toolbar' });
       const mk = (id, txt, fn) => { const b = el('button', { class: 'btn', type: 'button', id, text: txt }); b.addEventListener('click', fn); tools.appendChild(b); };
       mk('anPng', 'PNG', () => this.exportPng()); mk('anCsv', 'CSV', () => this.exportCsv());
-      this.canvas = el('canvas', { id: 'anCanvas', role: 'img', 'aria-label': 'Gráfica de dispersión con ajuste lineal' });
+      this.canvas = el('canvas', { id: 'anCanvas', role: 'img', 'aria-label': LAB.t('anaview.grafica_de_dispersion_con') });
       this.canvas.addEventListener('pointermove', (e) => this.pointer(e)); this.canvas.addEventListener('pointerleave', () => { this.cursor = null; this.draw(); });
       this.note = el('p', { class: 'hint', id: 'anNote', 'aria-live': 'polite' });
       this.stats = el('table', { class: 'mini', id: 'anStats' });
@@ -37,7 +37,7 @@
     async refresh() {
       this.runs = (await this.hooks.getRuns()).filter((x) => x.samples && x.samples.length);
       this.sel.textContent = '';
-      this.runs.forEach((x) => this.sel.appendChild(el('option', { value: x.id, text: `${x.label || x.id} · ${x.samples.length} muestras` })));
+      this.runs.forEach((x) => this.sel.appendChild(el('option', { value: x.id, text: LAB.t('anaview.muestras', { id: x.label || x.id, length: x.samples.length }) })));
       if (!this.runs.some((x) => x.id === this.runId)) this.runId = this.runs.length ? this.runs[this.runs.length - 1].id : null;
       this.sel.value = this.runId || '';
       this.render();
@@ -51,18 +51,18 @@
     render() {
       $$('#anTabs button', this.root).forEach((b) => b.setAttribute('aria-selected', String(b.dataset.k === this.kind)));
       this.res = this.compute();
-      const kind = KINDS.find((k) => k[0] === this.kind);
+      const kind = KINDS().find((k) => k[0] === this.kind);
       this.stats.textContent = '';
-      if (!this.res) { this.note.textContent = 'Todavía no hay corridas con muestras. Inicia una adquisición, o abre una corrida guardada, para analizarla.'; this.draw(); return; }
+      if (!this.res) { this.note.textContent = LAB.t('anaview.todavia_no_hay_corridas'); this.draw(); return; }
       const r = this.res;
       if (this.kind === 'dailyPR') {
-        this.note.textContent = r.days.length ? kind[2] : 'La corrida no tiene muestras contiguas con irradiancia y potencia.';
-        const head = el('tr'); ['Día', 'H (kWh/m²)', 'E (kWh)', 'PR', 'PR corregido por T', 'Horas'].forEach((h) => head.appendChild(el('th', { scope: 'col', text: h }))); this.stats.appendChild(head);
+        this.note.textContent = r.days.length ? kind[2] : LAB.t('anaview.la_corrida_no_tiene');
+        const head = el('tr'); [LAB.t('anaview.dia'), 'H (kWh/m²)', LAB.t('anaview.e_kwh'), 'PR', LAB.t('anaview.pr_corregido_por_t'), LAB.t('anaview.horas')].forEach((h) => head.appendChild(el('th', { scope: 'col', text: h }))); this.stats.appendChild(head);
         r.days.forEach((d) => { const tr = el('tr'); [d.day, fmt(d.H, 2), fmt(d.E, 3), d.PR == null ? '—' : fmt(d.PR, 3), d.PRT == null ? '—' : fmt(d.PRT, 3), fmt(d.hours, 2)].forEach((v) => tr.appendChild(el('td', { text: v }))); this.stats.appendChild(tr); });
       } else {
         const f = r.fit;
-        this.note.textContent = r.points.length < 2 ? `${kind[2]} — Esta corrida no tiene suficientes puntos que cumplan (${r.points.length}).` : kind[2] + (r.filter ? ` Filtro: ${r.filter}.` : '');
-        if (f) { const rows = [['Puntos', String(f.n)], ['Pendiente', fmt(f.slope, 5)], ['Ordenada', fmt(f.intercept, 4)], ['R²', fmt(f.r2, 4)]]; rows.forEach(([a, b]) => { const tr = el('tr'); tr.append(el('th', { scope: 'row', text: a }), el('td', { text: b })); this.stats.appendChild(tr); }); }
+        this.note.textContent = r.points.length < 2 ? LAB.t('anaview.esta_corrida_no_tiene', { v: kind[2], length: r.points.length }) : kind[2] + (r.filter ? LAB.t('anaview.filtro', { f: LAB.tm(r.filter) }) : '');
+        if (f) { const rows = [[LAB.t('anaview.puntos'), String(f.n)], [LAB.t('anaview.pendiente'), fmt(f.slope, 5)], [LAB.t('anaview.ordenada'), fmt(f.intercept, 4)], ['R²', fmt(f.r2, 4)]]; rows.forEach(([a, b]) => { const tr = el('tr'); tr.append(el('th', { scope: 'row', text: a }), el('td', { text: b })); this.stats.appendChild(tr); }); }
       }
       this.draw();
     }
@@ -70,7 +70,7 @@
       const c = this.canvas, dpr = Math.min(window.devicePixelRatio || 1, 2), b = c.getBoundingClientRect(), w = Math.max(200, Math.round(b.width || 400)), h = Math.max(120, Math.round(b.height || 220));
       c.width = w * dpr; c.height = h * dpr; const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
       ctx.font = '11px ui-monospace, monospace'; const r = this.res; this.geom = null;
-      if (!r || r.points.length === 0) { ctx.fillStyle = '#9db3c8'; ctx.textAlign = 'center'; ctx.fillText('Sin puntos que graficar', w / 2, h / 2); return; }
+      if (!r || r.points.length === 0) { ctx.fillStyle = '#9db3c8'; ctx.textAlign = 'center'; ctx.fillText(LAB.t('anaview.sin_puntos_que_graficar'), w / 2, h / 2); return; }
       const xs = r.points.map((p) => p.x), ys = r.points.map((p) => p.y);
       let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
       if (this.kind === 'iscVsG') { x0 = Math.min(0, x0); y0 = Math.min(0, y0); }
@@ -82,13 +82,13 @@
       for (let i = 0; i <= 4; i++) { const v = y0 + (y1 - y0) * i / 4, yy = Y(v); ctx.beginPath(); ctx.moveTo(pad.l, yy); ctx.lineTo(w - pad.r, yy); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(Math.abs(v) < 0.01 && v !== 0 ? v.toExponential(1) : fmt(v, Math.abs(y1 - y0) < 1 ? 3 : 1), pad.l - 5, yy); }
       ctx.textBaseline = 'top'; ctx.textAlign = 'center';
       for (let i = 0; i <= 4; i++) { const v = x0 + (x1 - x0) * i / 4; ctx.fillText(this.kind === 'dailyPR' ? '' : fmt(v, Math.abs(x1 - x0) < 10 ? 1 : 0), X(v), pad.t + ih + 6); }
-      ctx.textAlign = 'right'; ctx.fillText(r.xLabel, w - 4, h - 12); ctx.save(); ctx.translate(10, pad.t + ih / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center'; ctx.fillText(r.yLabel, 0, 0); ctx.restore();
-      ctx.fillStyle = this.mod === 'A' ? '#35d07f' : '#ffb020';
+      ctx.textAlign = 'right'; ctx.fillText(LAB.tm(r.xLabel), w - 4, h - 12); ctx.save(); ctx.translate(10, pad.t + ih / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center'; ctx.fillText(LAB.tm(r.yLabel), 0, 0); ctx.restore();
+      ctx.fillStyle = this.mod === 'A' ? LAB.config.palette.A : LAB.config.palette.B;
       r.points.forEach((p) => { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 2.4, 0, 7); ctx.fill(); });
       if (r.fit) { ctx.strokeStyle = '#2fb4ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X(x0), Y(r.fit.slope * x0 + r.fit.intercept)); ctx.lineTo(X(x1), Y(r.fit.slope * x1 + r.fit.intercept)); ctx.stroke(); }
       if (this.kind === 'dailyPR') { ctx.fillStyle = '#9db3c8'; ctx.textAlign = 'center'; r.points.forEach((p) => ctx.fillText(p.day.slice(5), X(p.x), pad.t + ih + 6)); }
       this.geom = { X, Y, x0, x1, y0, y1, w, h };
-      if (this.cursor) { const p = this.cursor; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 6, 0, 7); ctx.stroke(); ctx.fillStyle = '#e7f1fb'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(`${fmt(p.x, 3)} ; ${fmt(p.y, 4)}${p.n != null ? ` · muestra ${p.n}` : ''}`, pad.l + 6, pad.t + 2); }
+      if (this.cursor) { const p = this.cursor; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 6, 0, 7); ctx.stroke(); ctx.fillStyle = '#e7f1fb'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(`${fmt(p.x, 3)} ; ${fmt(p.y, 4)}${p.n != null ? LAB.t('anaview.muestra', { n: p.n }) : ''}`, pad.l + 6, pad.t + 2); }
     }
     pointer(e) {
       if (!this.res || !this.geom) return; const b = this.canvas.getBoundingClientRect(), mx = e.clientX - b.left, my = e.clientY - b.top; let best = null, bd = 400;
@@ -103,15 +103,15 @@
       else { L.push(`n,${r.xLabel.replace(/,/g, ' ')},${r.yLabel.replace(/,/g, ' ')}`); r.points.forEach((p) => L.push(`${p.n},${p.x},${p.y}`)); }
       return L.join('\n') + '\n';
     }
-    exportCsv() { const t = this.csvText(); if (!t) return this.hooks.toast('No hay datos que exportar.', 'warn'); this.hooks.download(t, `lab-solar-unach_${this.runId}_${this.kind}.csv`, 'text/csv;charset=utf-8'); this.hooks.toast('CSV del análisis descargado.', 'ok'); }
+    exportCsv() { const t = this.csvText(); if (!t) return this.hooks.toast(LAB.t('anaview.no_hay_datos_que'), 'warn'); this.hooks.download(t, `lab-solar-unach_${this.runId}_${this.kind}.csv`, 'text/csv;charset=utf-8'); this.hooks.toast(LAB.t('anaview.csv_del_analisis_descargado'), 'ok'); }
     exportPng() {
-      if (!this.res) return this.hooks.toast('No hay gráfica que exportar.', 'warn');
+      if (!this.res) return this.hooks.toast(LAB.t('anaview.no_hay_grafica_que'), 'warn');
       const src = this.canvas, k = src.width / (this.geom ? this.geom.w : src.width), c = document.createElement('canvas'), top = Math.round(34 * k); c.width = src.width; c.height = src.height + top;
       const ctx = c.getContext('2d'); ctx.fillStyle = '#0b1622'; ctx.fillRect(0, 0, c.width, c.height); ctx.fillStyle = '#e7f1fb'; ctx.font = `${12 * k}px sans-serif`; ctx.textBaseline = 'top';
-      ctx.fillText(`Laboratorio Solar UNACH · ${this.run.label || this.runId} · ${KINDS.find((x) => x[0] === this.kind)[1]} · módulo ${this.mod}`, 8 * k, 6 * k);
+      ctx.fillText(LAB.t('anaview.laboratorio_solar_unach_modulo', { runId: this.run.label || this.runId, v: KINDS().find((x) => x[0] === this.kind)[1], mod: this.mod }), 8 * k, 6 * k);
       const f = this.res.fit; if (f) { ctx.fillStyle = '#9db3c8'; ctx.fillText(`y = ${fmt(f.slope, 5)} x + ${fmt(f.intercept, 4)}   R² = ${fmt(f.r2, 4)}   n = ${f.n}`, 8 * k, 20 * k); }
       ctx.drawImage(src, 0, top);
-      c.toBlob((blob) => { if (!blob) return this.hooks.toast('El navegador no pudo generar la imagen.', 'warn'); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `lab-solar-unach_${this.runId}_${this.kind}.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); this.hooks.toast('Imagen PNG descargada.', 'ok'); }, 'image/png');
+      c.toBlob((blob) => { if (!blob) return this.hooks.toast(LAB.t('anaview.el_navegador_no_pudo'), 'warn'); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `lab-solar-unach_${this.runId}_${this.kind}.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); this.hooks.toast(LAB.t('anaview.imagen_png_descargada'), 'ok'); }, 'image/png');
     }
   }
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));

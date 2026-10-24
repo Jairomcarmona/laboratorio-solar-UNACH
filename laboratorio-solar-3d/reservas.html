@@ -3,30 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reservas · Laboratorio Remoto Solar UNACH</title>
+<title data-i18n="reservas.page.reservas_laboratorio_remoto_solar">Reservas · Laboratorio Remoto Solar UNACH</title>
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/portal.css">
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/theme.js"></script>
 </head>
 <body class="portal">
+<div class="portalang"><button type="button" class="btn quiet" id="themeBtn" data-theme-toggle aria-pressed="false" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema claro/oscuro"><span class="ico-dark" aria-hidden="true">☾</span><span class="ico-light" aria-hidden="true">☀</span></button><div class="seg" id="langSwitch" role="group" aria-label="Idioma de la interfaz" data-i18n-attr="aria-label:ui.lang.label"><button type="button" data-lang="es" lang="es" title="Español" aria-pressed="true">ES</button><button type="button" data-lang="en" lang="en" title="English" aria-pressed="false">EN</button></div></div>
 <main class="portalcard glass wide">
-  <h1>Reservas del banco</h1>
-  <p class="lead" id="who">Cargando tu cuenta…</p>
+  <h1 data-i18n="reservas.page.reservas_del_banco">Reservas del banco</h1>
+  <p class="lead" id="who" data-i18n="reservas.who.cargando_tu_cuenta">Cargando tu cuenta…</p>
   <section aria-labelledby="hNew" id="newBox" hidden>
-    <h2 id="hNew">Nueva reserva</h2>
+    <h2 id="hNew" data-i18n="reservas.hNew.nueva_reserva">Nueva reserva</h2>
     <form id="bookForm" novalidate>
-      <label for="bStart">Inicio</label><input id="bStart" type="datetime-local" required>
-      <label for="bMin">Duración (minutos)</label><input id="bMin" type="number" min="15" max="120" step="15" value="60" required>
+      <label for="bStart" data-i18n="reservas.bookForm.inicio">Inicio</label><input id="bStart" type="datetime-local" required>
+      <label for="bMin" data-i18n="reservas.bookForm.duracion_minutos">Duración (minutos)</label><input id="bMin" type="number" min="15" max="120" step="15" value="60" required>
       <p id="bMsg" class="msg" role="alert" aria-live="assertive" hidden></p>
-      <button class="btn accent" type="submit">Reservar</button>
+      <button class="btn accent" type="submit" data-i18n="reservas.bookForm.reservar">Reservar</button>
     </form>
   </section>
   <section aria-labelledby="hMine">
-    <h2 id="hMine">Mis reservas</h2>
+    <h2 id="hMine" data-i18n="reservas.hMine.mis_reservas">Mis reservas</h2>
     <ul id="list" class="blist"></ul>
-    <p class="hint" id="empty" hidden>No tienes reservas próximas.</p>
+    <p class="hint" id="empty" hidden data-i18n="reservas.empty.no_tienes_reservas_proximas">No tienes reservas próximas.</p>
   </section>
-  <div class="rowbtn"><a class="btn accent" href="index.html?source=ws" id="enter">Entrar al laboratorio</a><button class="btn" id="logout" type="button">Cerrar sesión</button></div>
+  <div class="rowbtn"><a class="btn accent" href="index.html?source=ws" id="enter" data-i18n="reservas.enter.entrar_al_laboratorio">Entrar al laboratorio</a><button class="btn" id="logout" type="button" data-i18n="reservas.logout.cerrar_sesion">Cerrar sesión</button></div>
 </main>
+<script src="js/config.js"></script>
+<script src="i18n/es.js"></script>
+<script src="i18n/en.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/portal.js"></script>
 </body>
 </html>

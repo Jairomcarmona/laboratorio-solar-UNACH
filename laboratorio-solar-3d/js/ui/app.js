@@ -5,13 +5,13 @@
   const { clamp, fmt, pad2 } = LAB.util;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-  const DOW = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-  const MODE_TXT = { manual: 'Manual', astro: 'Astronómico', sensor: 'Por sensores', fixed: 'Fijo' };
-  const SENSOR_TXT = { TRACK: 'Sensor: enganchado', NO_SIGNAL: 'Sensor: sin señal (nube)', ACQUIRE: 'Sensor: adquiriendo Sol', NIGHT: 'Noche: estacionado' };
+  const MONTHS = () => LAB.tl('app.months');
+  const DOW = () => LAB.tl('app.dow');
+  const MODE_TXT = () => ({ manual: LAB.t('app.manual'), astro: LAB.t('app.astronomico'), sensor: LAB.t('app.por_sensores'), fixed: LAB.t('app.fijo') });
+  const SENSOR_TXT = () => ({ TRACK: LAB.t('app.sensor_enganchado'), NO_SIGNAL: LAB.t('app.sensor_sin_senal_nube'), ACQUIRE: LAB.t('app.sensor_adquiriendo_sol'), NIGHT: LAB.t('app.noche_estacionado') });
   const PART_VIEW = { moduleA: 'moduleA', irrA: 'moduleA', dcA: 'moduleA', moduleB: 'moduleB', irrB: 'moduleB', azAxis: 'moduleB', tiltAxis: 'moduleB', dcB: 'moduleB',
     pyr: 'station', anemo: 'station', shield: 'station', rain: 'station', load: 'load', cabinet: 'cabinet', estop: 'cabinet', cam1: 'camFocus1', cam2: 'camFocus2' };
-  const VIEW_BTNS = [['general', 'Vista general'], ['moduleA', 'A'], ['moduleB', 'B'], ['station', 'Estación'], ['load', 'Carga'], ['cabinet', 'Gabinete'], ['aerial', 'Aérea']];
+  const VIEW_BTNS = () => [['general', LAB.t('app.vista_general')], ['moduleA', 'A'], ['moduleB', 'B'], ['station', LAB.t('app.estacion')], ['load', LAB.t('app.carga')], ['cabinet', LAB.t('app.gabinete')], ['aerial', LAB.t('app.aerea')]];
 
   const ui = LAB.ui;
   const store = LAB.core.store;
@@ -26,7 +26,7 @@
   // ------------------------------------------------------------------ utilidades
   ui.toast = function (msg, level = 'info', ms = 4200) {
     const box = $('#toasts');
-    const t = document.createElement('div'); t.className = 'toast ' + level; t.textContent = msg;
+    const t = document.createElement('div'); t.className = 'toast ' + level; t.textContent = LAB.tm(msg);
     box.appendChild(t);
     while (box.children.length > 3) box.firstChild.remove();
     setTimeout(() => t.remove(), ms);
@@ -40,7 +40,7 @@
   const isNet = () => source && (source.kind === 'ws' || source.kind === 'twin');
   const netSrc = () => (source.kind === 'twin' ? source.ws : source);
   /** Anuncio para lectores de pantalla (region viva educada) */
-  ui.announce = function (msg) { const r = $('#liveRegion'); if (r) { r.textContent = ''; setTimeout(() => { r.textContent = msg; }, 30); } };
+  ui.announce = function (msg) { const r = $('#liveRegion'); if (r) { r.textContent = ''; setTimeout(() => { r.textContent = LAB.tm(msg); }, 30); } };
   ui.openLogin = function () { showModal($('#loginModal')); };
   ui.openLog = function () { openLog(); };
   const fieldErr = (input, msg) => {
@@ -52,11 +52,11 @@
   /** Lee un campo numerico: devuelve {empty}, {value} o {error}; en caso de error marca el campo y CONSERVA lo escrito */
   const readNum = (input, name, lo, hi, unit) => {
     const raw = input.value.trim();
-    if (raw === '' && input.validity && input.validity.badInput) { fieldErr(input, `${name}: escribe un número.`); return { error: true }; }
+    if (raw === '' && input.validity && input.validity.badInput) { fieldErr(input, LAB.t('app.escribe_un_numero', { name })); return { error: true }; }
     if (raw === '') { fieldErr(input, ''); return { empty: true }; }
     const v = Number(raw.replace(',', '.'));
-    if (!Number.isFinite(v)) { fieldErr(input, `${name}: escribe un número.`); return { error: true }; }
-    if (v < lo || v > hi) { fieldErr(input, `${name}: debe estar entre ${lo} y ${hi} ${unit}.`); return { error: true }; }
+    if (!Number.isFinite(v)) { fieldErr(input, LAB.t('app.escribe_un_numero', { name })); return { error: true }; }
+    if (v < lo || v > hi) { fieldErr(input, LAB.t('app.debe_estar_entre_y', { name, lo, hi, unit })); return { error: true }; }
     fieldErr(input, ''); return { value: v };
   };
   /** Sincroniza un control con el estado del dominio sin pisar lo que la persona esta editando */
@@ -72,9 +72,10 @@
 
     // vistas
     const vs = $('#viewSeg');
-    VIEW_BTNS.forEach(([id, label]) => { const b = document.createElement('button'); b.textContent = label; b.dataset.v = id; vs.appendChild(b); });
+    VIEW_BTNS().forEach(([id, label]) => { const b = document.createElement('button'); b.textContent = label; b.dataset.v = id; vs.appendChild(b); });
     vs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; app.rig.set(b.dataset.v); markViews(b.dataset.v); });
     markViews('general');
+    LAB.i18n.onChange(relang);
 
     if (ui.layout) ui.layout.init();
     applyRanges();
@@ -85,16 +86,16 @@
       const ws = netSrc();
       ws.on('ack', (a) => {
         if (!a.ok) { if (a.reason) ui.toast(a.reason, a.kind === 'timeout' ? 'bad' : 'warn', 6000); return; }
-        if (a.cmd && a.cmd.type === 'session.start') { const m = $('#loginModal'); if (!m.hidden) hideModal(m); ui.toast('Tienes el control del banco. Los comandos se validan en la pasarela, en el puente y en el PLC.', 'ok', 6000); }
+        if (a.cmd && a.cmd.type === 'session.start') { const m = $('#loginModal'); if (!m.hidden) hideModal(m); ui.toast(LAB.t('app.tienes_el_control_del'), 'ok', 6000); }
       });
-      ws.on('auth', () => ui.toast('Tu sesión de acceso venció. Vuelve a iniciar sesión.', 'bad', 8000));
+      ws.on('auth', () => ui.toast(LAB.t('app.tu_sesion_de_acceso'), 'bad', 8000));
     }
     source.on('sweep', (sw) => {
-      if (sw.status === 'complete') { chartTab = 'iv'; markTab(); ui.toast('Barrido I‑V completado y guardado. Revisa la pestaña I‑V / P‑V.', 'ok'); ui.announce('Barrido I-V completado'); }
+      if (sw.status === 'complete') { chartTab = 'iv'; markTab(); ui.toast(LAB.t('app.barrido_i_v_completado'), 'ok'); ui.announce(LAB.t('app.barrido_i_v_completado_2')); }
       store.putSweep(sw); if (sw.status !== 'running') { sweepSel = [sw.id]; refreshSweeps(); }
     });
     source.on('run', (r) => { if (r.status === 'discarded') store.deleteRun(r.id); else store.putRun(r); refreshRuns(); });
-    source.on('acq', (e) => { if (e.status === 'stopped') { const r = source.getRun(e.runId); if (r) store.putRun(r); } ui.announce(e.status === 'recording' ? 'Adquisición iniciada' : 'Adquisición detenida'); refreshRuns(); });
+    source.on('acq', (e) => { if (e.status === 'stopped') { const r = source.getRun(e.runId); if (r) store.putRun(r); } ui.announce(e.status === 'recording' ? LAB.t('app.adquisicion_iniciada') : LAB.t('app.adquisicion_detenida')); refreshRuns(); });
     source.on('session', (e) => {
       if (e.phase === 'end') source.runs.filter((r) => r.sessionId === e.entry.id).forEach((r) => store.putRun(r));
       if (ui.practices) ui.practices.onSession(e.phase, e.entry);
@@ -109,13 +110,16 @@
     const q = new URLSearchParams(location.search);
     const preRole = isNet() ? null : q.get('session');
     if (preRole) {
-      if (LAB.config.roles.includes(preRole)) { startSession(preRole, 'Demostración'); }
-      else { source.log('warn', `Parámetro de URL session="${String(preRole).replace(/[^\w-]/g, '?').slice(0, 20)}" no reconocido: se ignora.`, 'URL'); showModal($('#loginModal')); }
+      if (LAB.config.roles.includes(preRole)) { startSession(preRole, LAB.t('app.demostracion')); }
+      else { source.log('warn', LAB.t('app.parametro_de_url_session', { slice: String(preRole).replace(/[^\w-]/g, '?').slice(0, 20) }), 'URL'); showModal($('#loginModal')); }
     } else if (source.kind === 'replay') { /* reproduccion: sin acceso que elegir */ } else showModal($('#loginModal'));
     const pr = q.get('practice');
-    if (pr) { if (ui.practices && ui.practices.defs(pr)) setTimeout(() => ui.practices.openFromUrl(pr), 300); else source.log('warn', 'Parámetro de URL practice no reconocido: se ignora.', 'URL'); }
+    if (pr) { if (ui.practices && ui.practices.defs(pr)) setTimeout(() => ui.practices.openFromUrl(pr), 300); else source.log('warn', LAB.t('app.parametro_de_url_practice'), 'URL'); }
     const tab = q.get('tab');
-    if (tab) { if (['power', 'day', 'iv', 'energy', 'run', 'analysis'].includes(tab)) { chartTab = tab; markTab(); } else source.log('warn', 'Parámetro de URL tab no reconocido: se ignora.', 'URL'); }
+    if (tab) { if (['power', 'day', 'iv', 'energy', 'run', 'analysis'].includes(tab)) { chartTab = tab; markTab(); } else source.log('warn', LAB.t('app.parametro_de_url_tab'), 'URL'); }
+    // ubicación (un solo lugar: LAB.config.site): los valores inválidos de la URL se ignoran con aviso; si cambian las coordenadas, se avisa de la tabla de cielo despejado
+    (LAB.config.siteUrlErrors || []).forEach((k) => source.log('warn', LAB.t(k), 'URL'));
+    if (!LAB.config.siteStatus().tableMatches) source.log('warn', LAB.t('site.table_mismatch'), 'URL');
     if (q.get('panels') === '0') document.body.dataset.panels = '0';   // solo escena (capturas y enlaces de demostracion)
   };
 
@@ -150,15 +154,15 @@
     const r = send({ type: 'session.start', role, user: clean || undefined, profileId: store.profileId(role, clean) });
     if (!r.ok) return r;
     const m = $('#loginModal'); if (!m.hidden) hideModal(m);
-    if (role === 'visitor') ui.toast('Modo visitante: puedes mirar y cambiar el entorno, pero no enviar comandos al banco.', 'info', 6500);
-    else ui.toast('Sesión de demostración iniciada. Prueba el modo Astronómico o abre "Prácticas".', 'ok', 6000);
+    if (role === 'visitor') ui.toast(LAB.t('app.modo_visitante_puedes_mirar'), 'info', 6500);
+    else ui.toast(LAB.t('app.sesion_de_demostracion_iniciada'), 'ok', 6000);
     return r;
   }
   /** Banco real: el rol y la identidad vienen de la cuenta (pasarela); aqui solo se pide tomar el control con la reserva vigente. */
   function startRealSession() {
     const ws = netSrc(), h = ws.hello;
-    if (!h) { ui.toast('Aún no hay conexión con la pasarela del laboratorio.', 'warn'); return { ok: false }; }
-    if (!['student', 'teacher', 'tech'].includes(h.role)) { ui.toast(h.role === 'admin' ? 'Las cuentas de administración no operan el banco.' : 'Tu cuenta es de solo observación.', 'info'); const m = $('#loginModal'); if (!m.hidden) hideModal(m); return { ok: false }; }
+    if (!h) { ui.toast(LAB.t('app.aun_no_hay_conexion'), 'warn'); return { ok: false }; }
+    if (!['student', 'teacher', 'tech'].includes(h.role)) { ui.toast(h.role === 'admin' ? LAB.t('app.las_cuentas_de_administracion') : LAB.t('app.tu_cuenta_es_de'), 'info'); const m = $('#loginModal'); if (!m.hidden) hideModal(m); return { ok: false }; }
     const r = send({ type: 'session.start', role: h.role, user: h.user, profileId: ws.profileId || undefined });
     return r;
   }
@@ -167,15 +171,15 @@
     const lead = $('.lead', m); const roles = $('.roles', m); const nm = $('#userName'), lbl = $('.lbl', m);
     const h = ws.hello;
     lead.innerHTML = '';
-    const b1 = document.createElement('b'); b1.textContent = source.kind === 'twin' ? 'Modo gemelo' : 'Banco real';
-    lead.append(b1, document.createTextNode(h ? `: has iniciado sesión como ${h.user} (${({ student: 'estudiante', teacher: 'docente', tech: 'técnico', visitor: 'visitante', admin: 'administración' })[h.role] || h.role}). Los datos son mediciones del banco; los límites de seguridad los aplica el controlador local.` : ': conectando con la pasarela…'));
+    const b1 = document.createElement('b'); b1.textContent = source.kind === 'twin' ? LAB.t('app.modo_gemelo') : LAB.t('app.banco_real');
+    lead.append(b1, document.createTextNode(h ? LAB.t('app.has_iniciado_sesion_como', { user: h.user, role: ({ student: 'estudiante', teacher: 'docente', tech: LAB.t('app.tecnico'), visitor: 'visitante', admin: LAB.t('app.administracion') })[h.role] || h.role }) : LAB.t('app.conectando_con_la_pasarela')));
     if (nm) nm.hidden = true; if (lbl) lbl.hidden = true;
     roles.textContent = '';
     const can = h && ['student', 'teacher', 'tech'].includes(h.role);
     const take = document.createElement('button'); take.className = 'role'; take.dataset.role = h ? h.role : 'student'; take.id = 'btnTakeControl'; take.disabled = !can;
-    take.innerHTML = '<b>Tomar el control</b><span>Requiere una reserva vigente; solo una persona opera a la vez</span>';
+    take.innerHTML = LAB.t('app.tomar_el_control_requiere');
     const look = document.createElement('button'); look.className = 'role'; look.id = 'btnObserve';
-    look.innerHTML = '<b>Solo observar</b><span>Ver la telemetría sin enviar comandos</span>';
+    look.innerHTML = LAB.t('app.solo_observar_ver_la');
     look.addEventListener('click', () => hideModal(m));
     roles.append(take, look);
     take.addEventListener('click', () => { const r = startRealSession(); if (r && r.ok) { /* el modal se cierra al llegar el acuse */ } });
@@ -191,20 +195,20 @@
   function bindReplay() {
     const dock = $('#dock'); if (!dock) return;
     const bar = document.createElement('div'); bar.className = 'grp'; bar.id = 'gReplay';
-    const play = document.createElement('button'); play.className = 'btn icon'; play.id = 'rpPlay'; play.setAttribute('aria-label', 'Pausar'); play.textContent = '❚❚';
+    const play = document.createElement('button'); play.className = 'btn icon'; play.id = 'rpPlay'; play.setAttribute('aria-label', LAB.t('app.pausar')); play.textContent = '❚❚';
     const seg = document.createElement('div'); seg.className = 'seg'; seg.id = 'rpSpeed';
     [1, 10, 60, 600].forEach((v) => { const b = document.createElement('button'); b.dataset.s = v; b.textContent = '×' + v; seg.appendChild(b); });
-    const pos = document.createElement('input'); pos.type = 'range'; pos.id = 'rpPos'; pos.min = 0; pos.max = 1000; pos.value = 0; pos.setAttribute('aria-label', 'Posición en la corrida');
+    const pos = document.createElement('input'); pos.type = 'range'; pos.id = 'rpPos'; pos.min = 0; pos.max = 1000; pos.value = 0; pos.setAttribute('aria-label', LAB.t('app.posicion_en_la_corrida'));
     const out = document.createElement('output'); out.id = 'rpOut'; out.setAttribute('aria-live', 'off');
     bar.append(play, seg, pos, out); dock.prepend(bar);
     play.addEventListener('click', () => send({ type: source.playing ? 'replay.pause' : 'replay.play' }));
     seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) send({ type: 'replay.speed', speed: +b.dataset.s }); });
     pos.addEventListener('input', () => { const t0 = source.teles[0], t1 = source.teles[source.teles.length - 1]; if (t0) send({ type: 'replay.seek', ms: t0.ts + (t1.ts - t0.ts) * pos.value / 1000 }); });
     ui.replayTick = (rp) => {
-      play.textContent = source.playing ? '❚❚' : '▶'; play.setAttribute('aria-label', source.playing ? 'Pausar' : 'Reproducir');
+      play.textContent = source.playing ? '❚❚' : '▶'; play.setAttribute('aria-label', source.playing ? LAB.t('app.pausar') : LAB.t('app.reproducir'));
       $$('#rpSpeed button').forEach((b) => b.classList.toggle('on', +b.dataset.s === source.speed));
       if (rp && document.activeElement !== pos) pos.value = rp.durationS > 0 ? Math.round(rp.positionS / rp.durationS * 1000) : 0;
-      out.textContent = rp ? `${Math.round(rp.positionS)} s de ${Math.round(rp.durationS)} s · muestra ${rp.index + 1}/${rp.count}` : '';
+      out.textContent = rp ? LAB.t('app.s_de_s_muestra', { round: Math.round(rp.positionS), round2: Math.round(rp.durationS), v: rp.index + 1, count: rp.count }) : '';
     };
   }
 
@@ -223,20 +227,36 @@
     set('#numAz', { min: T.azMin, max: T.azMax }); set('#numTilt', { min: T.tiltMin, max: T.tiltMax });
     set('#windSlider', { min: 0, max: LAB.config.limits.windMax });
     set('#cloudSlider', { min: 0, max: 100 });
-    $('#trHint').textContent = `Rango autorizado: azimut ${T.azMin}°–${T.azMax}°, inclinación ${T.tiltMin}°–${T.tiltMax}°. Los comandos fuera de rango se rechazan.`;
+    $('#trHint').textContent = LAB.t('app.rango_autorizado_azimut_inclinacion', { azMin: T.azMin, azMax: T.azMax, tiltMin: T.tiltMin, tiltMax: T.tiltMax });
     void L;
   }
 
-  function markViews(v) { $$('#viewSeg button').forEach((b) => b.classList.toggle('on', b.dataset.v === v)); }
+  let curView = 'general';
+  function markViews(v) { curView = v; $$('#viewSeg button').forEach((b) => b.classList.toggle('on', b.dataset.v === v)); }
+  /** Cambio de idioma en vivo: lo que se construyó una sola vez con texto se vuelve a construir (el resto se repinta en cada ciclo) */
+  function relang() {
+    const vs = $('#viewSeg'); vs.textContent = '';
+    VIEW_BTNS().forEach(([id, label]) => { const b = document.createElement('button'); b.textContent = label; b.dataset.v = id; vs.appendChild(b); });
+    markViews(curView);
+    applyRanges();
+    badgeKey = '';
+    renderLog();
+    if (app && app.world && app.world.labels && app.world.labels.relabel) app.world.labels.relabel();
+    if (ui.onboarding && ui.onboarding.rebuild) ui.onboarding.rebuild();
+    // las vistas de corrida y análisis guardan texto en su estructura: se vuelven a crear
+    if (ui.runview) { $('#runPane').textContent = ''; ui.runview = null; }
+    if (ui.analysisview) { $('#analysisPane').textContent = ''; ui.analysisview = null; }
+    markTab();
+  }
 
   // ------------------------------------------------------------------ barra superior
-  const BADGE = {
-    sim: ['SIMULACIÓN', 'Modo simulador: datos calculados con pvlib. Pulsa ? para ver el alcance del modelo.'],
-    real: ['BANCO REAL', 'Mediciones del banco físico a través de la pasarela del laboratorio.'],
-    fake: ['BANCO VIRTUAL', 'El puente está conectado a un banco VIRTUAL de pruebas, no a hardware: los datos no son mediciones físicas.'],
-    twin: ['GEMELO', 'Modelo del simulador alimentado con el ambiente medido; compara lo esperado con lo medido.'],
-    replay: ['REPRODUCCIÓN', 'Corrida registrada, en solo lectura.'],
-  };
+  const BADGE = () => ({
+    sim: [LAB.t('app.simulacion'), LAB.t('app.modo_simulador_datos_calculados')],
+    real: [LAB.t('app.banco_real_2'), LAB.t('app.mediciones_del_banco_fisico')],
+    fake: [LAB.t('app.banco_virtual'), LAB.t('app.el_puente_esta_conectado')],
+    twin: ['GEMELO', LAB.t('app.modelo_del_simulador_alimentado')],
+    replay: [LAB.t('app.reproduccion'), LAB.t('app.corrida_registrada_en_solo')],
+  });
   function bindSource() {
     const sw = $('#sourceSwitch'); if (!sw) return;
     const served = /^https?:$/.test(location.protocol);
@@ -244,7 +264,7 @@
     $$('button', sw).forEach((b) => {
       const k = b.dataset.src, on = k === cur;
       b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
-      if (k !== 'sim') { b.disabled = !served; if (!served) b.title = 'Disponible cuando la página se sirve desde el servidor del laboratorio (no desde un archivo local).'; else b.title = k === 'ws' ? 'Mediciones del banco físico (requiere iniciar sesión)' : b.title; }
+      if (k !== 'sim') { b.disabled = !served; if (!served) b.title = LAB.t('app.disponible_cuando_la_pagina'); else b.title = k === 'ws' ? LAB.t('app.mediciones_del_banco_fisico_2') : b.title; }
     });
     sw.addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b || b.disabled || b.dataset.src === cur) return;
@@ -256,11 +276,11 @@
     $('#sessionBtn').addEventListener('click', () => {
       if (tel.safety.session.active) {
         const nRec = tel.acq.status === 'recording';
-        if (confirm('¿Terminar la sesión de demostración?' + (nRec ? ' La adquisición en curso se detendrá y sus datos se conservarán.' : ' Tus corridas y tu avance se conservan.'))) { send({ type: 'session.end' }); }
+        if (confirm(LAB.t('app.terminar_la_sesion_de') + (nRec ? LAB.t('app.la_adquisicion_en_curso') : LAB.t('app.tus_corridas_y_tu')))) { send({ type: 'session.end' }); }
       } else showModal($('#loginModal'));
     });
     $('#btnPractices').addEventListener('click', (e) => {
-      if (!tel.safety.session.active) { ui.toast('Inicia una sesión de demostración para usar las prácticas.', 'warn'); showModal($('#loginModal')); return; }
+      if (!tel.safety.session.active) { ui.toast(LAB.t('app.inicia_una_sesion_de'), 'warn'); showModal($('#loginModal')); return; }
       ui.practices.toggleDrawer(e.currentTarget);
     });
     $('#btnLog').addEventListener('click', () => { const p = $('#logpanel'); if (p.hidden) openLog(); else closeLog(); });
@@ -285,12 +305,12 @@
     tl.addEventListener('change', () => { dragging.tilt = false; send({ type: 'tracker.target', tilt: +tl.value }); });
     const nAz = $('#numAz'), nTl = $('#numTilt'), T = LAB.config.tracker;
     const go = () => {
-      const a = readNum(nAz, 'Azimut', T.azMin, T.azMax, '°'), t = readNum(nTl, 'Inclinación', T.tiltMin, T.tiltMax, '°');
+      const a = readNum(nAz, LAB.t('app.azimut'), T.azMin, T.azMax, '°'), t = readNum(nTl, LAB.t('app.inclinacion'), T.tiltMin, T.tiltMax, '°');
       if (a.error || t.error) { (a.error ? nAz : nTl).focus(); return; }          // se conserva lo escrito y se marca el campo
-      if (a.empty && t.empty) { fieldErr(nAz, 'Escribe un azimut, una inclinación o ambos.'); nAz.focus(); return; }
+      if (a.empty && t.empty) { fieldErr(nAz, LAB.t('app.escribe_un_azimut_una')); nAz.focus(); return; }
       const o = { type: 'tracker.target' }; if (!a.empty) o.az = a.value; if (!t.empty) o.tilt = t.value;
       const r = send(o);
-      if (r.ok) { nAz.value = ''; nTl.value = ''; ui.announce('Orden enviada al seguidor'); }       // solo se limpia si el controlador la aceptó
+      if (r.ok) { nAz.value = ''; nTl.value = ''; ui.announce(LAB.t('app.orden_enviada_al_seguidor')); }       // solo se limpia si el controlador la aceptó
     };
     [nAz, nTl].forEach((n) => n.addEventListener('input', () => fieldErr(n, '')));
     $('#btnNumGo').addEventListener('click', go);
@@ -302,7 +322,7 @@
   }
 
   // --------------------------------------------------------------------- carga
-  const LOAD_NAMES = { mppt: 'MPPT', cv: 'Tensión', cr: 'Resistencia', oc: 'Abierto', sc: 'Cortocirc.' };
+  const LOAD_NAMES = () => ({ mppt: 'MPPT', cv: LAB.t('app.tension'), cr: LAB.t('app.resistencia'), oc: LAB.t('app.abierto'), sc: LAB.t('app.cortocirc') });
   function loadSetpoint(mode) {
     const v = +$('#loadSp').value;
     if (mode === 'cv') return v / 100;
@@ -325,10 +345,10 @@
     sp.addEventListener('change', () => { dragging.load = false; });
     const num = $('#loadNum');
     const applyNum = () => {
-      const mode = tel.load.mode; if (mode !== 'cv' && mode !== 'cr') { ui.toast('Elige modo Tensión o Resistencia para fijar un valor.', 'warn'); return; }
-      const L = LM(), r = mode === 'cv' ? readNum(num, 'Tensión', L.CV_MIN * 100, L.CV_MAX * 100, '% de Voc') : readNum(num, 'Resistencia', L.CR_MIN, L.CR_MAX, 'Ω');
+      const mode = tel.load.mode; if (mode !== 'cv' && mode !== 'cr') { ui.toast(LAB.t('app.elige_modo_tension_o'), 'warn'); return; }
+      const L = LM(), r = mode === 'cv' ? readNum(num, LAB.t('app.tension'), L.CV_MIN * 100, L.CV_MAX * 100, LAB.t('app.de_voc')) : readNum(num, LAB.t('app.resistencia'), L.CR_MIN, L.CR_MAX, 'Ω');
       if (r.error) { num.focus(); return; }
-      if (r.empty) { fieldErr(num, 'Escribe un valor.'); num.focus(); return; }
+      if (r.empty) { fieldErr(num, LAB.t('app.escribe_un_valor')); num.focus(); return; }
       send({ type: 'load.set', mode, setpoint: mode === 'cv' ? r.value / 100 : r.value });
     };
     num.addEventListener('input', () => { dragging.loadNum = true; fieldErr(num, ''); });
@@ -340,10 +360,10 @@
 
   // ------------------------------------------------------------------ seguridad
   function bindSafety() {
-    $('#btnEstop').addEventListener('click', () => send({ type: 'safety.estop', who: 'Usuario remoto' }));
+    $('#btnEstop').addEventListener('click', () => send({ type: 'safety.estop', who: LAB.t('app.usuario_remoto') }));
     $('#btnReset').addEventListener('click', () => {
-      if (!tel.safety.estop) return ui.toast('No hay paro de emergencia activo.', 'info');
-      if (!confirm('En el banco real el restablecimiento lo hace solo el técnico en sitio con la llave. Aquí puedes SIMULAR esa intervención. ¿Simular la intervención del técnico?')) return;
+      if (!tel.safety.estop) return ui.toast(LAB.t('app.no_hay_paro_de'), 'info');
+      if (!confirm(LAB.t('app.en_el_banco_real'))) return;
       send({ type: 'safety.reset' });
     });
     $('#btnComms').addEventListener('click', () => send({ type: 'sim.comms', connected: tel.safety.commsCut }));
@@ -405,11 +425,11 @@
     $('#btnLabels').addEventListener('click', () => {
       const next = { main: 'all', all: 'off', off: 'main' }[app.world.labels.mode];
       app.world.labels.setMode(next);
-      $('#btnLabels').title = { main: 'Etiquetas: principales (L)', all: 'Etiquetas: todas (L)', off: 'Sin etiquetas (L)' }[next];
+      $('#btnLabels').title = { main: LAB.t('app.etiquetas_principales_l'), all: LAB.t('app.etiquetas_todas_l'), off: LAB.t('app.sin_etiquetas_l') }[next];
       $('#btnLabels').classList.toggle('on', next === 'all'); $('#btnLabels').classList.toggle('dim', next === 'off');
     });
     const qBtn = $('#btnQuality');
-    const qLabel = () => { const nm = { high: 'Alta', medium: 'Media', low: 'Baja' }[app.quality.level]; setText('qTxt', app.quality.auto ? 'Auto·' + nm[0] : nm); qBtn.title = 'Calidad gráfica: ' + (app.quality.auto ? 'automática (' + nm.toLowerCase() + ')' : nm.toLowerCase()) + ' — clic para cambiar'; };
+    const qLabel = () => { const nm = { high: LAB.t('app.alta'), medium: LAB.t('app.media'), low: LAB.t('app.baja') }[app.quality.level]; setText('qTxt', app.quality.auto ? 'Auto·' + nm[0] : nm); qBtn.title = LAB.t('app.calidad_grafica') + (app.quality.auto ? LAB.t('app.automatica') + nm.toLowerCase() + ')' : nm.toLowerCase()) + LAB.t('app.clic_para_cambiar'); };
     ui.onQuality = qLabel; qLabel();
     qBtn.addEventListener('click', () => {
       const q = app.quality;
@@ -432,7 +452,7 @@
     if (app.rig.free) $('#btnFree').click();
     app.rig.enterPov(which); povOpener = document.activeElement;
     $('#povOverlay').hidden = false;
-    setText('povName', which === 'cam1' ? 'CÁM 1 · Vista general' : 'CÁM 2 · Vista del seguidor');
+    setText('povName', which === 'cam1' ? LAB.t('app.cam_1_vista_general') : LAB.t('app.cam_2_vista_del'));
     $('#btnCam1').classList.toggle('on', which === 'cam1'); $('#btnCam2').classList.toggle('on', which === 'cam2');
     if (ui.practices) ui.practices.notify('pov', { id: which, phase: 'enter' });
     $('#povExit').focus();
@@ -464,16 +484,16 @@
       if (!r.ok) return ui.toast(r.reason, 'warn', 6000);
       download(r.text, r.filename, r.mime);
       if (ui.practices) ui.practices.notify('csv', { rows: r.rows, runId: r.runId });
-      ui.toast(`Descargadas ${r.rows} muestras de la corrida ${r.runId}.`, 'ok');
+      ui.toast(LAB.t('app.descargadas_muestras_de_la', { rows: r.rows, runId: r.runId }), 'ok');
     });
     $('#btnAcq').addEventListener('click', () => {
       if (tel.acq.status === 'recording') return send({ type: 'acq.stop' });
       const st = ui.practices && ui.practices.state();
-      if (!tel.acq.runId && st && st.current && st.ps && st.ps.status === 'in_progress') { const r = send({ type: 'acq.newRun', practiceId: st.current, label: 'Práctica ' + st.current }); if (!r.ok) return; }
+      if (!tel.acq.runId && st && st.current && st.ps && st.ps.status === 'in_progress') { const r = send({ type: 'acq.newRun', practiceId: st.current, label: LAB.t('app.practica') + st.current }); if (!r.ok) return; }
       send({ type: 'acq.start' });
     });
     $('#btnNewRun').addEventListener('click', () => { if (tel.acq.status === 'recording') send({ type: 'acq.stop' }); const st = ui.practices && ui.practices.state(); send({ type: 'acq.newRun', practiceId: st && st.ps && st.ps.status === 'in_progress' ? st.current : undefined }); });
-    $('#btnResetE').addEventListener('click', () => { if (confirm('Poner a cero los contadores de energía abre un nuevo segmento de integración. Las muestras ya registradas se conservan. ¿Continuar?')) send({ type: 'sim.resetEnergy' }); });
+    $('#btnResetE').addEventListener('click', () => { if (confirm(LAB.t('app.poner_a_cero_los'))) send({ type: 'sim.resetEnergy' }); });
     $('#btnResetRain').addEventListener('click', () => send({ type: 'sim.resetRain' }));
     $('#btnRuns').addEventListener('click', () => { const p = $('#runsPanel'); p.hidden = !p.hidden; $('#btnRuns').setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) refreshRuns(); });
   }
@@ -486,13 +506,13 @@
   async function refreshRuns() {
     const p = $('#runsPanel'); if (!p || p.hidden || !tel.session.profileId) return;
     const runs = await store.listRuns(tel.session.profileId), box = $('#runsList'); box.textContent = '';
-    if (!runs.length) { box.textContent = 'Todavía no hay corridas guardadas para este perfil.'; return; }
+    if (!runs.length) { box.textContent = LAB.t('app.todavia_no_hay_corridas'); return; }
     runs.slice().reverse().forEach((r) => {
       const row = document.createElement('div'); row.className = 'runrow';
       const t = document.createElement('span'); const lt = r.samples.length ? LAB.localTime(r.samples[0][2]) : null;
-      t.textContent = `${r.id} · ${r.samples.length} muestras · ${r.segments.length} segmento(s) · ${r.status}${lt ? ' · ' + lt.day + '/' + lt.month + '/' + lt.year : ''}${r.practiceId ? ' · ' + r.practiceId : ''}`;
-      const b1 = document.createElement('button'); b1.className = 'btn'; b1.type = 'button'; b1.textContent = 'CSV'; b1.setAttribute('aria-label', 'Descargar CSV de ' + r.id);
-      b1.addEventListener('click', () => { if (!r.samples.length) return ui.toast('Esta corrida no tiene muestras.', 'warn'); download(LAB.core.runToCsv(r), `lab-solar-unach_${r.id}.csv`, 'text/csv;charset=utf-8'); });
+      t.textContent = LAB.t('app.muestras_segmento_s', { id: r.id, length: r.samples.length, length3: r.segments.length, status: r.status, year: lt ? ' · ' + lt.day + '/' + lt.month + '/' + lt.year : '', practiceId: r.practiceId ? ' · ' + r.practiceId : '' });
+      const b1 = document.createElement('button'); b1.className = 'btn'; b1.type = 'button'; b1.textContent = 'CSV'; b1.setAttribute('aria-label', LAB.t('app.descargar_csv_de') + r.id);
+      b1.addEventListener('click', () => { if (!r.samples.length) return ui.toast(LAB.t('app.esta_corrida_no_tiene'), 'warn'); download(LAB.core.runToCsv(r), `lab-solar-unach_${r.id}.csv`, 'text/csv;charset=utf-8'); });
       row.append(t, b1); box.appendChild(row);
     });
   }
@@ -533,7 +553,7 @@
   function logItem(e) {
     const li = document.createElement('li'); li.className = e.level;
     const tm = document.createElement('time'), sp = document.createElement('span'), sm = document.createElement('small');
-    tm.textContent = timeStr(e.local); sp.textContent = e.msg; sm.textContent = e.src; sp.append(document.createElement('br'), sm); li.append(tm, sp);
+    tm.textContent = timeStr(e.local); sp.textContent = LAB.tm(e.msg); sm.textContent = LAB.tk('src.', e.src); sp.append(document.createElement('br'), sm); li.append(tm, sp);
     return li;
   }
   function onLog(e) {
@@ -551,7 +571,7 @@
     $$('.panel').forEach((p, i) => {
       const b = $('.fold', p), body = $('.body', p); if (!b || !body) return;
       const name = p.querySelector('h3').firstChild.textContent.trim(); body.id = body.id || 'pbody' + i;
-      b.setAttribute('aria-controls', body.id); b.setAttribute('aria-expanded', 'true'); b.setAttribute('aria-label', 'Plegar o desplegar el panel ' + name); b.type = 'button';
+      b.setAttribute('aria-controls', body.id); b.setAttribute('aria-expanded', 'true'); b.setAttribute('aria-label', LAB.t('app.plegar_o_desplegar_el') + name); b.type = 'button';
       b.addEventListener('click', () => { p.classList.toggle('folded'); const f = p.classList.contains('folded'); b.textContent = f ? '+' : '–'; b.setAttribute('aria-expanded', String(!f)); });
     });
     // pestanas de la grafica: flechas, Inicio y Fin (patron de pestanas)
@@ -583,7 +603,7 @@
       if (modalStack.length) return;
       const k = e.key.toLowerCase();
       if (e.key === ' ') { e.preventDefault(); send({ type: 'sim.play', toggle: true }); }
-      else if (e.key >= '1' && e.key <= '7') { const v = VIEW_BTNS[+e.key - 1][0]; app.rig.set(v); markViews(v); }
+      else if (e.key >= '1' && e.key <= '7') { const v = VIEW_BTNS()[+e.key - 1][0]; app.rig.set(v); markViews(v); }
       else if (k === 'l') $('#btnLabels').click();
       else if (k === 'h') $('#btnClean').click();
       else if (k === 'f') $('#btnFree').click();
@@ -595,7 +615,7 @@
   let badgeKey = '';
   ui.update = function (t, dt, now) {
     tel = t;
-    if (t.source !== badgeKey) { badgeKey = t.source; const b = BADGE[t.source] || BADGE.sim, el = $('#simBadge'); if (el) { el.lastChild.textContent = b[0]; el.title = b[1]; el.dataset.kind = t.source; } document.body.dataset.srcKind = t.source; }
+    if (t.source !== badgeKey) { badgeKey = t.source; const B = BADGE(), b = B[t.source] || B.sim, el = $('#simBadge'); if (el) { el.lastChild.textContent = b[0]; el.title = b[1]; el.dataset.kind = t.source; } document.body.dataset.srcKind = t.source; }
     if (ui.replayTick && t.replay) ui.replayTick(t.replay);
     if (!app) return;
     if (now - lastDom > 180) { lastDom = now; updateDom(); }
@@ -614,8 +634,8 @@
     ctx.font = '700 22px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     [['N', 0, '#ff6b6b'], ['E', 90, '#e8f0f8'], ['S', 180, '#e8f0f8'], ['O', 270, '#e8f0f8']].forEach(([t, d, col]) => { const p = pt(d, R - 27); ctx.fillStyle = col; ctx.fillText(t, p[0], p[1]); });
     const line = (d, len, color, wd) => { ctx.strokeStyle = color; ctx.lineWidth = wd; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(c, c); ctx.lineTo(...pt(d, len)); ctx.stroke(); };
-    line(180, R * 0.62, '#35d07f', 4);                       // modulo A fijo (sur)
-    line(tel.B.az, R * 0.8, '#ffb020', 5);                   // modulo B
+    line(180, R * 0.62, LAB.config.palette.A, 4);                       // modulo A fijo (sur)
+    line(tel.B.az, R * 0.8, LAB.config.palette.B, 5);                   // modulo B
     if (tel.sun.el > 0) { const p = pt(tel.sun.az, R + 1); ctx.fillStyle = '#ffd34d'; ctx.beginPath(); ctx.arc(p[0], p[1], 9, 0, 7); ctx.fill(); }
     // viento: la flecha indica hacia donde se MUEVE el aire (el viento sopla "desde" windDir)
     const to = (tel.env.windDir + 180) % 360, len = R * (0.28 + 0.5 * Math.min(1, tel.env.wind / 14));
@@ -628,32 +648,32 @@
   function updateDom() {
     const lt = tel.local;
     setText('clockTime', timeStr(lt));
-    setText('clockDate', `${DOW[new Date(Date.UTC(lt.year, lt.month - 1, lt.day)).getUTCDay()]} ${lt.day} ${MONTHS[lt.month - 1]} ${lt.year} · UTC${LAB.config.site.tzHours}`);
+    setText('clockDate', `${DOW()[new Date(Date.UTC(lt.year, lt.month - 1, lt.day)).getUTCDay()]} ${lt.day} ${MONTHS()[lt.month - 1]} ${lt.year} · UTC${LAB.config.site.tzHours}`);
     const el = tel.sun.el;
     setText('sunIcon', el < -2 ? '☾' : el < 8 ? '🌅' : '☀');
-    setText('sunTxt', `elev ${fmt(el, 1)}° · az ${fmt(tel.sun.az, 0)}°`);
+    setText('sunTxt', LAB.t('app.elev_az', { fmt: fmt(el, 1), fmt2: fmt(tel.sun.az, 0) }));
 
     // sesion
     const s = tel.safety.session;
     $('#sessionBtn .led').className = 'led ' + (s.active ? (tel.safety.role && tel.safety.role.canOperate ? '' : 'warn') : 'off');
-    setText('sessionTxt', s.active ? `${s.user === tel.safety.role.label ? s.user : s.user + ' · ' + tel.safety.role.label}` : 'Sin sesión · iniciar');
+    setText('sessionTxt', s.active ? `${s.user === tel.safety.role.label ? LAB.tm(s.user) : s.user + ' · ' + LAB.tm(tel.safety.role.label)}` : LAB.t('app.sin_sesion_iniciar'));
     document.body.classList.toggle('nosession', !(s.active && tel.safety.role.canOperate));
     const ro = $('#roBanner'), why = tel.safety.blockReason;
-    ro.hidden = !why; setText('roTxt', why ? 'Solo lectura: ' + why : '');
+    ro.hidden = !why; setText('roTxt', why ? LAB.t('app.solo_lectura') + LAB.tm(why) : '');
 
     // seguidor
     const T = tel.tracker;
     setText('trAz', fmt(T.az, 1) + '°'); setText('trTilt', fmt(T.tilt, 1) + '°');
-    setText('trAzT', 'objetivo ' + fmt(T.targetAz, 0) + '°' + (T.lockAz ? ' 🔒' : '')); setText('trTiltT', 'objetivo ' + fmt(T.targetTilt, 0) + '°' + (T.lockTilt ? ' 🔒' : ''));
+    setText('trAzT', LAB.t('app.objetivo') + fmt(T.targetAz, 0) + '°' + (T.lockAz ? ' 🔒' : '')); setText('trTiltT', LAB.t('app.objetivo') + fmt(T.targetTilt, 0) + '°' + (T.lockTilt ? ' 🔒' : ''));
     $$('#trModes button').forEach((b) => { const on = b.dataset.mode === T.requestedMode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     const axes = T.lockAz ? 'tilt' : T.lockTilt ? 'az' : 'both';
     $$('#trAxes button').forEach((b) => b.classList.toggle('on', b.dataset.axes === axes));
     const sb = [];
-    sb.push(`<span class="${T.moving.az || T.moving.tilt ? 'warn' : 'ok'}">${T.moving.az || T.moving.tilt ? 'En movimiento' : 'En posición'}</span>`);
-    if (T.mode === 'sensor') sb.push(`<span class="${T.sensor.lock ? 'ok' : 'warn'}">${SENSOR_TXT[T.sensor.state] || ''}</span>`);
-    if (T.appliedMode !== T.requestedMode) sb.push(`<span class="bad" title="Modo pedido: ${MODE_TXT[T.requestedMode]}">Aplicado: ${({ night: 'Noche (estacionado)', stow: 'Posición segura', estop: 'Paro de emergencia' })[T.appliedMode] || T.appliedMode}${T.blockCause ? ' · ' + T.blockCause : ''}</span>`);
-    if (T.stowing && T.appliedMode === T.requestedMode) sb.push('<span class="bad">Posición segura</span>');
-    sb.push(`<span>${fmt(T.powerW, 0)} W motores</span>`);
+    sb.push(`<span class="${T.moving.az || T.moving.tilt ? 'warn' : 'ok'}">${T.moving.az || T.moving.tilt ? LAB.t('app.en_movimiento') : LAB.t('app.en_posicion')}</span>`);
+    if (T.mode === 'sensor') sb.push(`<span class="${T.sensor.lock ? 'ok' : 'warn'}">${SENSOR_TXT()[T.sensor.state] || ''}</span>`);
+    if (T.appliedMode !== T.requestedMode) sb.push(LAB.t('app.aplicado', { requestedMode: MODE_TXT()[T.requestedMode], appliedMode: ({ night: LAB.t('app.noche_estacionado_2'), stow: LAB.t('app.posicion_segura'), estop: LAB.t('app.paro_de_emergencia') })[T.appliedMode] || T.appliedMode, blockCause: T.blockCause ? ' · ' + LAB.tm(T.blockCause) : '' }));
+    if (T.stowing && T.appliedMode === T.requestedMode) sb.push(LAB.t('app.posicion_segura_2'));
+    sb.push(LAB.t('app.w_motores', { fmt: fmt(T.powerW, 0) }));
     $('#trState').innerHTML = sb.join('');
     if (!dragging.az) { syncCtl($('#azSlider'), Math.round(T.targetAz)); setText('azOut', Math.round(T.targetAz) + '°'); }
     if (!dragging.tilt) { syncCtl($('#tiltSlider'), Math.round(T.targetTilt)); setText('tiltOut', Math.round(T.targetTilt) + '°'); }
@@ -673,31 +693,31 @@
     $('#loadNumRow').hidden = !usesSp;
     if (usesSp && !dragging.loadNum) { numEl.min = L.mode === 'cr' ? LMt.CR_MIN : LMt.CV_MIN * 100; numEl.max = L.mode === 'cr' ? LMt.CR_MAX : LMt.CV_MAX * 100; syncCtl(numEl, L.mode === 'cr' ? fmt(L.setpoint, 1) : Math.round(L.setpoint * 100)); }
     setText('loadNumUnit', L.mode === 'cr' ? 'Ω' : '% Voc');
-    setText('loadSpLabel', L.mode === 'cr' ? 'Resistencia' : 'Tensión');
+    setText('loadSpLabel', L.mode === 'cr' ? LAB.t('app.resistencia') : LAB.t('app.tension'));
     setText('loadSpOut', L.mode === 'cr' ? fmt(LMt.CR_MIN + Math.pow(+$('#loadSp').value / 100, 2) * (LMt.CR_MAX - LMt.CR_MIN), 1) + ' Ω' : (usesSp ? Math.round(L.setpoint * 100) : +$('#loadSp').value) + ' % Voc');
-    setText('btnSweep', L.sweeping ? `Interrumpir barrido (${fmt(L.sweepT, 0)} / ${L.sweepSeconds} s)` : `Barrido I‑V automático (${L.sweepSeconds} s)`);
+    setText('btnSweep', L.sweeping ? LAB.t('app.interrumpir_barrido_s', { fmt: fmt(L.sweepT, 0), sweepSeconds: L.sweepSeconds }) : LAB.t('app.barrido_i_v_automatico', { sweepSeconds: L.sweepSeconds }));
 
     // seguridad
     const S = tel.safety;
-    const stateTxt = { NORMAL: ['Normal', 'Todos los enclavamientos cumplidos', 'green'], WIND_STOW: ['Posición segura por viento', 'El seguidor se ha llevado a horizontal', 'amber'],
-      COMMS_STOW: ['Watchdog: enlace caído', 'Posición segura. Reconoce la falla al restablecer el enlace', 'amber'], ESTOP: ['PARO DE EMERGENCIA', 'Motores sin energía y carga desconectada', 'red'],
-      FAULT: ['Falla o sin datos del controlador', 'No hay estado confiable del PLC: el banco se considera en condición segura y sin comandos', 'red'] }[S.state] || ['Estado desconocido', 'Sin información del controlador', 'red'];
+    const stateTxt = { NORMAL: [LAB.t('app.normal'), LAB.t('app.todos_los_enclavamientos_cumplidos'), 'green'], WIND_STOW: [LAB.t('app.posicion_segura_por_viento'), LAB.t('app.el_seguidor_se_ha'), 'amber'],
+      COMMS_STOW: [LAB.t('app.watchdog_enlace_caido'), LAB.t('app.posicion_segura_reconoce_la'), 'amber'], ESTOP: [LAB.t('app.paro_de_emergencia_2'), LAB.t('app.motores_sin_energia_y'), 'red'],
+      FAULT: [LAB.t('app.falla_o_sin_datos'), LAB.t('app.no_hay_estado_confiable'), 'red'] }[S.state] || [LAB.t('app.estado_desconocido'), LAB.t('app.sin_informacion_del_controlador'), 'red'];
     setText('safeState', stateTxt[0]);
-    setText('safeDetail', S.windStow && S.resumeText ? S.resumeText : S.commsCut && !S.watchdog ? `Enlace cortado: watchdog en ${fmt(LAB.config.safety.commsTimeoutS - S.commsAge, 0)} s` : stateTxt[1]);
+    setText('safeDetail', S.windStow && S.resumeText ? S.resumeText : S.commsCut && !S.watchdog ? LAB.t('app.enlace_cortado_watchdog_en', { fmt: fmt(LAB.config.safety.commsTimeoutS - S.commsAge, 0) }) : stateTxt[1]);
     $('#safeBadge').className = 'safebadge ' + (stateTxt[2] === 'green' ? '' : stateTxt[2]);
     $('#safeBadge .lamp').className = 'lamp ' + (stateTxt[2] === 'green' ? '' : stateTxt[2]);
-    setText('windOut', fmt(tel.env.wind, 1) + ' m/s (instantáneo)');
+    setText('windOut', fmt(tel.env.wind, 1) + LAB.t('app.m_s_instantaneo'));
     const wmax = LAB.config.limits.windMax;
     $('#windBar').style.width = clamp(tel.env.wind / wmax * 100, 0, 100) + '%';
     $('#windThr').style.left = (LAB.config.safety.windStow / wmax * 100) + '%';
-    setText('btnComms', S.commsCut ? 'Restablecer enlace' : 'Cortar enlace'); $('#linkBanner').hidden = !S.commsCut;
+    setText('btnComms', S.commsCut ? LAB.t('app.restablecer_enlace') : LAB.t('app.cortar_enlace')); $('#linkBanner').hidden = !S.commsCut;
     $('#btnComms').classList.toggle('on', S.commsCut);
     $('#btnEstop').disabled = S.estop;
 
     // dock
     setText('btnPlay', tel.playing ? '❚❚' : '▶');
-    { const bp = $('#btnPlay'), t = tel.playing ? 'Pausar reloj solar (el banco, el seguidor y los enclavamientos siguen activos)' : 'Reanudar reloj solar'; bp.title = t; bp.setAttribute('aria-label', t); bp.setAttribute('aria-pressed', String(!tel.playing)); }
-    { const dc = $('#clock'); dc.classList.toggle('paused', !tel.playing); setText('clockPause', tel.playing ? '' : 'RELOJ SOLAR EN PAUSA'); }
+    { const bp = $('#btnPlay'), t = tel.playing ? LAB.t('app.pausar_reloj_solar_el') : LAB.t('app.reanudar_reloj_solar'); bp.title = t; bp.setAttribute('aria-label', t); bp.setAttribute('aria-pressed', String(!tel.playing)); }
+    { const dc = $('#clock'); dc.classList.toggle('paused', !tel.playing); setText('clockPause', tel.playing ? '' : LAB.t('app.reloj_solar_en_pausa')); }
     $$('#speedSeg button').forEach((b) => { const on = +b.dataset.s === tel.speed; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     const di = dayInfo(lt);
     if (!dragging.time) $('#timeSlider').value = Math.floor(lt.hours * 60);
@@ -705,7 +725,7 @@
     if ($('#dateIn').value !== dv && document.activeElement !== $('#dateIn')) $('#dateIn').value = dv;
     void di;
     $('#btnRain').classList.toggle('on', tel.env.rain); $('#btnRain').setAttribute('aria-pressed', String(tel.env.rain));
-    setText('btnRain', tel.env.rain ? 'Lluvia: ' + LAB.sim.RAIN_LEVELS[tel.env.rainLevel].name.toLowerCase() : 'Lluvia');
+    setText('btnRain', tel.env.rain ? LAB.t('app.lluvia') + LAB.sim.RAIN_LEVELS[tel.env.rainLevel].name.toLowerCase() : LAB.t('app.lluvia_2'));
     if (!app.rig.pov && !$('#povOverlay').hidden) $('#povOverlay').hidden = true;
 
     // telemetria
@@ -718,36 +738,36 @@
       $('#p' + k + 'max').style.left = clamp(m.pmp / scale * 100, 0, 100) + '%';
     }
     setText('bOrient', `${fmt(tel.B.az, 0)}° / ${fmt(tel.B.tilt, 0)}°`);
-    { const C = tel.comparison, d = C.powerDiffPct, g = C.energyGainPct, sg = (v) => (v == null ? 'No disponible' : (v >= 0 ? '+' : '') + fmt(v, 1) + ' %');
+    { const C = tel.comparison, d = C.powerDiffPct, g = C.energyGainPct, sg = (v) => (v == null ? LAB.t('app.no_disponible') : (v >= 0 ? '+' : '') + fmt(v, 1) + ' %');
       setText('diffTxt', sg(d)); setText('gainTxt', sg(g));
-      $('#diffBadge').classList.toggle('neg', d != null && d < 0); $('#diffBadge').title = d == null ? C.powerNote : 'Diferencia de potencia ahora: P_B/P_A − 1';
-      $('#gainBadge').classList.toggle('neg', g != null && g < 0); $('#gainBadge').title = g == null ? C.energyNote : `Ganancia de energía desde el último cero (${LAB.core.localStr(tel.energy.startedSimMs)}): E_B/E_A − 1`; }
+      $('#diffBadge').classList.toggle('neg', d != null && d < 0); $('#diffBadge').title = d == null ? LAB.tm(C.powerNote) : LAB.t('app.diferencia_de_potencia_ahora');
+      $('#gainBadge').classList.toggle('neg', g != null && g < 0); $('#gainBadge').title = g == null ? LAB.tm(C.energyNote) : LAB.t('app.ganancia_de_energia_desde', { localStr: LAB.core.localStr(tel.energy.startedSimMs) }); }
     setText('eGhi', fmt(tel.env.ghi, 0)); setText('eDni', fmt(tel.env.dni, 0)); setText('eTa', fmt(tel.env.ta, 1)); setText('eRh', fmt(tel.env.rh, 0));
     setText('eWind', fmt(tel.env.wind, 1)); setText('eRain', fmt(tel.env.rainMm, 1));
-    setText('eWindSet', 'consigna ' + fmt(tel.settings.windBase, 1));
+    setText('eWindSet', LAB.t('app.setpoint') + fmt(tel.settings.windBase, 1));
     drawCompass();
     { const cs = $('#cloudSlider'), ws = $('#windSlider'); syncCtl(cs, Math.round(tel.settings.cloud * 100), dragging.cloudSlider); setText('cloudOut', Math.round(tel.settings.cloud * 100) + ' %');
       syncCtl(ws, tel.settings.windBase, dragging.windSlider); setText('windSetOut', fmt(tel.settings.windBase, 1) + ' m/s'); }
     // adquisicion
     { const A = tel.acq, rec = A.status === 'recording', bt = $('#btnAcq');
-      setText('acqState', rec ? '● Grabando' : (A.runId ? '■ Detenido' : '■ Sin corrida'));
+      setText('acqState', rec ? LAB.t('app.grabando') : (A.runId ? LAB.t('app.detenido') : LAB.t('app.sin_corrida')));
       $('#acqState').className = 'acqstate ' + (rec ? 'rec' : '');
-      setText('acqCount', A.runId ? `${A.samples.toLocaleString('es-MX')} / ${A.limit.toLocaleString('es-MX')} muestras${A.segmentId ? ' · segmento ' + A.segmentId : ''}` : `límite ${A.limit.toLocaleString('es-MX')} muestras por corrida`);
-      setText('btnAcq', rec ? 'Detener adquisición' : (A.runId ? 'Reanudar adquisición' : 'Iniciar adquisición'));
+      setText('acqCount', A.runId ? LAB.t('app.muestras', { toLocaleString: A.samples.toLocaleString(LAB.locale()), toLocaleString2: A.limit.toLocaleString(LAB.locale()), segmentId: A.segmentId ? LAB.t('app.segmento') + A.segmentId : '' }) : LAB.t('app.limite_muestras_por_corrida', { toLocaleString: A.limit.toLocaleString(LAB.locale()) }));
+      setText('btnAcq', rec ? LAB.t('app.detener_adquisicion') : (A.runId ? LAB.t('app.reanudar_adquisicion') : LAB.t('app.iniciar_adquisicion')));
       bt.classList.toggle('danger', rec); bt.setAttribute('aria-pressed', String(rec));
-      $('#acqBasis').textContent = `Una muestra cada ${A.everyS} s (${A.basis}).` + (A.reason === 'limite' ? ' La corrida llegó a su límite y se detuvo: exporta o crea una corrida nueva.' : '');
+      $('#acqBasis').textContent = LAB.t('app.una_muestra_cada_s', { everyS: A.everyS, basis: LAB.tm(A.basis) }) + (A.reason === 'limite' ? LAB.t('app.la_corrida_llego_a') : '');
       const nl = !tel.safety.session.active || !tel.safety.role.canOperate; bt.disabled = nl; $('#btnNewRun').disabled = nl; }
     updateInfoLive();
 
     // camara IP
     if (app.rig.pov) {
       setText('povTime', `${timeStr(lt)} · ${lt.day}/${lt.month}/${lt.year}`);
-      $('#povMeta').innerHTML = `Módulo B ${fmt(tel.B.az, 0)}° / ${fmt(tel.B.tilt, 0)}°<br>P_A ${fmt(tel.A.p, 0)} W · P_B ${fmt(tel.B.p, 0)} W<br>Viento ${fmt(tel.env.wind, 1)} m/s · ${fmt(tel.env.ta, 1)} °C`;
+      $('#povMeta').innerHTML = LAB.t('app.modulo_b_p_a', { fmt: fmt(tel.B.az, 0), fmt2: fmt(tel.B.tilt, 0), fmt3: fmt(tel.A.p, 0), fmt4: fmt(tel.B.p, 0), fmt5: fmt(tel.env.wind, 1), fmt6: fmt(tel.env.ta, 1) });
     }
   }
 
   // ====================================================================== graficas
-  const C = { A: '#35d07f', B: '#ffb020', G: '#9db3c8', blue: '#2fb4ff' };
+  const C = { A: LAB.config.palette.A, B: LAB.config.palette.B, G: '#9db3c8', blue: '#2fb4ff' };
   const hms = (ms) => { const lt = LAB.localTime(ms); return `${pad2(lt.hour)}:${pad2(lt.minute)}:${pad2(lt.second)}`; };
   let lastTable = 0;
   /** Alternativa en tabla de la grafica (C18): mismos datos, legibles con lector de pantalla */
@@ -756,10 +776,10 @@
     const now = performance.now(); if (now - lastTable < 1500) return; lastTable = now;
     const H = source.history, D = source.day, tb = $('#chartTable'), f = (v, d = 0) => (Number.isFinite(v) ? fmt(v, d) : '—');
     let head, rows = [], cap;
-    if (chartTab === 'power') { cap = 'Potencia reciente (últimas muestras)'; head = ['Hora', 'P A (W)', 'P B (W)', 'POA B (W/m²)']; const n = H.t.length; for (let i = Math.max(0, n - 12); i < n; i++) rows.push([Number.isFinite(H.t[i]) ? hms(H.t[i]) : 'corte del reloj', f(H.pA[i]), f(H.pB[i]), f(H.gB[i])]); }
-    else if (chartTab === 'day') { cap = 'Perfil del día simulado (cada ~30 min)'; head = ['Hora', 'P A (W)', 'P B (W)']; for (let i = 0; i < D.t.length; i += 30) rows.push([Number.isFinite(D.t[i]) ? fmt(D.t[i], 2) + ' h' : 'corte', f(D.pA[i]), f(D.pB[i])]); }
-    else if (chartTab === 'iv') { const A = tel.A.curve, B = tel.B.curve; cap = 'Puntos característicos (curva calculada ahora)'; head = ['Módulo', 'Voc (V)', 'Isc (A)', 'Vmp (V)', 'Imp (A)', 'Pmp (W)']; rows = [['A', f(A.voc, 1), f(A.isc, 2), f(A.vmp, 1), f(A.imp, 2), f(A.pmp)], ['B', f(B.voc, 1), f(B.isc, 2), f(B.vmp, 1), f(B.imp, 2), f(B.pmp)]]; const sw = source.lastSweep; if (sw) rows.push(['Barrido ' + sw.status, sw.pts.A.length + ' puntos A', sw.pts.B.length + ' puntos B', '', '', '']); }
-    else { cap = 'Energía acumulada'; head = ['Magnitud', 'Valor']; rows = [['Módulo A', f(tel.A.wh, 1) + ' Wh'], ['Módulo B', f(tel.B.wh, 1) + ' Wh'], ['Motores', f(tel.tracker.motorWh, 1) + ' Wh'], ['E_B/E_A−1', tel.comparison.energyGainPct == null ? 'No disponible' : f(tel.comparison.energyGainPct, 1) + ' %']]; }
+    if (chartTab === 'power') { cap = LAB.t('app.potencia_reciente_ultimas_muestras'); head = [LAB.t('app.hora'), 'P A (W)', 'P B (W)', 'POA B (W/m²)']; const n = H.t.length; for (let i = Math.max(0, n - 12); i < n; i++) rows.push([Number.isFinite(H.t[i]) ? hms(H.t[i]) : LAB.t('app.corte_del_reloj'), f(H.pA[i]), f(H.pB[i]), f(H.gB[i])]); }
+    else if (chartTab === 'day') { cap = LAB.t('app.perfil_del_dia_simulado'); head = [LAB.t('app.hora'), 'P A (W)', 'P B (W)']; for (let i = 0; i < D.t.length; i += 30) rows.push([Number.isFinite(D.t[i]) ? fmt(D.t[i], 2) + ' h' : 'corte', f(D.pA[i]), f(D.pB[i])]); }
+    else if (chartTab === 'iv') { const A = tel.A.curve, B = tel.B.curve; cap = LAB.t('app.puntos_caracteristicos_curva_calculada'); head = [LAB.t('app.modulo'), 'Voc (V)', 'Isc (A)', 'Vmp (V)', 'Imp (A)', 'Pmp (W)']; rows = [['A', f(A.voc, 1), f(A.isc, 2), f(A.vmp, 1), f(A.imp, 2), f(A.pmp)], ['B', f(B.voc, 1), f(B.isc, 2), f(B.vmp, 1), f(B.imp, 2), f(B.pmp)]]; const sw = source.lastSweep; if (sw) rows.push([LAB.t('app.barrido') + sw.status, sw.pts.A.length + LAB.t('app.puntos_a'), sw.pts.B.length + LAB.t('app.puntos_b'), '', '', '']); }
+    else { cap = LAB.t('app.energia_acumulada'); head = [LAB.t('app.magnitud'), LAB.t('app.valor')]; rows = [[LAB.t('app.modulo_a'), f(tel.A.wh, 1) + ' Wh'], [LAB.t('app.modulo_b'), f(tel.B.wh, 1) + ' Wh'], [LAB.t('app.motores'), f(tel.tracker.motorWh, 1) + ' Wh'], ['E_B/E_A−1', tel.comparison.energyGainPct == null ? LAB.t('app.no_disponible') : f(tel.comparison.energyGainPct, 1) + ' %']]; }
     tb.textContent = '';
     const c = document.createElement('caption'); c.textContent = cap; tb.appendChild(c);
     const tr = document.createElement('tr'); head.forEach((h) => { const th = document.createElement('th'); th.scope = 'col'; th.textContent = h; tr.appendChild(th); }); tb.appendChild(tr);
@@ -779,9 +799,9 @@
         x: { min: ft[0], max: ft[n - 1], fmt: (v) => hms(v).slice(0, 5) + ':' + hms(v).slice(6), ticks: 3 },
         y: { min: 0, max: ymax, label: 'P (W)', ticks: 4 }, y2: { min: 0, max: gmax, label: 'G (W/m²)', color: C.G, fmt: (v) => v.toFixed(0), ticks: 4 },
         series: [{ xs: H.t, ys: H.gB, color: C.G, width: 1.2, dash: [4, 3], axis: 'y2' }, { xs: H.t, ys: H.pA, color: C.A, fill: true }, { xs: H.t, ys: H.pB, color: C.B, fill: true }],
-        legend: [{ name: 'P A', color: C.A }, { name: 'P B', color: C.B }, { name: 'G plano B', color: C.G, dash: true }],
+        legend: [{ name: 'P A', color: C.A }, { name: 'P B', color: C.B }, { name: LAB.t('app.g_plano_b'), color: C.G, dash: true }],
       });
-      note.textContent = 'últimos ~2 min reales';
+      note.textContent = LAB.t('app.ultimos_2_min_reales');
     } else if (chartTab === 'day') {
       const D = source.day;
       chart.line({
@@ -789,9 +809,9 @@
         y: { min: 0, max: ui.niceMax(Math.max(150, ...D.pA.filter(Number.isFinite), ...D.pB.filter(Number.isFinite)) * 1.05), label: 'P (W)', ticks: 4 },
         series: [{ xs: D.t, ys: D.pA, color: C.A, fill: true }, { xs: D.t, ys: D.pB, color: C.B, fill: true }],
         vlines: [{ x: tel.local.hours }],
-        legend: [{ name: 'A fijo', color: C.A }, { name: 'B móvil', color: C.B }],
+        legend: [{ name: LAB.t('app.a_fijo'), color: C.A }, { name: LAB.t('app.b_movil'), color: C.B }],
       });
-      note.textContent = D.t.length < 3 ? 'Acelera el tiempo (×600) para trazar el día' : 'perfil de potencia del día simulado';
+      note.textContent = D.t.length < 3 ? LAB.t('app.acelera_el_tiempo_600') : LAB.t('app.perfil_de_potencia_del');
     } else if (chartTab === 'iv') drawIV();
     else drawEnergy();
   }
@@ -808,15 +828,15 @@
   const selectedSweeps = () => sweepSel.map((id) => sweepCache.find((s) => s.id === id)).filter(Boolean);
   function sweepLabel(s) {
     const lt = LAB.localTime(s.startSimMs), c = s.cond && s.cond.start;
-    return `${s.id} · ${pad2(lt.day)}/${pad2(lt.month)} ${pad2(lt.hour)}:${pad2(lt.minute)}` + (c ? ` · G_A ${fmt(c.gA, 0)} W/m² · G_B ${fmt(c.gB, 0)} W/m² · T celda A ${fmt(c.tA, 1)} °C` : '') + ` · ${s.pts.A.length + s.pts.B.length} puntos · ${s.status === 'complete' ? 'completo' : 'interrumpido' + (s.cause ? ' (' + s.cause + ')' : '')}`;
+    return `${s.id} · ${pad2(lt.day)}/${pad2(lt.month)} ${pad2(lt.hour)}:${pad2(lt.minute)}` + (c ? ` · G_A ${fmt(c.gA, 0)} W/m² · G_B ${fmt(c.gB, 0)} W/m² · ${LAB.t('app.t_celda_a')} ${fmt(c.tA, 1)} °C` : '') + LAB.t('app.puntos', { length: s.pts.A.length + s.pts.B.length, cause: s.status === 'complete' ? LAB.t('app.completo') : LAB.t('app.interrumpido') + (s.cause ? ' (' + LAB.tm(s.cause) + ')' : '') });
   }
   function renderSweepPane() {
     const box = $('#sweepPane'); box.textContent = '';
     const mk = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; };
-    const fs = mk('fieldset', 'rvtoggles'); fs.appendChild(mk('legend', '', 'Barridos simulados registrados (elige hasta 2 para comparar)'));
+    const fs = mk('fieldset', 'rvtoggles'); fs.appendChild(mk('legend', '', LAB.t('app.barridos_simulados_registrados_elige')));
     const lc = document.createElement('label'), cc = document.createElement('input'); cc.type = 'checkbox'; cc.checked = showCalc; cc.id = 'swCalc';
-    cc.addEventListener('change', () => { showCalc = cc.checked; lastChart = 0; }); lc.append(cc, document.createTextNode(' Curva calculada actual (líneas, del modelo)')); fs.appendChild(lc);
-    if (!sweepCache.length) fs.appendChild(mk('p', 'hint', 'Todavía no hay barridos registrados. Pulsa «Barrido I‑V» en el panel de carga: se guarda cada uno con sus condiciones.'));
+    cc.addEventListener('change', () => { showCalc = cc.checked; lastChart = 0; }); lc.append(cc, document.createTextNode(LAB.t('app.curva_calculada_actual_lineas'))); fs.appendChild(lc);
+    if (!sweepCache.length) fs.appendChild(mk('p', 'hint', LAB.t('app.todavia_no_hay_barridos')));
     sweepCache.slice().reverse().forEach((s) => {
       const l = document.createElement('label'), cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = 'sw_' + s.id; cb.checked = sweepSel.includes(s.id);
       cb.addEventListener('change', () => { sweepSel = sweepSel.filter((x) => x !== s.id); if (cb.checked) { sweepSel.push(s.id); if (sweepSel.length > 2) sweepSel.shift(); } renderSweepPane(); lastChart = 0; });
@@ -824,15 +844,15 @@
     });
     box.appendChild(fs);
     const sel = selectedSweeps();
-    if (sel.length === 2) { const d = LAB.core.sweepConditionDiffs(sel[0], sel[1]); box.appendChild(mk('p', 'hint' + (d.length ? ' warn' : ''), d.length ? 'Atención: las condiciones difieren entre los dos barridos (' + d.join('; ') + '). Compáralos con cuidado: no se sobrescribe ninguna condición histórica.' : 'Los dos barridos se hicieron en condiciones similares (irradiancia y temperatura dentro de tolerancia).')); }
+    if (sel.length === 2) { const d = LAB.core.sweepConditionDiffs(sel[0], sel[1]); box.appendChild(mk('p', 'hint' + (d.length ? ' warn' : ''), d.length ? LAB.t('app.atencion_las_condiciones_difieren') + d.join('; ') + LAB.t('app.comparalos_con_cuidado_no') : LAB.t('app.los_dos_barridos_se'))); }
     else if (sel.length === 1) {
       const c = sel[0].cond && sel[0].cond.start, now = tel.A;
-      if (c && Math.abs(c.gA - now.poa) > 0.1 * Math.max(c.gA, 50)) box.appendChild(mk('p', 'hint warn', `Este barrido se hizo con G_A ${fmt(c.gA, 0)} W/m² y ahora hay ${fmt(now.poa, 0)} W/m²: la curva calculada actual no coincide con los puntos, es normal.`));
+      if (c && Math.abs(c.gA - now.poa) > 0.1 * Math.max(c.gA, 50)) box.appendChild(mk('p', 'hint warn', LAB.t('app.este_barrido_se_hizo', { fmt: fmt(c.gA, 0), fmt2: fmt(now.poa, 0) })));
     }
     if (sel.length) {
       const e = sel[sel.length - 1].cond && sel[sel.length - 1].cond.end;
-      box.appendChild(mk('p', 'hint', 'Solo se guardan la irradiancia y la temperatura al inicio y al final de cada barrido, no una serie en el tiempo; por eso no se muestra la evolución de G durante el barrido' + (e ? ` (final del último elegido: G_A ${fmt(e.gA, 0)} W/m²).` : '.')));
-      const b = mk('button', 'btn', 'CSV del barrido elegido'); b.type = 'button'; b.addEventListener('click', () => { const r = source.exportSweepCsv(sel[sel.length - 1].id); if (!r.ok) return ui.toast(r.reason, 'warn'); download(r.text, r.filename, r.mime); }); box.appendChild(b);
+      box.appendChild(mk('p', 'hint', LAB.t('app.solo_se_guardan_la') + (e ? LAB.t('app.final_del_ultimo_elegido', { fmt: fmt(e.gA, 0) }) : '.')));
+      const b = mk('button', 'btn', LAB.t('app.csv_del_barrido_elegido')); b.type = 'button'; b.addEventListener('click', () => { const r = source.exportSweepCsv(sel[sel.length - 1].id); if (!r.ok) return ui.toast(r.reason, 'warn'); download(r.text, r.filename, r.mime); }); box.appendChild(b);
     }
   }
 
@@ -865,17 +885,17 @@
       legend: [{ name: 'I‑V', color: C.G }, { name: 'P‑V', color: C.G, dash: true }, { name: '◆ MPP', color: C.blue }],
     });
     const nsel = selectedSweeps().length;
-    $('#chartNote').textContent = (nsel ? `Líneas = curva calculada ahora por el modelo · puntos (${nsel > 1 ? '○ primer barrido, □ segundo' : '○'}) = barrido registrado` : 'Líneas = curva calculada ahora por el modelo (aún no hay barridos registrados)') + ' · ◆ máx. potencia · ● operación actual';
+    $('#chartNote').textContent = (nsel ? LAB.t('app.lineas_curva_calculada_ahora', { segundo: nsel > 1 ? LAB.t('app.primer_barrido_segundo') : '○' }) : LAB.t('app.lineas_curva_calculada_ahora_2')) + LAB.t('app.max_potencia_operacion_actual');
   }
 
   function drawEnergy() {
     const eA = tel.A.wh, eB = tel.B.wh, mot = tel.tracker.motorWh;
-    const C2 = tel.comparison, sg = (v) => (v == null ? 'No disponible (' + (C2.energyNote || 'sin referencia') + ')' : (v >= 0 ? '+' : '') + fmt(v, 1) + ' %');
+    const C2 = tel.comparison, sg = (v) => (v == null ? LAB.t('app.no_disponible_2') + (LAB.tm(C2.energyNote) || LAB.t('app.sin_referencia')) + ')' : (v >= 0 ? '+' : '') + fmt(v, 1) + ' %');
     chart.bars([
-      { label: 'Módulo A · fijo', value: eA, color: C.A, text: fmt(eA, 1) + ' Wh' },
-      { label: 'Módulo B · móvil', value: eB, color: C.B, text: fmt(eB, 1) + ' Wh' },
-      { label: 'Motores del seguidor', value: mot, color: '#a98bff', text: fmt(mot, 1) + ' Wh' },
-    ], { minMax: 50, footer: [`Ganancia de energía de esta corrida (E_B/E_A−1): ${sg(C2.energyGainPct)}`, `Ganancia neta (restando motores): ${sg(C2.netGainPct)}`] });
+      { label: LAB.t('app.modulo_a_fijo'), value: eA, color: C.A, text: fmt(eA, 1) + ' Wh' },
+      { label: LAB.t('app.modulo_b_movil'), value: eB, color: C.B, text: fmt(eB, 1) + ' Wh' },
+      { label: LAB.t('app.motores_del_seguidor'), value: mot, color: '#a98bff', text: fmt(mot, 1) + ' Wh' },
+    ], { minMax: 50, footer: [LAB.t('app.ganancia_de_energia_de', { sg: sg(C2.energyGainPct) }), LAB.t('app.ganancia_neta_restando_motores', { sg: sg(C2.netGainPct) })] });
   }
 
   ui.markViews = markViews;
