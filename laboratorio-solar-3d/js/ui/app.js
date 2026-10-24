@@ -679,7 +679,8 @@
     // seguridad
     const S = tel.safety;
     const stateTxt = { NORMAL: ['Normal', 'Todos los enclavamientos cumplidos', 'green'], WIND_STOW: ['Posición segura por viento', 'El seguidor se ha llevado a horizontal', 'amber'],
-      COMMS_STOW: ['Watchdog: enlace caído', 'Posición segura. Reconoce la falla al restablecer el enlace', 'amber'], ESTOP: ['PARO DE EMERGENCIA', 'Motores sin energía y carga desconectada', 'red'] }[S.state];
+      COMMS_STOW: ['Watchdog: enlace caído', 'Posición segura. Reconoce la falla al restablecer el enlace', 'amber'], ESTOP: ['PARO DE EMERGENCIA', 'Motores sin energía y carga desconectada', 'red'],
+      FAULT: ['Falla o sin datos del controlador', 'No hay estado confiable del PLC: el banco se considera en condición segura y sin comandos', 'red'] }[S.state] || ['Estado desconocido', 'Sin información del controlador', 'red'];
     setText('safeState', stateTxt[0]);
     setText('safeDetail', S.windStow && S.resumeText ? S.resumeText : S.commsCut && !S.watchdog ? `Enlace cortado: watchdog en ${fmt(LAB.config.safety.commsTimeoutS - S.commsAge, 0)} s` : stateTxt[1]);
     $('#safeBadge').className = 'safebadge ' + (stateTxt[2] === 'green' ? '' : stateTxt[2]);
