@@ -33,6 +33,7 @@ class Settings:
     booking_horizon_days: int = 60
     password_min_len: int = 10
     gateway_hb_period_s: float = 1.0
+    session_reconcile_s: float = 4.0                                 # tiempo de gracia antes de soltar un control que el puente no reconoce
     admin_user: str | None = None
     admin_password: str | None = None
     csp: str | None = None                                           # si se define, se envía como Content-Security-Policy en todas las respuestas

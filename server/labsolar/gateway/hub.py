@@ -68,6 +68,7 @@ class Hub:
         self.tickets: dict[str, tuple[dict, float]] = {}
         self._tasks: list[asyncio.Task] = []
         self._booking_end: dt.datetime | None = None
+        self._granted_at = 0.0
         self.stats = {"cmd_in": 0, "cmd_rejected_local": 0, "cmd_published": 0, "acks": 0, "timeouts": 0}
 
     # ------------------------------------------------------------------ ciclo de vida
@@ -145,6 +146,10 @@ class Hub:
                     await self._revoke_control("session.lost", f"Sin latido del navegador en {self.cfg.client_hb_timeout_s:.0f} s: se retira el control", "sin latido del navegador")
                 elif self._booking_end is not None and dt.datetime.now(dt.timezone.utc) >= self._booking_end:
                     await self._revoke_control("session.expired", "La reserva terminó: se retira el control", "reserva terminada")
+                elif now - self._granted_at > self.cfg.session_reconcile_s and self.last_state is not None \
+                        and self.last_state.get("controlSession") != self.control_session:
+                    # el puente no reconoce esta sesión (reinicio del puente, rechazo perdido): se suelta para no dejar al navegador con un control falso
+                    await self._revoke_control("session.lost", "El banco no reconoce tu sesión: se retira el control. Vuelve a iniciar sesión.", "sesión no reconocida por el puente")
             for cid, (client, deadline, ctype) in list(self.pending.items()):
                 if now >= deadline:
                     self.pending.pop(cid, None)
@@ -240,9 +245,15 @@ class Hub:
             booking = await asyncio.to_thread(self.repo.active_booking, user["id"], self.bank)
             if not booking:
                 return await self._local_reject(c, cid, "interlock", "No tienes una reserva vigente para operar el banco.", None, ctype)
+            # La consulta anterior cede el turno: otra petición pudo tomar el control mientras tanto. Se vuelve a comprobar y se asigna sin
+            # ningún «await» de por medio, para que el otorgamiento sea atómico (si no, dos pestañas de la misma cuenta obtenían el control a la vez).
+            if self.control is not None:
+                return await self._local_reject(c, cid, "interlock", "Ya tienes una sesión activa." if self.control is c else "Otra sesión tiene el control del banco; tu vista es de solo lectura.", None, ctype)
+            if c.closed or c.id not in self.clients:
+                return
             sid = "ses_" + uuid.uuid4().hex[:12]
             self.control, self.control_session = c, sid
-            c.hb_last = time.monotonic()
+            c.hb_last = self._granted_at = time.monotonic()
             self._booking_end = _aware(booking["end_at"])
             args = {**args, "role": role, "user": user["username"], "profileId": user.get("profile_id") or ""}
             c.send({"t": "event", "v": 1, "d": contract.event(now_ms(), "ok", "pasarela", "session.granted", "Tienes el control del banco", {"sessionId": sid})})
