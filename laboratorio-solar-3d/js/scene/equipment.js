@@ -53,14 +53,16 @@
         const row = (label, m, y, c) => {
           ctx.fillStyle = c; ctx.font = '700 22px "JetBrains Mono", monospace'; ctx.fillText(label, 14, y);
           ctx.fillStyle = '#e8f6ff'; ctx.font = '500 20px "JetBrains Mono", monospace';
-          ctx.fillText(`${m.v.toFixed(1).padStart(5)} V`, 70, y); ctx.fillText(`${m.i.toFixed(2).padStart(5)} A`, 190, y); ctx.fillText(`${m.p.toFixed(0).padStart(4)} W`, 320, y);
-          const frac = clamp(m.p / 520, 0, 1);
+          const f = (v, d, n) => (Number.isFinite(v) ? v.toFixed(d) : '--').padStart(n);          // sin dato (fuente de red) se muestra «--», nunca NaN
+          ctx.fillText(`${f(m.v, 1, 5)} V`, 70, y); ctx.fillText(`${f(m.i, 2, 5)} A`, 190, y); ctx.fillText(`${f(m.p, 0, 4)} W`, 320, y);
+          const frac = Number.isFinite(m.p) ? clamp(m.p / 520, 0, 1) : 0;
           ctx.fillStyle = '#0d2a40'; ctx.fillRect(14, y + 10, 484, 12);
           ctx.fillStyle = c; ctx.fillRect(14, y + 10, 484 * frac, 12);
         };
         row('A', A, 102, '#35d07f'); row('B', B, 182, '#ffb020');
         ctx.fillStyle = '#7fd4ff'; ctx.font = '500 18px "JetBrains Mono", monospace';
-        ctx.fillText(`Pa+Pb ${(A.p + B.p).toFixed(0)} W   Pmax ${(A.pmp + B.pmp).toFixed(0)} W`, 14, 260);
+        const g = (v) => (Number.isFinite(v) ? v.toFixed(0) : '--');
+        ctx.fillText(`Pa+Pb ${g(A.p + B.p)} W   Pmax ${g(A.pmp + B.pmp)} W`, 14, 260);
         ctx.fillText(tel.safety.estop ? '⚠ CARGA DESCONECTADA (PARO)' : 'Carga conectada · protección CC OK', 14, 300);
         ctx.fillStyle = tel.safety.estop ? '#ff4d4d' : '#35d07f'; ctx.fillRect(14, 316, 484, 6);
         tex.needsUpdate = true;

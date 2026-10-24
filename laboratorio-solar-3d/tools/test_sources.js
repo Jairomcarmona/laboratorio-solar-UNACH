@@ -38,7 +38,7 @@ const ok = (body) => ({ ok: true, status: 200, json: async () => body, text: asy
     const sk = new Set(keys(LAB.data.skeleton()));
     t.eq('el esqueleto inicial tambien', keys(eng.telemetry).filter((k) => !sk.has(k)).join(','), '');
     const m = LAB.data.mapTele(tele(), { hello: { user: 'ana', role: 'student' }, control: true, sessionId: 's1', link: 'open' });
-    t.ok('A fijo conserva su orientacion de la configuracion; B toma la medida', m.A.az === LAB.config.fixed.az && m.B.az === null && m.tracker.az === 180);
+    t.ok('A fijo conserva su orientacion de la configuracion; B toma la medida', m.A.az === LAB.config.fixed.az && Number.isNaN(m.B.az) && m.tracker.az === 180);
     t.ok('canOperate solo con control + rol + PLC', m.safety.canOperate === true && LAB.data.mapTele(tele(), { hello: { user: 'v', role: 'visitor' }, control: false, link: 'open' }).safety.canOperate === false);
     t.ok('estado ESTOP -> lampara roja y estop', (() => { const x = LAB.data.mapTele(tele({ safety: { state: 'ESTOP', canOperate: false } }), { link: 'open' }); return x.safety.lamp === 'red' && x.safety.estop; })());
   }

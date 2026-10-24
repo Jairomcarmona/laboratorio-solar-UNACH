@@ -1,0 +1,60 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  servidor:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: ci, POSTGRES_DB: labsolar }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r server/requirements.lock pytest pytest-asyncio httpx
+        working-directory: .
+      - run: pip install --no-deps -e server
+      - name: Pruebas del servidor (sin integración)
+        run: python -m pytest -m "not integration" -q
+        working-directory: server
+      - name: Migraciones contra PostgreSQL
+        run: |
+          python - <<'PY'
+          from labsolar import db
+          db.migrate("postgresql://postgres:ci@localhost:5432/labsolar")
+          db.migrate("postgresql://postgres:ci@localhost:5432/labsolar")
+          print("migraciones ok")
+          PY
+        working-directory: server
+
+  simulador:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Pruebas de dominio (sin navegador)
+        working-directory: laboratorio-solar-3d
+        run: |
+          for t in test_pv_vs_pvlib test_poa_vs_pvlib test_physics_models test_sources test_solar; do
+            node tools/$t.js
+          done
+
+  integracion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: sudo apt-get update && sudo apt-get install -y mosquitto
+      - run: pip install -r server/requirements.lock pytest pytest-asyncio httpx
+      - run: pip install --no-deps -e server
+      - name: Mosquitto real (autenticación y ACL)
+        run: sudo env "PATH=$PATH" python -m pytest tests/test_integration_mqtt.py -q
+        working-directory: server

@@ -23,7 +23,7 @@ from .bridge.fakebank import FakeBank, run_bank
 from .bus import MemoryBus
 from .gateway.app import create_app
 from .gateway.security import hash_password
-from .gateway.settings import Settings
+from .gateway.settings import CSP, Settings
 from .recorder.app import RecorderApp
 from .repo import Repo
 from .twin.app import TwinApp
@@ -46,7 +46,7 @@ async def run(a: argparse.Namespace) -> None:
     now = db.utcnow()
     if not repo.active_booking(ana["id"], a.bank):
         repo.create_booking(ana["id"], a.bank, now - dt.timedelta(minutes=1), now + dt.timedelta(hours=2), None)
-    settings = Settings(bank=a.bank, db_url=a.db, cookie_secure=False, static_dir=a.static, mqtt={"kind": "memory"}, client_hb_timeout_s=a.client_timeout)
+    settings = Settings(bank=a.bank, db_url=a.db, cookie_secure=False, static_dir=a.static, csp=CSP, mqtt={"kind": "memory"}, client_hb_timeout_s=a.client_timeout)
     api = create_app(settings, bus=bus, repo=repo)
     recorder = RecorderApp(bus, repo, a.bank)
     twin = TwinApp(bus, a.bank)

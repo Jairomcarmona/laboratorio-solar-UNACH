@@ -1,0 +1,19 @@
+# MediaMTX: recibe/entrega las cámaras IP. No se publica en internet; Nginx lo expone solo tras auth_request.
+logLevel: warn
+api: no
+rtmp: no
+srt: no
+rtsp: yes
+rtspAddress: :8554          # solo red de cámaras (ver SEGURIDAD-Y-DESPLIEGUE.md)
+hls: yes
+hlsAddress: :8888
+hlsAlwaysRemux: yes
+webrtc: yes
+webrtcAddress: :8889
+paths:
+  cam1:
+    source: rtsp://${CAM1_USER}:${CAM1_PASSWORD}@${CAM1_HOST}:554/stream1
+    sourceOnDemand: yes
+  cam2:
+    source: rtsp://${CAM2_USER}:${CAM2_PASSWORD}@${CAM2_HOST}:554/stream1
+    sourceOnDemand: yes

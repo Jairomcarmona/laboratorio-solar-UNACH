@@ -6,6 +6,7 @@ Con fake, el banco virtual corre en el mismo proceso (y opcionalmente sirve Modb
 from __future__ import annotations
 
 import argparse
+import os
 import asyncio
 import logging
 import signal
@@ -101,7 +102,12 @@ def main() -> None:
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
     logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    asyncio.run(run(yaml.safe_load(Path(a.config).read_text(encoding="utf-8"))))
+    cfg = yaml.safe_load(os.path.expandvars(Path(a.config).read_text(encoding="utf-8")))       # ${VAR} del entorno: los secretos no van en el archivo
+    bus = cfg.setdefault("bus", {"kind": "mqtt"})
+    if bus.get("kind", "mqtt") == "mqtt":
+        bus.setdefault("username", os.environ.get("MQTT_USER"))
+        bus.setdefault("password", os.environ.get("MQTT_PASSWORD"))
+    asyncio.run(run(cfg))
 
 
 if __name__ == "__main__":

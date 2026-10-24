@@ -1,0 +1,42 @@
+# ACL de Mosquitto: cada servicio solo escribe lo que le corresponde (mínimo privilegio). Contrato: server/contract/v1/README.md
+# Un servicio comprometido no puede suplantar a otro: p. ej. la pasarela no puede publicar telemetría y el puente no puede dar órdenes.
+
+# Puente: único que publica lo que viene del banco; escucha órdenes y el latido de la pasarela
+user bridge
+topic write labsolar/v1/+/tele
+topic write labsolar/v1/+/state
+topic write labsolar/v1/+/event
+topic write labsolar/v1/+/cmd/ack
+topic write labsolar/v1/+/sweep
+topic read  labsolar/v1/+/cmd/req
+topic read  labsolar/v1/+/hb/gateway
+topic read  labsolar/v1/+/daq/#
+
+# Pasarela: único que da órdenes en nombre de las personas
+user gateway
+topic read  labsolar/v1/+/tele
+topic read  labsolar/v1/+/state
+topic read  labsolar/v1/+/event
+topic read  labsolar/v1/+/cmd/ack
+topic read  labsolar/v1/+/sweep
+topic read  labsolar/v1/+/twin
+topic write labsolar/v1/+/cmd/req
+topic write labsolar/v1/+/hb/gateway
+
+# Registrador: solo lee
+user recorder
+topic read  labsolar/v1/+/tele
+topic read  labsolar/v1/+/state
+topic read  labsolar/v1/+/event
+topic read  labsolar/v1/+/cmd/req
+topic read  labsolar/v1/+/cmd/ack
+topic read  labsolar/v1/+/sweep
+
+# Gemelo: lee telemetría, publica su comparación
+user twin
+topic read  labsolar/v1/+/tele
+topic write labsolar/v1/+/twin
+
+# Adquisición externa (opcional): publica sus lecturas crudas para el puente
+user daq
+topic write labsolar/v1/+/daq/#
