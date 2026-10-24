@@ -11,6 +11,9 @@ El plan solo enumera sus entregables, no su especificación cerrada, así que **
 | O6 catálogo de fallas | Pendiente | inyección de fallas (S8) depende de él |
 | O3 | Pendiente | prácticas B4/B5 dependen de O3/O2 |
 
+## Datos que solo puede dar el banco real (plantillas listas, valores POR_DEFINIR)
+Ver `server/deploy/hardware/README.md`: especificación del PLC (watchdog, rampas, fallas), mapa de registros confirmado, calibración e incertidumbre por canal, límites eléctricos de la carga, direcciones de red. Con `mode: real` el puente no arranca hasta que estén completos, y `tests/test_hardware.py` lo exige.
+
 ## Falta del plan Sonnet
 Prácticas B2, B3, B8, gráficas de análisis, corrida de calibración A=B, B4/B5 (dependen de O2/O3), inyección de fallas (depende de O6), cámaras con el equipo real y S28 (datos pendientes).
 
@@ -18,7 +21,7 @@ Prácticas B2, B3, B8, gráficas de análisis, corrida de calibración A=B, B4/B
 - PLC real (Siemens S7-1200 recomendado, **no confirmado**) por Modbus/OPC UA: los controladores se probaron contra servidores simulados con pymodbus y asyncua.
 - NI-DAQmx en Linux con el cDAQ-9184: soporte **sin verificar**; alternativa prevista: equipo Windows que publique por MQTT.
 - Cámaras IP y MediaMTX.
-- Despliegue con Docker en el servidor institucional (los archivos están, no se ejecutó `docker compose` aquí).
+- Despliegue con Docker en el servidor institucional: `docker compose config`, Nginx (TLS, cabeceras, límites) y Mosquitto con TLS y ACL se probaron fuera de contenedor; `docker compose up` no se pudo ejecutar (sin demonio de Docker).
 - Rendimiento con carga real de usuarios.
 
 ## Decisiones que son de ustedes

@@ -163,7 +163,7 @@ class Hub:
             return
         await self._publish_req("session.end", {"why": why}, sid, c.user, c.user["role"], f"gw_{uuid.uuid4().hex[:10]}")
         ev = contract.event(now_ms(), "warn", "pasarela", code, msg, {"sessionId": sid, "user": c.user["username"]})
-        await self.bus.publish_msg(self.bank, "event", ev)
+        await self.bus.publish_msg(self.bank, "event/gw", ev)      # el navegador lo recibe directo (abajo); el registrador, por este tópico
         c.send({"t": "event", "v": 1, "d": ev})
 
     # ------------------------------------------------------------------ conexiones

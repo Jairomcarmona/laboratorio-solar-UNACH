@@ -62,3 +62,19 @@ def test_dependencias_fijadas():
     lock = (D.parent / "requirements.lock").read_text().splitlines()
     pins = [l for l in lock if l and not l.startswith("#")]
     assert pins and all(re.fullmatch(r"[A-Za-z0-9_.\-]+==[\w.+!\-]+", l) for l in pins)
+
+
+def test_nginx_no_repite_directivas_de_proxy():
+    """Regresión: proxy_read_timeout en proxy_params y otra vez en /ws hacía que nginx no arrancara ("directive is duplicate")."""
+    conf = (D / "nginx" / "nginx.conf").read_text()
+    params = (D / "nginx" / "proxy_params").read_text()
+    for loc in re.split(r"\n    location ", conf)[1:]:
+        if "include /etc/nginx/proxy_params" in loc:
+            for directive in set(re.findall(r"^\s*(proxy_\w+)", params, re.M)) - {"proxy_set_header"}:
+                assert len(re.findall(rf"^\s*{directive}\b", loc, re.M)) <= 1, directive
+
+
+def test_acl_sin_comentarios_en_linea():
+    """Mosquitto toma el comentario de una línea 'topic ...' como parte del tópico y no carga la ACL."""
+    for line in (D / "mosquitto" / "acl").read_text().splitlines():
+        assert not (line.startswith(("topic", "user")) and " #" in line), line

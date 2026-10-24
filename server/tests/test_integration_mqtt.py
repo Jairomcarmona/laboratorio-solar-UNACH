@@ -29,7 +29,7 @@ def broker():
     s = socket.socket(); s.bind(("127.0.0.1", 0)); port = s.getsockname()[1]; s.close()
     pw = d / "passwd"
     d.chmod(0o755)
-    for i, u in enumerate(("bridge", "gateway", "recorder", "twin")):
+    for i, u in enumerate(("bridge", "gateway", "recorder", "twin", "daq")):
         subprocess.run(["mosquitto_passwd", "-b"] + (["-c"] if i == 0 else []) + [str(pw), u, f"pw-{u}"], check=True)
     acl = d / "acl"                                    # copia dentro del directorio temporal, junto a passwd
     shutil.copy(DEPLOY / "acl", acl)
@@ -109,4 +109,24 @@ async def test_acl_cada_servicio_solo_publica_lo_suyo(broker):
         assert not any(x.get("from") == "recorder" for x in seen_br)
     finally:
         for b in (br, gw, rec):
+            await b.close()
+
+
+async def test_acl_eventos_de_la_pasarela_y_adquisicion_externa(broker):
+    """H1: la pasarela publica en event/gw (llega al registrador) y no puede suplantar event. H3: el usuario daq escribe en daq/#, que lee el puente."""
+    br, gw, rec, daq = bus(broker, "bridge"), bus(broker, "gateway"), bus(broker, "recorder"), bus(broker, "daq")
+    for b in (br, gw, rec, daq):
+        await b.start()
+    try:
+        got_gw, got_ev, got_daq = rec.subscribe(contract.topic(BANK, "event/gw")), rec.subscribe(contract.topic(BANK, "event")), br.subscribe(f"labsolar/v1/{BANK}/daq/#")
+        await asyncio.sleep(0.5)
+        await gw.publish(contract.topic(BANK, "event/gw"), contract.event(1, "warn", "pasarela", "session.lost", "x"), qos=1)
+        await gw.publish(contract.topic(BANK, "event"), contract.event(2, "warn", "pasarela", "FALSO", "x"), qos=1)
+        await daq.publish(f"labsolar/v1/{BANK}/daq/cdaq", {"A": {}, "B": {}}, qos=1)
+        assert (await got_gw.get(timeout=3))[1]["code"] == "session.lost"
+        assert (await got_daq.get(timeout=3))[1] == {"A": {}, "B": {}}
+        with pytest.raises(Exception):
+            await got_ev.get(timeout=1)
+    finally:
+        for b in (br, gw, rec, daq):
             await b.close()

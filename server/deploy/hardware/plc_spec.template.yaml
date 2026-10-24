@@ -1,0 +1,37 @@
+# Especificación del PLC (control y seguridad, tarea O5). PLANTILLA: copia a plc_spec.yaml.
+# Todo lo marcado POR_DEFINIR lo debe dar la ingeniería del banco; aquí no se inventa ningún valor.
+# El PLC es la autoridad final de seguridad: el puente y la pasarela solo piden.
+plc:
+  model: POR_DEFINIR            # S7-1200 recomendado, sin confirmar
+  firmware: POR_DEFINIR
+watchdog:
+  heartbeat_period_s: POR_DEFINIR     # periodo del latido puente->PLC; debe ser igual a hb_period_s de bridge.yaml
+  timeout_s: POR_DEFINIR              # sin latido durante este tiempo el PLC pasa a posición segura (COMMS_STOW); >= 3 veces el periodo
+ramps:
+  az_deg_s: POR_DEFINIR               # velocidad máxima de movimiento del seguidor, grados/s
+  tilt_deg_s: POR_DEFINIR
+limits:                                # límites mecánicos/de software que el PLC impone al seguidor
+  az_min: POR_DEFINIR
+  az_max: POR_DEFINIR
+  tilt_min: POR_DEFINIR
+  tilt_max: POR_DEFINIR
+wind:
+  stow_ms: POR_DEFINIR                # velocidad de viento (m/s) a la que el PLC manda posición segura
+  resume_ms: POR_DEFINIR              # velocidad a la que puede reanudar; menor que stow_ms (histéresis)
+  resume_hold_s: POR_DEFINIR          # tiempo por debajo de resume_ms antes de reanudar
+restart_behavior: POR_DEFINIR         # qué hace el PLC al reiniciar (p. ej. arranca en posición segura y exige reconocimiento)
+estop_reset: POR_DEFINIR              # quién y cómo restablece el paro de emergencia (p. ej. técnico en sitio con llave)
+# Códigos que el PLC publica en IR_REJECT_CODE (1 a 7, ver registers.Reject). Escribe el texto/condición real de cada uno.
+reject_codes:
+  1: POR_DEFINIR   # AZ_RANGE
+  2: POR_DEFINIR   # TILT_RANGE
+  3: POR_DEFINIR   # ESTOP
+  4: POR_DEFINIR   # WIND_STOW
+  5: POR_DEFINIR   # COMMS_STOW
+  6: POR_DEFINIR   # LOCKED_AXIS
+  7: POR_DEFINIR   # BAD_VALUE
+# Códigos que el PLC publica en IR_FAULT_CODE: {código: descripción}. Al menos uno.
+fault_codes:
+  POR_DEFINIR: POR_DEFINIR
+signed_off_by: POR_DEFINIR            # persona responsable de ingeniería que firma esta especificación
+signed_off_date: POR_DEFINIR          # AAAA-MM-DD

@@ -37,7 +37,7 @@ class RecorderApp:
 
     async def start(self) -> None:
         b = self.bank
-        self._sub = self.bus.subscribe(*(contract.topic(b, t) for t in ("tele", "event", "cmd/req", "cmd/ack", "sweep")))
+        self._sub = self.bus.subscribe(*(contract.topic(b, t) for t in ("tele", "event", "event/gw", "cmd/req", "cmd/ack", "sweep")))
         await asyncio.to_thread(self._resume)
         self._tasks = [asyncio.create_task(self._consume(), name="rec-consume"), asyncio.create_task(self._flusher(), name="rec-flush")]
 

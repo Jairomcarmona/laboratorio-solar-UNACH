@@ -61,7 +61,7 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
       roleLabel: roleObj ? roleObj.label : null, profileId: ctx.profileId || null, startedReal: ctx.sessionSince || null, demo: false };
     const acq = ctx.acq || { status: 'stopped', runId: null, samples: 0, elapsedReal: 0, startedReal: 0, reason: '', runs: 0 };
     const out = {
-      simMs: ts, local: lt, speed: ctx.source === 'replay' && ctx.speed ? ctx.speed : 1, playing: ctx.source === 'replay' ? ctx.playing !== false : true, source: ctx.source === 'replay' ? 'replay' : (t.source === 'fake' ? 'fake' : ctx.source || 'real'),
+      simMs: ts, local: lt, speed: ctx.source === 'replay' && ctx.speed ? ctx.speed : 1, playing: ctx.source === 'replay' ? ctx.playing !== false : true, source: ctx.source === 'replay' ? 'replay' : (t.source === 'fake' || t.source === 'mixed' ? t.source : ctx.source || 'real'),
       clock: { playing: ctx.source === 'replay' ? ctx.playing !== false : true, speed: ctx.speed || 1, simMs: ts, tzHours: cfg.site.tzHours },
       settings: { cloud: null, windBase: null, rainLevel: 0, speed: 1, clockPlaying: true, seed: null, scenarioId: null },
       sun: { az: sun.az, el: sun.el, zenith: sun.zenith, vec: sunVec },

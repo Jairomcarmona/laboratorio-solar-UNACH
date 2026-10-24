@@ -272,6 +272,8 @@
  "app.modo_simulador_datos_calculados": "Modo simulador: datos calculados con pvlib. Pulsa ? para ver el alcance del modelo.",
  "app.banco_real_2": "BANCO REAL",
  "app.mediciones_del_banco_fisico": "Mediciones del banco físico a través de la pasarela del laboratorio.",
+ "app.banco_mixto": "BANCO MIXTO",
+ "app.banco_mixto_desc": "PLC o adquisición simulados: solo parte de los datos viene del banco físico.",
  "app.banco_virtual": "BANCO VIRTUAL",
  "app.el_puente_esta_conectado": "El puente está conectado a un banco VIRTUAL de pruebas, no a hardware: los datos no son mediciones físicas.",
  "app.modelo_del_simulador_alimentado": "Modelo del simulador alimentado con el ambiente medido; compara lo esperado con lo medido.",

@@ -550,7 +550,7 @@ body.src-ws #btnResetE, body.src-ws #btnResetRain, body.src-ws #btnComms, body.s
 body.src-replay #btnResetE, body.src-replay #btnResetRain, body.src-replay #btnComms { display: none !important; }
 .simbadge[data-kind="real"] { color: #9df0c0; border-color: rgba(53, 208, 127, .6); background: rgba(53, 208, 127, .14); }
 .simbadge[data-kind="real"] i { background: #35d07f; box-shadow: 0 0 8px #35d07f; }
-.simbadge[data-kind="fake"] { color: #ffd48a; border-color: rgba(255, 176, 32, .8); }
+.simbadge[data-kind="fake"], .simbadge[data-kind="mixed"] { color: #ffd48a; border-color: rgba(255, 176, 32, .8); }
 .simbadge[data-kind="twin"], .simbadge[data-kind="replay"] { color: #b9d8ff; border-color: rgba(47, 180, 255, .6); background: rgba(47, 180, 255, .14); }
 .simbadge[data-kind="twin"] i, .simbadge[data-kind="replay"] i { background: #2fb4ff; box-shadow: 0 0 8px #2fb4ff; }
 #gReplay { display: flex; align-items: center; gap: 10px; flex: 1; }

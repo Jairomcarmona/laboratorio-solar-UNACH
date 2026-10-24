@@ -1,4 +1,7 @@
 # Configuración del puente en producción. Selecciona el controlador y la adquisición reales.
+# mode: sim (sin validar) | staged (valida solo las piezas reales) | real (PLC y adquisición reales; exige deploy/hardware/*.yaml completos)
+# Con mode real o staged el puente NO arranca si falta o es inválido algún dato de hardware. Revisarlo antes: labsolar-bridge --config bridge.yaml --check
+mode: real
 bank: lab1
 tele_period_s: 1.0
 bus:
@@ -12,6 +15,12 @@ controller:
   host: ${PLC_HOST}
   port: 502
   unit: 1
+  ir_offset: 0            # deben coincidir con hardware/plc_registers.yaml
+  hr_offset: 0
 daq:
   driver: nidaqmx         # nidaqmx | mqtt   (cDAQ-9184: la compatibilidad con Linux debe verificarse; alternativa: mqtt desde un equipo Windows)
-  channels: {}            # se completa con el cableado real (docs/REGISTROS.md)
+  # con nidaqmx los canales y sus escalas salen de hardware/calibration.yaml (única fuente de calibración)
+  # Alternativa con equipo Windows publicando por MQTT (el usuario 'daq' de la ACL solo puede escribir en labsolar/v1/<banco>/daq/#):
+  #   driver: mqtt
+  #   topic: labsolar/v1/lab1/daq/cdaq
+  #   max_age_s: 3.0

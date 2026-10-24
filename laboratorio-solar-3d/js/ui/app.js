@@ -253,6 +253,7 @@
   const BADGE = () => ({
     sim: [LAB.t('app.simulacion'), LAB.t('app.modo_simulador_datos_calculados')],
     real: [LAB.t('app.banco_real_2'), LAB.t('app.mediciones_del_banco_fisico')],
+    mixed: [LAB.t('app.banco_mixto'), LAB.t('app.banco_mixto_desc')],
     fake: [LAB.t('app.banco_virtual'), LAB.t('app.el_puente_esta_conectado')],
     twin: ['GEMELO', LAB.t('app.modelo_del_simulador_alimentado')],
     replay: [LAB.t('app.reproduccion'), LAB.t('app.corrida_registrada_en_solo')],

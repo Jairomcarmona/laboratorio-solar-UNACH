@@ -1,0 +1,8 @@
+# Direccionamiento de red del banco. PLANTILLA: copia a network.yaml.
+# Los secretos (contraseñas de cámaras, MQTT) NO van aquí: van en deploy/.env (ignorado por git).
+plc_ip: POR_DEFINIR        # debe coincidir con PLC_HOST de .env y controller.host del puente (ejemplo en .env.example: 192.168.50.10, no confirmado)
+cdaq_ip: POR_DEFINIR       # NI cDAQ-9184 (o equipo Windows que publica por MQTT)
+cam1_ip: POR_DEFINIR       # ejemplo en .env.example: 192.168.60.11
+cam2_ip: POR_DEFINIR
+vlan_field: POR_DEFINIR    # VLAN/segmento aislado del PLC y el cDAQ (sin ruta a internet)
+vpn: POR_DEFINIR           # acceso remoto de mantenimiento (quién, cómo)

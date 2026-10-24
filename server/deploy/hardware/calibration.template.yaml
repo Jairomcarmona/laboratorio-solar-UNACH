@@ -1,0 +1,26 @@
+# Calibración e incertidumbre por canal de adquisición. PLANTILLA: copia a calibration.yaml.
+# Es la única fuente de escalas: con daq.driver nidaqmx el puente toma de aquí phys/type/scale/offset.
+# Física de la conversión (nidaqmx): valor_real = lectura * scale + offset.
+#   Divisor de tensión: scale = (R1+R2)/R2.   Derivación (shunt): scale = 1/R_shunt (A/V).   Piranómetro: scale = 1/sensibilidad (W/m2 por V).
+# Vencimiento: cal_due en el pasado hace fallar la validación (calibración vencida).
+# La incertidumbre (value, con factor de cobertura k, y unidad) alimenta la práctica P4 (calidad e incertidumbre).
+#   Aún NO viaja en el contrato de telemetría (tele) v1; hoy queda documentada aquí. Propuesta: campo opcional `u` en tele en una v1.x.
+sampling:
+  read_hz: POR_DEFINIR          # frecuencia de lectura del cDAQ (hoy el puente promedia una ventana por muestra)
+  tele_hz: POR_DEFINIR          # frecuencia de telemetría; debe ser 1/tele_period_s de bridge.yaml (hoy 1 Hz)
+  timestamp: POR_DEFINIR        # bridge (hora del puente al leer) | device (hora del equipo de adquisición)
+# Canales obligatorios: A.v A.i A.poa A.tback B.v B.i B.poa B.tback env.ghi env.ta.  Opcionales: env.rh env.wind env.windDir env.rainRate
+# Copia el bloque de ejemplo por cada canal; abajo solo se deja uno como guía de formato (los demás faltan y el validador los pedirá).
+channels:
+  A.v:
+    phys: POR_DEFINIR           # canal físico NI, p. ej. cDAQ1Mod1/ai0 (obligatorio con nidaqmx)
+    type: voltage               # voltage | thermocouple | rtd
+    scale: POR_DEFINIR
+    offset: POR_DEFINIR
+    unit: V
+    uncertainty: {value: POR_DEFINIR, coverage_k: POR_DEFINIR, unit: V}
+    sensor_id: POR_DEFINIR
+    cal_certificate: POR_DEFINIR
+    cal_date: POR_DEFINIR       # AAAA-MM-DD
+    cal_due: POR_DEFINIR        # AAAA-MM-DD
+  # A.i, A.poa, A.tback (type: thermocouple, tc: K | rtd), B.v, B.i, B.poa, B.tback, env.ghi, env.ta: mismo formato
