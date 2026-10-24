@@ -39,15 +39,14 @@ const d = require('./lib/drive.js');
       t.ok('E11 P1: la cámara IP 1 ve A y B completos', await page.evaluate(() => { const w = LAB.world; let m = 0; for (const k of ['moduleA', 'moduleB']) for (const p of __t_ndc(w.cam1.cam, w.env3[k])) m = Math.max(m, Math.abs(p.x), Math.abs(p.y)); return m <= 0.95; }));
     },
     p2: async () => { t.ok('E12 P2: con el seguidor en movimiento la cámara IP 2 ve el 100 % de las piezas móviles', (await seen('cam2')) === 1, String(await seen('cam2'))); },
-    p3: async () => { t.ok('E13 P3: tras las tres estrategias el seguidor sigue a la vista de la cámara IP 2 y nada se movió de lugar', (await seen('cam2')) >= 0.99 && (await phys()) === base); },
+    p3: async () => { t.ok('E13 P3: tras las cuatro corridas (dos cielos) el seguidor sigue a la vista de la cámara IP 2 y nada se movió de lugar', (await seen('cam2')) >= 0.99 && (await phys()) === base); },
     p4: async () => {
-      t.ok('E14 P4: componentes, movimiento (cámara IP 2), ráfaga, paro y bitácora completados sin que cambie la distribución', (await phys()) === base);
+      t.ok('E14 P4: barridos repetidos y análisis de calidad completados sin que cambie la distribución', (await phys()) === base);
     },
   };
   await page.evaluate(() => { window.__t_ndc = (cam, box) => { cam.updateMatrixWorld(true); cam.updateProjectionMatrix(); const o = []; for (const x of [box.min[0], box.max[0]]) for (const y of [box.min[1], box.max[1]]) for (const z of [box.min[2], box.max[2]]) o.push(new THREE.Vector3(x, y, z).project(cam)); return o; }; });
   for (const id of ['p1', 'p2', 'p3', 'p4']) {
     await d.openPractice(page, id);
-    if (id === 'p4') { await d.click(page, '#btnAcq'); await d.adv(page, 6); }
     // durante el paso de movimiento de P4 y P2 se muestrea la camara IP 2 mientras B se mueve
     let minSeen = 1, nSamples = 0;
     if (id === 'p4' || id === 'p2') {
