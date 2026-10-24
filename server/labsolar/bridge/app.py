@@ -43,6 +43,7 @@ class BridgeConfig:
     load_bank: list[float] | None = None
     daq_timeout_s: float = 0.8
     require_gateway_hb: bool = True
+    session_reconcile_s: float = 4.0        # el puente suelta una sesión que la pasarela declara distinta (o ninguna) durante este tiempo
 
 
 def now_ms() -> int:
@@ -64,6 +65,9 @@ class BridgeApp:
         self.gateway_seen = False
         self._gateway_last = 0.0
         self._link_lost_sent = False
+        self._gw_session: str | None = None
+        self._gw_session_known = False
+        self._mismatch_since: float | None = None
         self.last_state: PlcState | None = None
         self.last_daq: dict | None = None
         self.daq_ok = True
@@ -130,8 +134,11 @@ class BridgeApp:
             now = time.monotonic()
             try:
                 while True:
-                    self._sub_hb.queue.get_nowait()
+                    hb = self._sub_hb.queue.get_nowait()
                     self._gateway_last = now
+                    body = hb[1] if isinstance(hb, tuple) else hb
+                    if isinstance(body, dict) and "sessionId" in body:
+                        self._gw_session, self._gw_session_known = body["sessionId"], True
                     self.gateway_seen = True
             except asyncio.QueueEmpty:
                 pass
@@ -143,6 +150,7 @@ class BridgeApp:
             elif not ok and self.gateway_ok:
                 self.gateway_ok = False
                 await self._event("bad", "gateway.lost", f"Sin latido de la pasarela en {self.cfg.gateway_timeout_s:.0f} s: no se aceptan comandos")
+            await self._reconcile_session(now, ok)
             if not ok and not self._link_lost_sent:
                 self._link_lost_sent = True
                 if self._sweep:
@@ -158,6 +166,23 @@ class BridgeApp:
                     await self._event("warn", "session.lost", "Sesión con control retirada por pérdida de enlace", {"sessionId": old})
                 await self._publish_state()
             await asyncio.sleep(0.25)
+
+    async def _reconcile_session(self, now: float, gateway_ok: bool) -> None:
+        """La pasarela es quien autoriza el control: si declara en su latido otra sesión (o ninguna) más de `session_reconcile_s`, la del puente es huérfana."""
+        if not (gateway_ok and self.control_session and self._gw_session_known) or self._gw_session == self.control_session:
+            self._mismatch_since = None
+            return
+        if self._mismatch_since is None:
+            self._mismatch_since = now
+            return
+        if now - self._mismatch_since < self.cfg.session_reconcile_s:
+            return
+        old, self._mismatch_since = self.control_session, None
+        if self._sweep:
+            await self._finish_sweep("interrupted", "sesión huérfana")
+        self.control_session = self.control_role = None
+        await self._event("warn", "session.orphan", "Sesión retirada: la pasarela ya no la reconoce", {"sessionId": old})
+        await self._publish_state(force=True)
 
     # ------------------------------------------------------------------ telemetría
     async def _tele_loop(self) -> None:
