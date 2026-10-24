@@ -274,3 +274,11 @@ async def test_secuencia_de_eventos_de_viento_coincide_con_el_simulador():
         assert [e["code"] for e in r.bank.events_log] == ["wind_stow", "wind_resume"]
     finally:
         await r.stop()
+
+
+async def test_el_puente_rechaza_el_paro_de_un_visitante_sin_sesion(rig):
+    a = await rig.cmd("safety.estop", {"who": "vera"}, session="obs_x", role="visitor", user="vera")
+    assert not a["ok"] and a["kind"] == "interlock"
+    await settle(rig, 0.2)
+    assert not rig.bank.estop
+    assert (await rig.cmd("safety.estop", {"who": "prof"}, session="obs_y", role="teacher", user="prof"))["ok"]

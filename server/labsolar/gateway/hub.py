@@ -28,6 +28,7 @@ from .settings import Settings
 log = logging.getLogger("labsolar.gateway")
 
 OPERATE_ROLES = ("student", "teacher")
+ESTOP_STAFF = ("teacher", "admin", "tech")          # personal que puede pedir el paro por software sin tener el control
 FORCED_PREFIX = "forzado: "          # `why` de un session.end impuesto por la administración: el puente manda el banco a estado seguro
 
 
@@ -274,9 +275,12 @@ class Hub:
         ctype, args = msg["type"], msg.get("args") or {}
         user = c.user
         role = user["role"]
-        if ctype == "safety.estop":                          # pedir un paro es siempre posible para cualquier cuenta autenticada
-            sid = self.control_session if self.control is c else f"obs_{c.id}"
-            return await self._send_req(c, cid, ctype, args, sid)
+        if ctype == "safety.estop":                          # solo el operador con control vigente y el personal autorizado; los demás (visitantes, alumnos sin turno) no
+            if self.control is c and self.control_session:
+                return await self._send_req(c, cid, ctype, args, self.control_session)
+            if role in ESTOP_STAFF:
+                return await self._send_req(c, cid, ctype, args, f"obs_{c.id}")
+            return await self._local_reject(c, cid, "interlock", "El paro de emergencia por software solo lo piden el operador con el control y el personal autorizado.", None, ctype)
         if ctype == "session.start":
             if role not in OPERATE_ROLES:
                 return await self._local_reject(c, cid, "interlock", "Tu cuenta es de solo observación." if role == "visitor" else "Las cuentas de administración no operan el banco.", None, ctype)

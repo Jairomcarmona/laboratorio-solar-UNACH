@@ -139,3 +139,42 @@ async def test_cambiar_el_rol_a_visitante_corta_el_control(crig):
     assert (await adm.patch(f"/api/admin/users/{u['id']}", json={"role": "visitor"})).status_code == 200
     await asyncio.sleep(0.5)
     assert crig.api.state.hub.control is None and crig.app.control_session is None
+
+
+# ---------------------------------------------------------------------------- paro de emergencia por software
+async def test_el_visitante_no_puede_disparar_el_paro(crig):
+    crig.add_user("vera", "visitor")
+    w = await tab(crig, "vera")
+    a = await w.cmd("safety.estop", {"who": "vera"})
+    assert not a["ok"] and a["kind"] == "interlock"
+    await asyncio.sleep(0.3)
+    assert not crig.bank.estop
+
+
+async def test_alumno_sin_el_control_no_puede_disparar_el_paro(crig):
+    crig.book(crig.add_user("ana", "student"))
+    crig.book(crig.add_user("beto", "student"))
+    wa, wb = await tab(crig, "ana"), await tab(crig, "beto")
+    assert (await wa.cmd("session.start", {"role": "student"}))["ok"]
+    a = await wb.cmd("safety.estop", {"who": "beto"})
+    assert not a["ok"]
+    await asyncio.sleep(0.3)
+    assert not crig.bank.estop
+
+
+async def test_el_operador_con_control_si_dispara_el_paro(crig):
+    crig.book(crig.add_user("ana", "student"))
+    w = await tab(crig, "ana")
+    assert (await w.cmd("session.start", {"role": "student"}))["ok"]
+    assert (await w.cmd("safety.estop", {"who": "ana"}))["ok"]
+    await asyncio.sleep(0.4)
+    assert crig.bank.estop
+
+
+@pytest.mark.parametrize("role", ["teacher", "admin"])
+async def test_el_personal_autorizado_dispara_el_paro_sin_tener_el_control(crig, role):
+    crig.add_user("jefe", role)
+    w = await tab(crig, "jefe")
+    assert (await w.cmd("safety.estop", {"who": "jefe"}))["ok"]
+    await asyncio.sleep(0.4)
+    assert crig.bank.estop
