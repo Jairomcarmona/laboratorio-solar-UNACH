@@ -30,14 +30,22 @@ def broker():
         subprocess.run(["mosquitto_passwd", "-b"] + (["-c"] if i == 0 else []) + [str(pw), u, f"pw-{u}"], check=True)
     shutil.chown(pw, "mosquitto")                      # como root, Mosquitto cede privilegios y exige que el archivo sea suyo
     pw.chmod(0o700)
-    (d / "m.conf").write_text(f"allow_anonymous false\npassword_file {pw}\nacl_file {DEPLOY / 'acl'}\nlistener {port} 127.0.0.1\n")
-    p = subprocess.Popen([exe, "-c", str(d / "m.conf")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    acl = d / "acl"                                    # copia dentro del directorio temporal: en CI el repo vive bajo un /home que el usuario mosquitto no puede leer
+    shutil.copy(DEPLOY / "acl", acl)
+    shutil.chown(acl, "mosquitto")
+    acl.chmod(0o700)
+    (d / "m.conf").write_text(f"allow_anonymous false\npassword_file {pw}\nacl_file {acl}\nlistener {port} 127.0.0.1\n")
+    log = open(d / "mosquitto.log", "wb")
+    p = subprocess.Popen([exe, "-c", str(d / "m.conf")], stdout=log, stderr=subprocess.STDOUT)
     for _ in range(50):
         try:
             socket.create_connection(("127.0.0.1", port), 0.2).close()
             break
         except OSError:
             time.sleep(0.1)
+    else:
+        p.terminate()
+        pytest.fail("Mosquitto no abrió el puerto: " + (d / "mosquitto.log").read_text(errors="replace")[-800:])
     yield port
     p.terminate()
     p.wait(5)
