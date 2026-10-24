@@ -9,6 +9,12 @@
   const colIndex = (run) => { const m = {}; (run.cols || COLS()).forEach((c, i) => (m[c] = i)); return m; };
   const dayOf = (ms) => { const l = LAB.localTime(ms); return `${l.year}-${String(l.month).padStart(2, '0')}-${String(l.day).padStart(2, '0')}`; };
 
+  /** Duracion simulada (s) entre la primera y la ultima muestra; 0 si no hay al menos dos. */
+  const runSpanS = (run) => {
+    const idx = colIndex(run), S = run.samples || [];
+    return S.length > 1 ? (S[S.length - 1][idx.simMs] - S[0][idx.simMs]) / 1000 : 0;
+  };
+
   /** Razon porcentual null-segura: devuelve {v, note}. Nunca -0.0 ni NaN. */
   function ratioPct(num, den, what) {
     if (!Number.isFinite(num) || !Number.isFinite(den)) return { v: null, note: `No disponible: falta ${what}.` };
@@ -50,6 +56,13 @@
     (run.segments || []).forEach((s, i) => { if (i > 0 && reasons[s.reason] && !out.includes(reasons[s.reason])) out.push(reasons[s.reason]); });
     const idx = colIndex(run);
     if ((run.samples || []).some((r) => r[idx.safety] && r[idx.safety] !== 'NORMAL')) out.push('el sistema de seguridad intervino (paro, viento o enlace)');
+    const cmpCfg = LAB.config.compare, S = run.samples || [];
+    if (S.length) {       // H03: la variable estudiada no puede cambiar a mitad de la corrida, y una corrida corta no compara nada
+      const modes = (col) => new Set(S.map((r) => r[idx[col]]));
+      if (modes('loadMode').size > 1) out.push('cambió el modo de carga durante la corrida');
+      if (modes('trMode').size > 1) out.push('cambió el modo de seguimiento durante la corrida');
+      if (runSpanS(run) < cmpCfg.minDurS) out.push(`duró menos de ${cmpCfg.minDurS} s simulados`);
+    }
     if (run.status === 'limit') out.push('llegó al límite de muestras');
     if (run.status === 'stopped' && (run.events || []).some((e) => /paro|e-stop|emergencia/i.test(e.text))) out.push('se interrumpió por paro de emergencia');
     return out;
@@ -63,6 +76,7 @@
       profileId: run.profileId || null, scenarioId: c.scenarioId != null ? c.scenarioId : (run.scenario ? run.scenario.id : null), seed: c.seed != null ? c.seed : run.seed,
       day: t0 != null ? dayOf(t0) : null, startSimMs: t0, cloud: c.cloud != null ? c.cloud : null, windBase: c.windBase != null ? c.windBase : null,
       speed: c.speed != null ? c.speed : null,
+      durationS: runSpanS(run), loadMode: S.length ? S[0][idx.loadMode] : null,
       // diferencias deliberadas (variable de estudio):
       trackerMode: c.trackerMode || null, lockAz: !!c.lockAz, lockTilt: !!c.lockTilt,
     };
@@ -72,6 +86,11 @@
   LAB.core.compareRuns = function (runs) {
     const conds = runs.map(LAB.core.runConditions), common = ['scenarioId', 'seed', 'day', 'cloud', 'windBase'], names = { scenarioId: 'escenario', seed: 'semilla', day: 'fecha simulada', cloud: 'nubes', windBase: 'viento medio' };
     const differs = []; common.forEach((k) => { if (new Set(conds.map((c) => String(c[k]))).size > 1) differs.push(names[k]); });
+    const K = LAB.config.compare;     // H03: inicio y duracion tambien definen "mismo escenario" (tolerancias provisionales en cfg.compare)
+    const starts = conds.map((c) => c.startSimMs), durs = conds.map((c) => c.durationS);
+    if (starts.every((t) => t != null) && Math.max(...starts) - Math.min(...starts) > K.startTolS * 1000) differs.push('hora de inicio');
+    if (Math.max(...durs) - Math.min(...durs) > Math.max(K.durTolMinS, K.durTolFrac * Math.max(...durs))) differs.push('duración');
+    if (new Set(conds.map((c) => c.loadMode)).size > 1) differs.push('modo de carga');
     const varied = []; if (new Set(conds.map((c) => c.trackerMode)).size > 1) varied.push('modo de seguimiento');
     if (new Set(conds.map((c) => `${c.lockAz}/${c.lockTilt}`)).size > 1) varied.push('eje inmovilizado');
     const altered = runs.map((r) => ({ id: r.id, reasons: LAB.core.runAlterations(r) })).filter((a) => a.reasons.length);

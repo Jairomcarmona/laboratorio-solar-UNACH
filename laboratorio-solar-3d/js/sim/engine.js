@@ -19,6 +19,7 @@
   const S = LAB.sim.solar;
   const PV = LAB.sim.pv;
   const cfg = LAB.config;
+  const PO_PERIOD_S = 0.15, PO_MAX_ITERS = 12;     // MPPT perturbar-y-observar: periodo fisico y tope de iteraciones por paso
   const MODES = ['manual', 'astro', 'sensor', 'fixed'];
   const LOAD_MODES = ['mppt', 'cv', 'cr', 'oc', 'sc'];
   const { CR_MIN, CR_MAX, CV_MIN, CV_MAX } = LAB.core.CMD;   // consignas de carga (cv: fraccion de Voc, cr: ohm)
@@ -47,7 +48,7 @@
       this.simMs = LAB.fromLocal(2026, 10, 23, 10, 30);
       this.speed = 1;
       this.playing = true;              // reloj solar (no congela el banco: el seguidor y los enclavamientos siguen)
-      this.realT = 0;
+      this.realT = 0; this.physT = 0;
       this.seed = opts.seed != null ? opts.seed >>> 0 : 20261023;
       this.scenario = null;
       this.weather = new LAB.sim.Weather();
@@ -115,7 +116,7 @@
           if (this.sweep.active) return this._bad('Hay un barrido en curso: espera a que termine o interrúmpelo antes de mover el reloj.', 'interlock');
           const from = this.simMs;
           this.simMs = cmd.ms; this.jumped = true; this._breakPending = true;
-          if (this._recording() && Math.abs(cmd.ms - from) > 1500) this._newSegment('salto_de_tiempo', `Salto del reloj: ${LAB.core.localStr(from)} → ${LAB.core.localStr(cmd.ms)}`);
+          if (this._recording() && Math.abs(cmd.ms - from) > 1500) this._newSegment('salto_de_tiempo', `Salto del reloj: ${LAB.core.localStr(from)} → ${LAB.core.localStr(cmd.ms)}`, from);
           return { ok: true, log: false };
         }
         case 'sim.cloud': this.weather.cloud = cmd.value; return { ok: true, log: false };
@@ -132,10 +133,11 @@
         case 'sim.comms': sf.setComms(cmd.connected); return { ok: true, log: false };
         case 'sim.resetEnergy': {
           // Nuevo segmento de integracion: NO borra muestras, lluvia ni otras sesiones (C07)
+          if (this._recording()) this._closeSegment();      // H04: el segmento termina con la energia que llevaba, ANTES de ponerla a cero
           this.A.energyWh = 0; this.B.energyWh = 0; this.motorWh = 0;
           this.energy.startedSimMs = this.simMs; this.energy.resets++;
           this.log('info', 'Contadores de energía puestos a cero: empieza un nuevo segmento de integración. Las muestras registradas se conservan.', 'Sistema');
-          if (this._recording()) this._newSegment('energia_a_cero', 'Contadores de energía puestos a cero');
+          if (this._recording()) this._newSegment('energia_a_cero', 'Contadores de energía puestos a cero', undefined, true);
           return { ok: true, log: false };
         }
         case 'sim.resetRain': this.weather.rainMm = 0; this.log('info', 'Acumulado de lluvia puesto a cero.', 'Sistema'); return { ok: true, log: false };
@@ -273,7 +275,7 @@
       if (!run) { run = this._makeRun('', null); this.acq.runId = run.id; this.acq.elapsedReal = 0; }
       run.status = 'open';
       this.acq.status = 'recording'; this.acq.reason = ''; this.acq.timer = 0; this.acq.startedReal = Date.now();
-      this._newSegment(resumed ? 'reanudacion' : 'inicio', resumed ? 'Adquisición reanudada (el reloj pudo avanzar mientras estaba detenida)' : 'Inicio de la adquisición');
+      this._newSegment(resumed ? 'reanudacion' : 'inicio', resumed ? 'Adquisición reanudada (el reloj pudo avanzar mientras estaba detenida)' : 'Inicio de la adquisición', undefined, true);   // el segmento anterior ya se cerro al detener
       this._event('adquisicion', resumed ? 'Adquisición reanudada' : 'Adquisición iniciada');
       this.log('ok', `${resumed ? 'Adquisición reanudada' : 'Adquisición iniciada'} · corrida ${run.id} · una muestra por segundo (${cfg.acq.basis}).`, 'Adquisición');
       this.emit('acq', { status: 'recording', runId: run.id });
@@ -282,6 +284,7 @@
     _acqStop(reason) {
       if (!this._recording()) return this._bad('La adquisición no está grabando.', 'interlock');
       const run = this.activeRun();
+      this._closeSegment();
       this._event('adquisicion', `Adquisición detenida (${reason})`);
       this.acq.status = 'stopped'; this.acq.reason = reason;
       if (run) run.status = run.samples.length >= run.limit ? 'limit' : 'stopped';
@@ -299,10 +302,18 @@
       this.emit('run', { ...r, status: 'discarded' });
       return { ok: true, log: false };
     }
-    _newSegment(reason, text) {
+    /** H04: cierra el segmento vigente con los acumuladores FISICOS de este instante (antes solo se actualizaban al muestrear y se perdia la energia final) */
+    _closeSegment(endSimMs) {
+      const run = this.activeRun(); if (!run) return;
+      const seg = run.segments[run.segments.length - 1]; if (!seg) return;
+      seg.end = { ...this._acc(), n: run.samples.length };
+      if (endSimMs != null) seg.end.simMs = endSimMs;
+    }
+    _newSegment(reason, text, prevEndSimMs, alreadyClosed = false) {
       const run = this.activeRun(); if (!run) return;
       const last = run.segments[run.segments.length - 1];
       if (reason === 'salto_de_tiempo' && last && last.reason === reason && last.firstSample === run.samples.length) { last.startedSimMs = this.simMs; return; }   // arrastre continuo del control de hora: un solo segmento
+      if (!alreadyClosed) this._closeSegment(prevEndSimMs);
       const seg = { id: 's' + (run.segments.length + 1), startedSimMs: this.simMs, startedAtUtc: new Date().toISOString(), reason, firstSample: run.samples.length,
         start: this._acc(), ctx: this._ctx() };
       run.segments.push(seg);
@@ -324,9 +335,12 @@
     _record(dtReal, t) {
       if (!this._recording()) return;
       const run = this.activeRun(); if (!run) return;
+      // H04: instantes objetivo. El residuo del cronometro se conserva (antes se ponia a 0 y el redondeo retrasaba la muestra: 90 en 100 s)
       this.acq.elapsedReal += dtReal; this.acq.timer += dtReal;
-      if (this.acq.timer < cfg.acq.sampleEveryS) return;
-      this.acq.timer = 0;
+      const period = cfg.acq.sampleEveryS, due = Math.floor((this.acq.timer + 1e-9) / period);
+      if (due < 1) return;
+      this.acq.timer = Math.max(0, this.acq.timer - due * period);
+      if (due > 1) run.missedSamples = (run.missedSamples || 0) + (due - 1);     // vencidas y no inventadas: se informan, no se rellenan
       if (run.samples.length >= run.limit) { this._acqStop('limite'); return; }
       const seg = run.segments[run.segments.length - 1];
       if (seg) seg.end = { ...this._acc(), n: run.samples.length };
@@ -345,17 +359,18 @@
       if (this.safety.commsCut) return this._bad('No se puede preparar el escenario con el enlace cortado: restablécelo primero.', 'interlock');
       if (this.sweep.active) return this._bad('Hay un barrido en curso.', 'interlock');
       const sc = cmd.scenario || {};
-      for (const [k, lo, hi] of [['simMs', 9.46e11, 4.1e12], ['cloud', 0, 1], ['windBase', 0, cfg.limits.windMax], ['seed', 0, 4294967295]]) {
+      for (const [k, lo, hi] of [['simMs', 9.46e11, 4.1e12], ['cloud', 0, 1], ['windBase', 0, cfg.limits.windMax], ['seed', 0, 4294967295], ['az', cfg.tracker.azMin, cfg.tracker.azMax], ['tilt', cfg.tracker.tiltMin, cfg.tracker.tiltMax]]) {   // H10: az/tilt tambien, antes de mutar
         if (sc[k] != null && (!isNum(sc[k]) || sc[k] < lo || sc[k] > hi)) return this._bad(`Escenario con ${k} no válido.`, 'validation');
       }
       if (sc.speed != null && !cfg.speeds.includes(sc.speed)) return this._bad('Escenario con velocidad no válida.', 'validation');
       const tr = this.tracker;
+      if (this._recording()) this._closeSegment();      // H04: cerrar con la energia vigente antes de reiniciar contadores y reloj
       this.weather.windBase = sc.windBase != null ? sc.windBase : this.weather.windBase;
       this.weather.cloud = sc.cloud != null ? sc.cloud : this.weather.cloud;
       this.weather.setRain(0);
       if (sc.simMs != null) { this.simMs = sc.simMs; this.jumped = true; this._breakPending = true; }
       this.seed = sc.seed != null ? sc.seed >>> 0 : this.seed;
-      this.realT = 0;
+      this.realT = 0; this.physT = 0;
       this.weather.reset(LAB.localTime(this.simMs));
       this.A.restart(); this.B.restart();
       tr.az = tr.targetAz = tr.holdAz = (sc.az != null ? sc.az : cfg.fixed.az); tr.tilt = tr.targetTilt = tr.holdTilt = (sc.tilt != null ? sc.tilt : cfg.fixed.tilt);
@@ -367,7 +382,7 @@
       this.history = { t: [], pA: [], pB: [], gA: [], gB: [], tA: [], tB: [], az: [], tilt: [], wind: [], ta: [], motor: [] };
       this.scenario = { id: sc.id || 'sin-id', seed: this.seed, appliedAtReal: Date.now(), simMs: this.simMs, cloud: this.weather.cloud, windBase: this.weather.windBase };
       this.log('info', `Escenario "${this.scenario.id}" aplicado (simulador): ${LAB.core.localStr(this.simMs)}, nubes ${(this.weather.cloud * 100).toFixed(0)} %, viento medio ${this.weather.windBase} m/s, semilla ${this.seed}, seguidor ${tr.az}°/${tr.tilt}°, energía a cero.`, 'Escenario');
-      if (this._recording()) this._newSegment('escenario', `Escenario ${this.scenario.id} aplicado`);
+      if (this._recording()) this._newSegment('escenario', `Escenario ${this.scenario.id} aplicado`, undefined, true);
       return { ok: true, log: false, scenario: this.scenario };
     }
 
@@ -383,12 +398,19 @@
         cond: { start: this._cond(t), end: null },
       };
       this.speed = 1;
+      if (!this._bankSlot()) this._sweepEndpoint('sc');
     }
     _cond(t) {
       return { gA: t.A.poaTrue, gB: t.B.poaTrue, tA: t.A.tcell, tB: t.B.tcell, ghi: t.env.ghi, dni: t.env.dni, ta: t.env.ta, cloud: t.settings.cloud, wind: t.env.wind, azB: t.B.az, tiltB: t.B.tilt };
     }
+    /** H08: punto extremo del barrido continuo ('sc' = V=0, 'oc' = I=0) con la curva vigente; el barrido por tension nunca llega exactamente a ellos. */
+    _sweepEndpoint(kind) {
+      const pt = (m) => { const o = PV.operating(m.cv, kind, 0, 0); return { v: o.v, i: o.i, p: o.v * o.i, g: m.poa.total }; };
+      this.sweep.pts.A.push(pt(this.A)); this.sweep.pts.B.push(pt(this.B));
+    }
     _finishSweep(status, cause) {
       const s = this.sweep, t = this.telemetry;
+      if (status === 'complete' && !this._bankSlot()) this._sweepEndpoint('oc');
       s.active = false;
       this.load.mode = s.prevMode; this.load.setpoint = s.prevSetpoint; this.speed = s.prevSpeed;
       const rec = s.rec; rec.status = status; rec.cause = cause || ''; rec.cond.end = this._cond(t); rec.endSimMs = this.simMs;
@@ -409,22 +431,42 @@
     abortSweep(cause) { if (this.sweep.active) this._finishSweep('interrupted', cause); }
 
     // ------------------------------------------------------------ paso de simulacion
-    _noise(m, k) { return hashNoise(this.seed, Math.floor(this.realT * 20), m.ch[k]); }
+    _noise(m, k) { return hashNoise(this.seed, Math.floor(this.physT * 20), m.ch[k]); }
 
+    /**
+     * Un cuadro de la aplicacion (dtReal s reales). H01: el mundo se avanza en pasos FISICOS (_physicsStep) y el cuadro solo decide
+     * cuantos; acelerar el reloj calcula mas pasos con la misma historia fisica, no motores ni controles mas rapidos.
+     * Con el reloj en pausa los procesos del banco (motores, viento, MPPT) siguen a ritmo real (modo didactico), y el Sol, la
+     * temperatura y la energia quedan congelados. Si el cuadro necesita mas de physics.maxSubsteps pasos, el paso crece (tope de calculo).
+     */
     step(dtReal) {
       dtReal = clamp(dtReal, 0, 0.1);
       this.realT += dtReal;
-      const sf = this.safety, tr = this.tracker, w = this.weather;
       const speed = this.sweep.active ? 1 : this.speed;
-      const dtSim = this.playing ? dtReal * speed : 0;
-      this.simMs += dtSim * 1000;
+      const dtPhys = this.playing ? dtReal * speed : dtReal;
+      const n = clamp(Math.ceil(dtPhys / cfg.physics.stepS - 1e-9), 1, cfg.physics.maxSubsteps);
+      const h = dtPhys / n, hSim = this.playing ? h : 0;
+      let last = null;
+      for (let k = 0; k < n; k++) last = this._physicsStep(h, hSim, dtReal / n);
+      const { lt, irr, sun, sunVec, mode } = last;
+      this._snapshot(lt, irr, sun, sunVec, mode);
+      this._history(dtReal, lt);
+      this._record(dtReal, this.telemetry);
+      const run = this.activeRun(); this.telemetry.acq.samples = run ? run.samples.length : 0; this.telemetry.acq.status = this.acq.status;
+    }
+
+    /** h = segundos fisicos del paso, hSim = lo que avanza el reloj solar en el (0 en pausa), dtComms = parte del cuadro real (watchdog de enlace) */
+    _physicsStep(h, hSim, dtComms) {
+      this.physT += h;
+      const sf = this.safety, tr = this.tracker, w = this.weather;
+      this.simMs += hSim * 1000;
       const lt = LAB.localTime(this.simMs);
 
       // sol y recurso
       const sun = S.position(this.simMs);
       this.sunPos = sun;
       const sunVec = S.sunVector(sun.az, sun.el);
-      w.update(dtReal, dtSim, lt, speed);
+      w.update(h, hSim, lt);
       const cs = S.clearsky(lt, sun.el);
       const irr = S.applyClouds(cs, w.cloud, sun.el, w.flicker);
       irr.e0 = S.extraRadiation(lt.dayOfYear);
@@ -432,9 +474,9 @@
       if (this.envOverride) this._applyEnvOverride(w, irr);
 
       // seguridad y seguidor
-      sf.update(dtReal, dtSim, w.wind, this.simMs);
+      sf.update(h, hSim, w.wind, this.simMs, dtComms);
       tr.enabled = !sf.estop;
-      tr.update(dtReal, { sun, irr, stow: sf.stowRequired }, speed);
+      tr.update(h, { sun, irr, stow: sf.stowRequired });
       if (this.followPose) { tr.az = this.followPose.az; tr.tilt = this.followPose.tilt; tr.vAz = tr.vTilt = 0; }
       if (tr.limitHit.az || tr.limitHit.tilt) {
         if (!this._limitLogged) { this.log('info', 'Final de carrera alcanzado en el seguidor (el movimiento se detiene).', 'Seguidor'); this._limitLogged = true; }
@@ -442,8 +484,8 @@
       if (this.sweep.active && (sf.estop || sf.stowRequired)) this.abortSweep(sf.estop ? 'paro de emergencia' : 'posición segura');
 
       // modulos
-      this._module(this.A, cfg.fixed, sunVec, irr, w, dtSim, dtReal);
-      this._module(this.B, { az: tr.az, tilt: tr.tilt }, sunVec, irr, w, dtSim, dtReal);
+      this._module(this.A, cfg.fixed, sunVec, irr, w, hSim, h);
+      this._module(this.B, { az: tr.az, tilt: tr.tilt }, sunVec, irr, w, hSim, h);
       const sh = sun.el > 0 ? LAB.sim.shade.mutual(sunVec, tr.az, tr.tilt) : { A: 0, B: 0 };
       this.A.shade = sh.A; this.B.shade = sh.B;
       this.jumped = false;
@@ -451,23 +493,19 @@
       // carga (la carga se desconecta con el paro de emergencia)
       const mode = sf.estop ? 'oc' : this.load.mode;
       let setpoint = this.load.setpoint;
-      if (this.sweep.active) this._stepSweep(dtReal, this.sweep);
+      if (this.sweep.active) this._stepSweep(h, this.sweep);
       const sweeping = this.sweep.active;
       let mm = sweeping ? 'cv' : mode;
       if (sweeping) {
         const slot = this._bankSlot();
         if (slot) { mm = slot.mode; setpoint = slot.setpoint; } else setpoint = clamp(this.sweep.t / cfg.sweepSeconds, 0, 1);
       }
-      for (const m of [this.A, this.B]) this._operate(m, mm, setpoint, dtReal, dtSim);
+      for (const m of [this.A, this.B]) this._operate(m, mm, setpoint, h, hSim);
       if (sweeping) this._recordSweep();
 
       // energia
-      this.motorWh += tr.powerW * dtSim / 3600;
-
-      this._snapshot(lt, irr, sun, sunVec, mode);
-      this._history(dtReal, lt);
-      this._record(dtReal, this.telemetry);
-      const run = this.activeRun(); this.telemetry.acq.samples = run ? run.samples.length : 0; this.telemetry.acq.status = this.acq.status;
+      this.motorWh += tr.powerW * hSim / 3600;
+      return { lt, irr, sun, sunVec, mode };
     }
 
     /** Modo gemelo: el modelo corre con el ambiente MEDIDO (override) para compararlo con lo que mide el banco. null/undefined = ambiente simulado. */
@@ -499,12 +537,18 @@
     _operate(m, mode, setpoint, dtReal, dtSim) {
       const cv = m.cv;
       if (mode === 'mppt') {
+        // perturbar y observar cada PO_PERIOD_S de tiempo fisico (H01); en un paso largo se hacen varias iteraciones, con tope
         m.poTimer += dtReal;
-        if (m.poTimer >= 0.15) {            // perturbar y observar, a tiempo real
-          m.poTimer = 0;
-          if (m.op.p < m.lastP) m.dir *= -1;
-          m.lastP = m.op.p;
-          m.vTrack = clamp(m.vTrack + m.dir * 0.45, 2, Math.max(cv.voc, 5));
+        let iters = Math.floor(m.poTimer / PO_PERIOD_S + 1e-9);
+        if (iters > 0) {
+          m.poTimer = Math.max(0, m.poTimer - iters * PO_PERIOD_S);
+          iters = Math.min(iters, PO_MAX_ITERS);
+          for (let k = 0; k < iters; k++) {
+            if (k > 0) { const o = PV.operating(cv, mode, setpoint, m.vTrack); m.op = { v: o.v, i: o.i, p: o.v * o.i }; }
+            if (m.op.p < m.lastP) m.dir *= -1;
+            m.lastP = m.op.p;
+            m.vTrack = clamp(m.vTrack + m.dir * 0.45, 2, Math.max(cv.voc, 5));
+          }
         }
         if (cv.pmp <= 0) m.vTrack = 0.8 * (cv.voc || 40);
       }

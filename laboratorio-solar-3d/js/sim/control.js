@@ -139,10 +139,10 @@
       return { pos: np, vel, hit };
     }
 
-    /** dt en segundos reales; speed = factor de compresion del tiempo (los motores acompanan al Sol al acelerar) */
-    update(dt, ctx, speed = 1) {
+    /** dt en segundos FISICOS. H01: los motores tienen su velocidad real; al acelerar el reloj se calculan mas pasos, no motores mas rapidos */
+    update(dt, ctx) {
       this.computeTargets(dt, ctx);
-      const k = (this.mode === 'astro' || this.mode === 'sensor') ? Math.max(1, speed / 30) : 1;
+      const k = 1;
       const stowK = this.stowing ? 1.4 : 1;
       const ra = cfg.azRate * k * stowK, rt = cfg.tiltRate * k * stowK;
       const a = this.axisStep(this.az, this.vAz, this.targetAz, ra, ra * 1.6, dt, cfg.azMin, cfg.azMax);

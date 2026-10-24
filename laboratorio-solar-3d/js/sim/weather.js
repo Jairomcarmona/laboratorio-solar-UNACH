@@ -57,7 +57,9 @@
     }
     get rainRate() { return RAIN_LEVELS[this.rainLevel].mmh; }
 
-    update(dtReal, dtSim, localT, simSpeed) {
+    /** dtPhys = segundos fisicos de este paso (H01: el viento, las rafagas y la temperatura avanzan con el tiempo fisico, no con los cuadros) */
+    update(dtPhys, dtSim, localT) {
+      const dtReal = dtPhys;
       this.realT += dtReal;
       const t = this.realT;
       // viento: base + turbulencia lenta + rafaga con rampa de subida y bajada
@@ -70,10 +72,9 @@
       this.wind = clamp(w, 0, 40);
       this.windDir = (this.windDir + noise1(t / 20, 1) * 6 * dtReal + 360) % 360;
 
-      // pasos de nube: se atenuan cuando el tiempo corre muy rapido (promedio)
+      // pasos de nube: dependen solo de la hora fisica (H01: la amplitud ya no cambia con la velocidad de presentacion)
       const sec = localT.hours * 3600;
-      const amp = 1 / (1 + simSpeed / 60);
-      this.flicker = amp * (noise1(sec / 170, 5) * 0.6 + noise1(sec / 45, 9) * 0.4);
+      this.flicker = noise1(sec / 170, 5) * 0.6 + noise1(sec / 45, 9) * 0.4;
 
       // temperatura y humedad: ciclo diario, menos amplitud con nubes y lluvia
       const m = localT.month - 1;

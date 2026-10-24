@@ -110,3 +110,14 @@ Pruebas adicionales (Espacial 104, Controles del tiempo 12) cubren la redistribu
 - Horario real de las prácticas (la P3 usa un día simulado de 07:00 a 17:30).
 - Validación pedagógica por docentes (glosario, pistas, observaciones esperadas) y prueba con personas sin experiencia (C19).
 - Auditoría de accesibilidad con lector de pantalla, medición en equipos reales y conexión con el banco (`MqttSource`).
+
+## 9. Correcciones de la auditoría (H01, H03, H04, H08, H10)
+
+Aplicadas de la auditoría `DISENO_INTEGRAL_SOLAR_V1`; la prueba que las cubre es `tools/test_audit_fixes.js` (corre en CI). Quedan **fuera** H02 (sombras sin efecto eléctrico) y la redistribución física del banco.
+
+- **H01 – tiempo físico independiente de la velocidad.** El motor avanza en pasos físicos de ≤ 0,1 s (`cfg.physics`); acelerar el reloj calcula más pasos, no motores, MPPT ni parpadeo de nubes más rápidos. Con el reloj en pausa el banco (motores, viento, MPPT) sigue a ritmo real y Sol, temperatura y energía se congelan. El watchdog de comunicación sigue en tiempo real. Resultado medido: energía de B a ×1/×60/×600/×3600 coincide dentro de ~0,1 % (antes la energía de motores se duplicaba de ×1 a ×60).
+- **H04 – muestreo y segmentos.** El muestreo conserva el residuo del temporizador (sin deriva) y cuenta las muestras vencidas en `missedSamples`. Cada segmento se cierra de forma atómica con los acumuladores vigentes al detener, reanudar, poner energía a cero o aplicar escenario.
+- **H10 – validación de escenario.** `scenario.apply` valida forma, azimut, inclinación, nubes, viento, semilla y velocidad **antes** de mutar nada (validador puro en `validate.js` y comprobación en el motor).
+- **H03 – comparador.** Dos corridas solo son comparables si coinciden en hora de inicio, duración y modo de carga; cambiar modo de seguimiento o de carga dentro de una corrida, o una duración menor de 60 s, la marcan como alterada. Las tolerancias (`cfg.compare`: inicio 120 s, duración 5 % o 30 s) son **provisionales** y deben validarlas los docentes.
+- **H08 – barrido I‑V.** El barrido continuo incluye el punto de cortocircuito (V = 0) al inicio y el de circuito abierto (I = 0) al terminar; un barrido interrumpido no inventa el extremo abierto.
+- Efecto en pruebas existentes: `test_analysis_ui.js` ahora usa seguimiento fijo y 60 min simulados para que G varíe (con seguimiento astronómico la irradiancia del módulo B es casi constante y el R² dependía del ruido del sensor).
