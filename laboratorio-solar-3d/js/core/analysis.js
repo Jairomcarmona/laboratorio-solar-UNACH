@@ -36,6 +36,7 @@
     return {
       id: run.id, label: run.label || '', status: run.status, n: S.length, segments: segs.length, hasEnergy: withData > 0,
       EA: withData ? eA : null, EB: withData ? eB : null, motorWh: withData ? mot : null,
+      correctedPct: withData ? LAB.core.calibration.correctedGainPct(eA, eB, LAB.core.calibration.get()).v : null, calDate: (LAB.core.calibration.get() || {}).dateIso || null, calK: (LAB.core.calibration.get() || {}).k || null,
       grossPct: withData ? gross.v : null, netPct: withData ? net.v : null, grossNote: withData ? gross.note : 'Esta corrida no guardó acumuladores por segmento.', netNote: withData ? net.note : '',
       t0, t1, day: t0 != null ? dayOf(t0) : null,
       altered: LAB.core.runAlterations(run),
@@ -120,5 +121,63 @@
     if (Math.abs(x.tA - y.tA) > 3) d.push(`temperatura de celda A ${x.tA.toFixed(1)} vs ${y.tA.toFixed(1)} °C`);
     return d;
   };
+
+  // ------------------------------------------------------------------------------------------------ S13: graficas de analisis
+  /** Ajuste lineal y = m x + b por minimos cuadrados. Devuelve {slope, intercept, r2, n}; null si hay menos de 2 puntos o x no varia. */
+  function linfit(pts) {
+    const P = pts.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y)), n = P.length;
+    if (n < 2) return null;
+    let sx = 0, sy = 0; P.forEach((p) => { sx += p.x; sy += p.y; });
+    const mx = sx / n, my = sy / n;
+    let sxx = 0, sxy = 0, syy = 0; P.forEach((p) => { sxx += (p.x - mx) ** 2; sxy += (p.x - mx) * (p.y - my); syy += (p.y - my) ** 2; });
+    if (sxx < 1e-12) return null;
+    const slope = sxy / sxx, intercept = my - slope * mx;
+    return { slope, intercept, r2: syy < 1e-12 ? 1 : (sxy * sxy) / (sxx * syy), n };
+  }
+  const mod2 = (m) => (m === 'A' ? { g: 'gA', t: 'tcA', v: 'vA', i: 'iA', p: 'pA', e: 'eA' } : { g: 'gB', t: 'tcB', v: 'vB', i: 'iB', p: 'pB', e: 'eB' });
+  const rows = (run) => { const idx = colIndex(run); return (run.samples || []).map((r) => { const o = {}; Object.keys(idx).forEach((k) => { o[k] = r[idx[k]]; }); return o; }); };
+
+  /** Isc contra G (carga en cortocircuito): recta casi por el origen, pendiente ~ Isc_STC/1000. */
+  LAB.core.iscVsG = function (run, mod = 'B') {
+    const k = mod2(mod), pts = rows(run).filter((r) => r.loadMode === 'sc' && Number.isFinite(r[k.g]) && Number.isFinite(r[k.i])).map((r) => ({ x: r[k.g], y: r[k.i], n: r.n }));
+    return { id: 'iscVsG', xLabel: `G_${mod} (W/m²)`, yLabel: `Isc_${mod} (A)`, points: pts, fit: linfit(pts) };
+  };
+  /** Voc contra temperatura de celda (circuito abierto): pendiente = coeficiente de temperatura de Voc (V/°C). */
+  LAB.core.vocVsT = function (run, mod = 'B') {
+    const k = mod2(mod), pts = rows(run).filter((r) => r.loadMode === 'oc' && Number.isFinite(r[k.t]) && Number.isFinite(r[k.v])).map((r) => ({ x: r[k.t], y: r[k.v], n: r.n }));
+    return { id: 'vocVsT', xLabel: `T celda ${mod} (°C)`, yLabel: `Voc_${mod} (V)`, points: pts, fit: linfit(pts) };
+  };
+  /** (T - Ta)/G contra viento, solo con irradiancia estable (|dG| < 20 W/m2 dentro de 5 min) y G > 400 W/m2. */
+  LAB.core.thermalVsWind = function (run, mod = 'B', opts = {}) {
+    const k = mod2(mod), R = rows(run), win = (opts.windowMin || 5) * 60000, dG = opts.maxDeltaG || 20, gmin = opts.minG || 400;
+    const pts = [];
+    let lo = 0;
+    for (let i = 0; i < R.length; i++) {
+      while (R[i].simMs - R[lo].simMs > win) lo++;
+      let mn = Infinity, mx = -Infinity, contiguous = true;
+      for (let j = lo; j <= i; j++) { const g = R[j][k.g]; if (g < mn) mn = g; if (g > mx) mx = g; if (R[j].segmentId !== R[i].segmentId) contiguous = false; }
+      const r = R[i];
+      // la ventana debe cubrir los 5 min completos: con menos historia no se puede afirmar que la irradiancia fue estable
+      if (R[i].simMs - R[0].simMs < win || !contiguous || mx - mn >= dG || !(r[k.g] > gmin) || !Number.isFinite(r[k.t]) || !Number.isFinite(r.ta) || !Number.isFinite(r.wind)) continue;
+      pts.push({ x: r.wind, y: (r[k.t] - r.ta) / r[k.g], n: r.n });
+    }
+    return { id: 'thermalVsWind', xLabel: 'Viento (m/s)', yLabel: `(T_celda_${mod} − Ta)/G (K·m²/W)`, points: pts, fit: linfit(pts), filter: `|ΔG| < ${dG} W/m² en ${opts.windowMin || 5} min y G > ${gmin} W/m²` };
+  };
+  /** PR diario por modulo. H = ΣG·Δt (kWh/m2), Yr = H/1 kW/m2, Yf = E_DC/P0, PR = Yf/Yr; PR_T corrige por temperatura de celda (gamma de la hoja de datos). */
+  LAB.core.dailyPR = function (run, mod = 'B', opts = {}) {
+    const k = mod2(mod), R = rows(run), P0 = opts.P0 || LAB.config.module.Wp, gamma = (opts.gamma != null ? opts.gamma : ((LAB.data.pvlib && LAB.data.pvlib.sdm ? LAB.data.pvlib.sdm.gammaPmp : -0.3) / 100));
+    const days = {};
+    for (let i = 1; i < R.length; i++) {
+      const a = R[i - 1], b = R[i];
+      const dt = (b.simMs - a.simMs) / 3600000;                          // h
+      if (!(dt > 0) || dt > 1 / 60 * 5 || a.segmentId !== b.segmentId) continue;   // salto del reloj o cambio de segmento: no se integra el hueco
+      if (!Number.isFinite(b[k.g]) || !Number.isFinite(b[k.p]) || !Number.isFinite(b[k.t])) continue;
+      const d = dayOf(b.simMs), o = days[d] || (days[d] = { day: d, Hwh: 0, Ewh: 0, expWh: 0, expTWh: 0, n: 0, hours: 0 });
+      o.Hwh += b[k.g] * dt; o.Ewh += b[k.p] * dt; o.expWh += P0 * (b[k.g] / 1000) * dt; o.expTWh += P0 * (b[k.g] / 1000) * (1 + gamma * (b[k.t] - 25)) * dt; o.n++; o.hours += dt;
+    }
+    const out = Object.values(days).map((o) => ({ day: o.day, H: o.Hwh / 1000, Yr: o.Hwh / 1000, E: o.Ewh / 1000, Yf: o.Ewh / P0, PR: o.Hwh > 1 ? (o.Ewh / P0) / (o.Hwh / 1000) : null, PRT: o.expTWh > 1 ? o.Ewh / o.expTWh : null, hours: o.hours, n: o.n }));
+    return { id: 'dailyPR', xLabel: 'Día', yLabel: 'PR', days: out, points: out.filter((d) => d.PR != null).map((d, i) => ({ x: i, y: d.PR, day: d.day })), fit: null, P0, gamma };
+  };
+  LAB.core.linfit = linfit;
   LAB.core.ratioPct = ratioPct;
 })();
