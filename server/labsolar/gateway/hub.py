@@ -28,6 +28,7 @@ from .settings import Settings
 log = logging.getLogger("labsolar.gateway")
 
 OPERATE_ROLES = ("student", "teacher")
+FORCED_PREFIX = "forzado: "          # `why` de un session.end impuesto por la administración: el puente manda el banco a estado seguro
 
 
 def now_ms() -> int:
@@ -161,15 +162,56 @@ class Hub:
         self.control_session = None
         self._booking_end = None
 
-    async def _revoke_control(self, code: str, msg: str, why: str) -> None:
+    async def _revoke_control(self, code: str, msg: str, why: str, forced: bool = False) -> None:
         c, sid = self.control, self.control_session
         self._release_local()
         if c is None or sid is None:
             return
-        await self._publish_req("session.end", {"why": why}, sid, c.user, c.user["role"], f"gw_{uuid.uuid4().hex[:10]}")
+        if forced:                                     # el puente pide al PLC la posición segura cuando el corte no lo decidió el propio operador
+            why = FORCED_PREFIX + why
+        await self._publish_req("session.end", {"why": why[:120]}, sid, c.user, c.user["role"], f"gw_{uuid.uuid4().hex[:10]}")
         ev = contract.event(now_ms(), "warn", "pasarela", code, msg, {"sessionId": sid, "user": c.user["username"]})
         await self.bus.publish_msg(self.bank, "event/gw", ev)      # el navegador lo recibe directo (abajo); el registrador, por este tópico
         c.send({"t": "event", "v": 1, "d": ev})
+
+    # ------------------------------------------------------------------ acciones de administración sobre sesiones en curso
+    async def revoke_user(self, uid: int, code: str, msg: str, why: str, close: bool = True) -> bool:
+        """Corta de inmediato el control de la cuenta `uid` (y cierra sus conexiones si `close`). True si tenía el control."""
+        had = self.control is not None and self.control.user["id"] == uid
+        if had:
+            await self._revoke_control(code, msg, why, forced=True)
+        if close:
+            for c in [c for c in self.clients.values() if c.user["id"] == uid]:
+                c.send({"t": "event", "v": 1, "d": contract.event(now_ms(), "warn", "pasarela", code, msg)})
+                with contextlib.suppress(Exception):
+                    await c.ws.close(code=4401)
+        return had
+
+    async def release_control(self, who: str, why: str = "liberado por administración") -> bool:
+        """Libera el control actual sin cerrar la conexión del operador (queda como espectador)."""
+        if self.control is None:
+            return False
+        await self._revoke_control("session.revoked", f"La administración liberó el control ({why}).", f"{why} ({who})", forced=True)
+        return True
+
+    async def set_role(self, uid: int, role: str) -> None:
+        for c in self.clients.values():
+            if c.user["id"] == uid:
+                c.user = {**c.user, "role": role}
+        if self.control is not None and self.control.user["id"] == uid and role not in OPERATE_ROLES:
+            await self._revoke_control("session.revoked", "Tu rol cambió: ya no puedes operar el banco.", "cambio de rol", forced=True)
+
+    async def revalidate_control(self) -> bool:
+        """Tras cancelar una reserva: si el operador ya no tiene una vigente, se le corta el control. True si se cortó."""
+        c = self.control
+        if c is None:
+            return False
+        if await asyncio.to_thread(self.repo.active_booking, c.user["id"], self.bank):
+            return False
+        if self.control is not c:
+            return False
+        await self._revoke_control("session.revoked", "Tu reserva fue cancelada: se retira el control.", "reserva cancelada", forced=True)
+        return True
 
     # ------------------------------------------------------------------ conexiones
     async def connect(self, ws, user: dict) -> Client:

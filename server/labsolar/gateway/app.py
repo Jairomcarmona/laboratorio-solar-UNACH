@@ -207,11 +207,12 @@ def create_app(settings: Settings | None = None, bus: Bus | None = None, repo: R
         return {"id": b["id"], "start": s.isoformat(), "end": e.isoformat()}
 
     @app.delete("/api/bookings/{bid}")
-    def cancel_booking(bid: int, u: dict = Depends(current_user)):
-        if not repo.cancel_booking(bid, None if u["role"] == "admin" else u["id"]):
+    async def cancel_booking(bid: int, u: dict = Depends(current_user)):
+        if not await asyncio.to_thread(repo.cancel_booking, bid, None if u["role"] == "admin" else u["id"]):
             raise HTTPException(404, "No existe esa reserva (o no es tuya)")
-        repo.audit("booking.cancel", True, u["username"], None, str(bid))
-        return {"ok": True}
+        cut = await hub.revalidate_control()                    # cancelar la reserva del operador en curso corta su sesión al instante
+        repo.audit("booking.cancel", True, u["username"], None, str(bid) + (" (sesión en curso cortada)" if cut else ""))
+        return {"ok": True, "sessionCut": cut}
 
     # ------------------------------------------------------------------ WebSocket
     @app.post("/api/ws-ticket")
@@ -310,7 +311,7 @@ def create_app(settings: Settings | None = None, bus: Bus | None = None, repo: R
         return {"user": public_user(n)}
 
     @app.patch("/api/admin/users/{uid}")
-    def admin_patch_user(uid: int, body: UserPatch, u: dict = Depends(require("admin"))):
+    async def admin_patch_user(uid: int, body: UserPatch, u: dict = Depends(require("admin"))):
         t = repo.user_by_id(uid)
         if not t:
             raise HTTPException(404, "No existe ese usuario")
@@ -326,9 +327,14 @@ def create_app(settings: Settings | None = None, bus: Bus | None = None, repo: R
         if body.password is not None:
             check_password(body.password)
             vals["password_hash"] = hash_password(body.password)
-        repo.update_user(uid, **vals)
-        repo.audit("user.update", True, u["username"], None, f"{t['username']}: {','.join(k for k in vals if k != 'password_hash') or 'contraseña'}")
-        return {"ok": True}
+        await asyncio.to_thread(repo.update_user, uid, **vals)
+        cut = False
+        if body.active is False or "password_hash" in vals:      # cuenta desactivada o contraseña restablecida: se corta ya mismo lo que tenga abierto
+            cut = await hub.revoke_user(uid, "session.revoked", "Tu cuenta fue modificada por la administración: sesión cerrada.", "cuenta desactivada" if body.active is False else "contraseña restablecida")
+        elif "role" in vals:
+            await hub.set_role(uid, vals["role"])
+        repo.audit("user.update", True, u["username"], None, f"{t['username']}: {','.join(k for k in vals if k != 'password_hash') or 'contraseña'}" + (" (sesión en curso cortada)" if cut else ""))
+        return {"ok": True, "sessionCut": cut}
 
     @app.post("/api/admin/bookings", status_code=201)
     def admin_booking(body: BookingIn, u: dict = Depends(require("admin"))):
