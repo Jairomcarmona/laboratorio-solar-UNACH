@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="admin.page.administracion_laboratorio_remoto_solar">Administración · Laboratorio Remoto Solar UNACH</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/portal.css">
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/theme.js"></script>
+</head>
+<body class="portal">
+<div class="portalang"><button type="button" class="btn quiet" id="themeBtn" data-theme-toggle aria-pressed="false" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema claro/oscuro"><span class="ico-dark" aria-hidden="true">☾</span><span class="ico-light" aria-hidden="true">☀</span></button><div class="seg" id="langSwitch" role="group" aria-label="Idioma de la interfaz" data-i18n-attr="aria-label:ui.lang.label"><button type="button" data-lang="es" lang="es" title="Español" aria-pressed="true">ES</button><button type="button" data-lang="en" lang="en" title="English" aria-pressed="false">EN</button></div></div>
+<main class="portalcard glass wide admin">
+  <h1 data-i18n="admin.page.administracion_del_banco">Administración del banco</h1>
+  <p class="lead" id="who" data-i18n="reservas.who.cargando_tu_cuenta">Cargando tu cuenta…</p>
+  <p class="msg" id="topMsg" role="alert" aria-live="assertive" hidden></p>
+
+  <section aria-labelledby="hLive">
+    <h2 id="hLive" data-i18n="admin.hLive.control_en_vivo">Control en vivo</h2>
+    <dl class="kv" id="live"></dl>
+    <ul class="blist" id="watchers"></ul>
+    <div class="rowbtn">
+      <button class="btn" id="release" type="button" data-i18n="admin.release.liberar_el_control">Liberar el control</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="hMaint">
+    <h2 id="hMaint" data-i18n="admin.hMaint.mantenimiento">Mantenimiento</h2>
+    <p class="hint" id="maintState"></p>
+    <label for="mReason" data-i18n="admin.mReason.motivo">Motivo</label><input id="mReason" type="text" maxlength="200">
+    <div class="rowbtn"><button class="btn" id="maintOn" type="button" data-i18n="admin.maintOn.bloquear_el_banco">Bloquear el banco</button><button class="btn" id="maintOff" type="button" data-i18n="admin.maintOff.reabrir_el_banco">Reabrir el banco</button></div>
+  </section>
+
+  <section aria-labelledby="hUsers" id="usersBox">
+    <h2 id="hUsers" data-i18n="admin.hUsers.usuarios">Usuarios</h2>
+    <ul class="blist" id="users"></ul>
+    <form id="userForm" novalidate>
+      <label for="uName" data-i18n="admin.uName.usuario">Usuario</label><input id="uName" autocomplete="off" required>
+      <label for="uPass" data-i18n="admin.uPass.contrasena_inicial">Contraseña inicial</label><input id="uPass" type="password" autocomplete="new-password" required>
+      <label for="uRole" data-i18n="admin.uRole.rol">Rol</label><select id="uRole"></select>
+      <p id="uMsg" class="msg" role="alert" aria-live="assertive" hidden></p>
+      <button class="btn accent" type="submit" data-i18n="admin.userForm.crear_usuario">Crear usuario</button>
+    </form>
+  </section>
+
+  <section aria-labelledby="hBook">
+    <h2 id="hBook" data-i18n="admin.hBook.reservas_de_todos">Reservas de todos</h2>
+    <ul class="blist" id="bookings"></ul>
+    <p class="hint" id="noBookings" hidden data-i18n="admin.noBookings.no_hay_reservas_proximas">No hay reservas próximas.</p>
+  </section>
+
+  <section aria-labelledby="hAudit" id="auditBox">
+    <h2 id="hAudit" data-i18n="admin.hAudit.auditoria">Auditoría</h2>
+    <form id="auditForm" class="rowbtn" novalidate>
+      <input id="aUser" type="text" placeholder="Usuario" data-i18n-attr="placeholder:admin.aUser.usuario_ph" aria-label="Usuario">
+      <input id="aAction" type="text" placeholder="Acción" data-i18n-attr="placeholder:admin.aAction.accion_ph" aria-label="Acción">
+      <button class="btn" type="submit" data-i18n="admin.auditForm.buscar">Buscar</button>
+    </form>
+    <ul class="blist" id="audit"></ul>
+  </section>
+
+  <div class="rowbtn"><a class="btn" href="reservas.html" data-i18n="admin.back.volver_a_reservas">Volver a reservas</a><button class="btn" id="logout" type="button" data-i18n="reservas.logout.cerrar_sesion">Cerrar sesión</button></div>
+</main>
+<script src="js/config.js"></script>
+<script src="i18n/es.js"></script>
+<script src="i18n/en.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

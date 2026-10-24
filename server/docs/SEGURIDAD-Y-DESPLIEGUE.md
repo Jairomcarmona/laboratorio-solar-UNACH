@@ -64,3 +64,14 @@ Internet ──443──▶ [nginx] ──front──▶ [gateway] ──core─
 - **Ubicación del servidor y enlace al banco** (¿mismo edificio o VPN?): sin decidir.
 - **Seguridad del PLC** (contraseña del PLC, OPC UA con certificados, protección de acceso del programa): depende del modelo definitivo y de la especificación O5.
 - **Restauración de respaldos:** ensayar una restauración (`pg_restore`) antes de producción y copiar los respaldos fuera del servidor.
+
+## Administración global y roles (admin.html)
+
+- **admin:** todo: control en vivo, liberar el control, bloqueo por mantenimiento, usuarios (alta, rol, activar/desactivar, contraseña), reservas de todos, auditoría con filtros.
+- **tech (técnico):** ve el control en vivo, libera el control, bloquea/reabre el banco por mantenimiento y puede pedir el paro por software. No gestiona usuarios ni ve la auditoría. No opera el banco desde la pasarela.
+- **Paro de emergencia por software:** solo el operador con el control vigente, `teacher`, `admin` y `tech`. Visitantes y alumnos sin turno son rechazados (pasarela y puente).
+- **Cortes inmediatos:** desactivar una cuenta, restablecer su contraseña, cambiar su rol a uno que no opera, cancelar su reserva en curso, «liberar el control» y el mantenimiento retiran el control al instante y el puente pide al PLC la posición segura (modo de pérdida de enlace; el siguiente operador lo reconoce con `safety.ack`).
+- **Mantenimiento:** se guarda en la tabla `settings` (migración 0003) y sobrevive a reinicios de la pasarela.
+- **Sesión huérfana:** si pasarela y puente discrepan sobre quién tiene el control durante más de `session_reconcile_s` (4 s), el que no es reconocido se libera solo.
+- `/api/health` sin sesión solo responde `{"ok": true}`.
+- La pasarela mantiene el estado de control en memoria: corre un solo proceso (no escalar horizontalmente).

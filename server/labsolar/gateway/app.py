@@ -3,7 +3,8 @@
 Rutas: POST /api/login · POST /api/logout · GET /api/me · GET|POST /api/bookings · DELETE /api/bookings/{id} · POST /api/ws-ticket
        GET /api/runs · GET /api/runs/{id}.csv · POST /api/runs/{id}/discard · GET /api/sweeps · GET /api/sweeps/{id}.csv
        GET /api/auth/check (auth_request de Nginx para las cámaras) · GET /api/health · WS /ws?ticket=
-       Administración: GET|POST /api/admin/users · PATCH /api/admin/users/{id} · POST /api/admin/bookings · GET /api/admin/audit
+       Administración: GET|POST /api/admin/users · PATCH /api/admin/users/{id} · POST /api/admin/bookings · GET /api/admin/audit?user=&action=&hours=&limit=
+       Control en vivo (admin y tech): GET /api/admin/control · POST /api/admin/control/release · POST /api/admin/maintenance
 
 Seguridad: contraseñas con argon2id; sesión en cookie HttpOnly + SameSite=Strict (+ Secure); límite de intentos de acceso; bloqueo temporal de la
 cuenta; comprobación de Origin en peticiones que cambian estado y en el WebSocket; ticket de un solo uso (30 s) para el WebSocket.
@@ -30,7 +31,8 @@ from .security import SlidingWindow, hash_password, verify_password
 from .settings import Settings
 
 log = logging.getLogger("labsolar.gateway")
-ROLES = ("visitor", "student", "teacher", "admin")
+ROLES = ("visitor", "student", "teacher", "tech", "admin")
+STAFF_OPS = ("admin", "tech")            # administración y técnico: ven y operan el estado del banco (liberar control, mantenimiento)
 USERNAME_RE = re.compile(r"^[A-Za-z0-9._@-]{3,64}$")
 
 
@@ -50,6 +52,11 @@ class UserIn(BaseModel):
     password: str
     role: str
     display_name: str = ""
+
+
+class MaintenanceIn(BaseModel):
+    on: bool
+    reason: str = Field(default="", max_length=200)
 
 
 class UserPatch(BaseModel):
@@ -163,8 +170,12 @@ def create_app(settings: Settings | None = None, bus: Bus | None = None, repo: R
         return {"user": public_user(u), "bank": cfg.bank}
 
     @app.get("/api/health")
-    def health():
-        return {"ok": True, "clients": len(hub.clients), "control": hub.control_session}
+    def health(request: Request):
+        """Sin sesión, solo «vivo»: no se publican ids de sesión ni cuántas personas hay conectadas."""
+        u = repo.user_for_token(request.cookies.get(cfg.cookie_name))
+        if u and u["role"] in STAFF_OPS:
+            return {"ok": True, "clients": len(hub.clients), "control": hub.control_session}
+        return {"ok": True}
 
     @app.get("/api/auth/check")
     def auth_check(u: dict = Depends(current_user)):
@@ -348,8 +359,26 @@ def create_app(settings: Settings | None = None, bus: Bus | None = None, repo: R
         return {"id": b["id"]}
 
     @app.get("/api/admin/audit")
-    def admin_audit(u: dict = Depends(require("admin"))):
-        return {"audit": [{**r, "ts": aware(r["ts"]).isoformat()} for r in repo.audit_list()]}
+    def admin_audit(user: str | None = None, action: str | None = None, hours: float | None = None, limit: int = 200, u: dict = Depends(require("admin"))):
+        since = db.utcnow() - dt.timedelta(hours=hours) if hours else None
+        return {"audit": [{**r, "ts": aware(r["ts"]).isoformat()} for r in repo.audit_list(limit, user, action, since)]}
+
+    # ---- control en vivo del banco (administración y técnico)
+    @app.get("/api/admin/control")
+    def admin_control(u: dict = Depends(require(*STAFF_OPS))):
+        return hub.snapshot()
+
+    @app.post("/api/admin/control/release")
+    async def admin_release(u: dict = Depends(require(*STAFF_OPS))):
+        who = await hub.release_control(u["username"])
+        repo.audit("control.release", who, u["username"], None, "liberado por administración" if who else "sin sesión activa")
+        return {"released": who}
+
+    @app.post("/api/admin/maintenance")
+    async def admin_maintenance(body: MaintenanceIn, u: dict = Depends(require(*STAFF_OPS))):
+        cut = await hub.set_maintenance(body.on, body.reason, u["username"])
+        repo.audit("maintenance.on" if body.on else "maintenance.off", True, u["username"], None, body.reason[:200] + (" (sesión en curso cortada)" if cut else ""))
+        return {"maintenance": hub.maintenance, "sessionCut": cut}
 
     if cfg.static_dir:                                      # el simulador en el mismo origen que la API (desarrollo y prueba extremo a extremo)
         from fastapi.staticfiles import StaticFiles
