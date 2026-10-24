@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acceso · Laboratorio Remoto Solar UNACH</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/portal.css">
+</head>
+<body class="portal">
+<main class="portalcard glass">
+  <div class="logostrip" role="group" aria-label="Instituciones del proyecto"><img src="assets/logos/unach.png" alt="Universidad Autónoma de Chiapas"><img src="assets/logos/ue-cofinanciado.png" alt="Cofinanciado por la Unión Europea"><img src="assets/logos/eu-colmev.png" alt="EU-COLMEV"><img src="assets/logos/sisdic.png" alt="SISDIC"></div>
+  <h1>Laboratorio Remoto Solar UNACH</h1>
+  <p class="lead">Inicia sesión con tu cuenta institucional para ver el banco fotovoltaico y, con una reserva vigente, operarlo.</p>
+  <form id="loginForm" autocomplete="on" novalidate>
+    <label for="user">Usuario</label>
+    <input id="user" name="username" type="text" autocomplete="username" required maxlength="64" autofocus>
+    <label for="pass">Contraseña</label>
+    <input id="pass" name="password" type="password" autocomplete="current-password" required maxlength="256">
+    <p id="msg" class="msg" role="alert" aria-live="assertive" hidden></p>
+    <button class="btn accent" id="go" type="submit">Entrar</button>
+  </form>
+  <p class="fine">¿Solo quieres practicar? <a href="index.html?source=sim">Abre el simulador</a>, no necesita cuenta. EU‑COLMEV · WP3 Laboratorios remotos.</p>
+</main>
+<script src="js/portal.js"></script>
+</body>
+</html>
