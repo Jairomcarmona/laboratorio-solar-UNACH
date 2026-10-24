@@ -42,7 +42,7 @@ jobs:
       - name: Pruebas de dominio (sin navegador)
         working-directory: laboratorio-solar-3d
         run: |
-          for t in test_pv_vs_pvlib test_poa_vs_pvlib test_physics_models test_sources test_solar; do
+          for t in test_pv_vs_pvlib test_poa_vs_pvlib test_physics_models test_sources test_solar test_domain test_audit_fixes; do
             node tools/$t.js
           done
 

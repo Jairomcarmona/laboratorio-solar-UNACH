@@ -53,8 +53,22 @@
       }
       case 'session.start': return ROLES.includes(cmd.role) ? null : bad('Rol de demostración desconocido.', 'role');
       case 'safety.estop': case 'safety.reset': case 'safety.ack': case 'session.end': case 'acq.start': case 'acq.stop': case 'acq.newRun':
-      case 'load.sweep': case 'load.sweep.abort': case 'sim.comms': case 'sim.resetEnergy': case 'sim.resetRain': case 'scenario.apply': case 'acq.discard':
+      case 'load.sweep': case 'load.sweep.abort': case 'sim.comms': case 'sim.resetEnergy': case 'sim.resetRain': case 'acq.discard':
         return null;
+      case 'scenario.apply': {
+        // H10: el escenario se valida COMPLETO antes de mutar nada (posiciones del seguidor incluidas), igual que tracker.target
+        const sc = cmd.scenario;
+        if (!sc || typeof sc !== 'object' || Array.isArray(sc)) return bad('El escenario falta o no tiene un formato válido.', 'scenario');
+        if (sc.id != null && (typeof sc.id !== 'string' || sc.id.length > 64)) return bad('El identificador del escenario debe ser texto de hasta 64 caracteres.', 'id');
+        const T = cfg.tracker;
+        for (const [k, lo, hi] of [['simMs', 9.46e11, 4.1e12], ['cloud', 0, 1], ['windBase', 0, cfg.limits.windMax], ['seed', 0, 4294967295], ['az', T.azMin, T.azMax], ['tilt', T.tiltMin, T.tiltMax]]) {
+          if (sc[k] == null) continue;
+          if (!isNum(sc[k]) || sc[k] < lo || sc[k] > hi) return bad(`Escenario con ${k} no válido (rango ${lo}–${hi}).`, k);
+        }
+        if (sc.seed != null && !Number.isInteger(sc.seed)) return bad('La semilla del escenario debe ser un entero.', 'seed');
+        if (sc.speed != null && !cfg.speeds.includes(sc.speed)) return bad(`Velocidad del escenario no admitida (${cfg.speeds.join(', ')}).`, 'speed');
+        return null;
+      }
       case 'replay.play': case 'replay.pause': return null;
       case 'replay.seek': return num(cmd.ms, 'La posición');
       case 'replay.speed': return cfg.speeds.includes(cmd.speed) || cmd.speed === 0.5 ? null : bad('Velocidad de reproducción no admitida.', 'speed');

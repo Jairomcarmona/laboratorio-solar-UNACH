@@ -16,6 +16,10 @@
     sweepSeconds: 10,                   // s reales que dura un barrido I-V
     acq: { sampleEveryS: 1, limit: 20000, basis: 'tiempo real del navegador' },   // adquisicion: una muestra por segundo real
     speeds: [1, 10, 60, 600, 3600],
+    // Tiempo fisico (H01): el motor avanza el mundo en pasos fisicos, no en cuadros. PROVISIONAL: se confirma por convergencia (docs/AUDITORIA_H01_H10.md).
+    physics: { stepS: 0.1, maxSubsteps: 100 },     // paso fisico nominal (s) y tope de pasos por cuadro (a x3600 el paso crece a 3.6 s)
+    // Criterios provisionales para dar por comparables dos corridas (H03); los fija el protocolo de cada practica
+    compare: { startTolS: 120, durTolFrac: 0.05, durTolMinS: 30, minDurS: 60 },
     limits: { windMax: 25, cloudMax: 100 },          // rangos de las consignas del entorno (el motor y la interfaz leen los mismos)
     views: ['general', 'moduleA', 'moduleB', 'station', 'load', 'cabinet', 'aerial'],
     roles: ['visitor', 'student', 'teacher'],        // roles de demostracion admitidos por URL y por el acceso

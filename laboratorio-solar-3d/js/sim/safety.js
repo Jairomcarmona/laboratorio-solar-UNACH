@@ -44,7 +44,8 @@
     }
     get stowRequired() { return this.windStow || this.watchdogTrip; }
 
-    update(dtReal, dtSim, wind, simMs) {
+    /** dtReal = segundos fisicos del paso (viento); dtComms = segundos reales del cliente (watchdog de enlace, no se acelera) */
+    update(dtReal, dtSim, wind, simMs, dtComms = dtReal) {
       this.lastWind = wind;
       // viento
       if (!this.windStow) {
@@ -63,7 +64,7 @@
       }
       // watchdog de comunicacion
       if (this.commsCut) {
-        this.commsAge += dtReal;
+        this.commsAge += dtComms;
         if (!this.watchdogTrip && this.commsAge >= cfg.commsTimeoutS) {
           this.watchdogTrip = true;
           this.log('bad', `Watchdog: ${cfg.commsTimeoutS} s sin latido del cliente. Posición segura y comandos bloqueados.`, 'Seguridad');
