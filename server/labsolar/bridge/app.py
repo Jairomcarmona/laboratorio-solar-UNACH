@@ -418,6 +418,12 @@ class BridgeApp:
                 await self._finish_sweep("interrupted", "sesión terminada")
             self.control_session = self.control_role = None
             await self._publish_state(force=True)
+            if str((req.get("args") or {}).get("why", "")).startswith("forzado: "):      # corte impuesto: el banco queda en posición segura
+                try:
+                    r = await self.ctrl.request_link_lost()
+                    await self._event("warn", "session.forced", "Sesión cortada por la administración: se pidió la posición segura al PLC" + ("" if r.ok else f" (PLC: {r.reason})"))
+                except Exception as e:
+                    await self._event("bad", "plc.link_lost_fail", f"No se pudo pedir la posición segura al PLC: {e}")
             return await self._ack(req, True)
         if ctype == "safety.estop":                     # cualquier sesión autenticada puede pedir el paro por software
             r = await self.ctrl.request_stop()
