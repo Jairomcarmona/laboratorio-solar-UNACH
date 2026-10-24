@@ -22,12 +22,15 @@ topic read  labsolar/v1/+/sweep
 topic read  labsolar/v1/+/twin
 topic write labsolar/v1/+/cmd/req
 topic write labsolar/v1/+/hb/gateway
+# Solo su propio tópico de eventos (event/gw): no puede suplantar eventos del puente (event)
+topic write labsolar/v1/+/event/gw
 
 # Registrador: solo lee
 user recorder
 topic read  labsolar/v1/+/tele
 topic read  labsolar/v1/+/state
 topic read  labsolar/v1/+/event
+topic read  labsolar/v1/+/event/gw
 topic read  labsolar/v1/+/cmd/req
 topic read  labsolar/v1/+/cmd/ack
 topic read  labsolar/v1/+/sweep

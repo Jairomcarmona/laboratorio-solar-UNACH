@@ -139,6 +139,9 @@ async def test_sin_latido_del_navegador_se_retira_el_control(grig):
     await w.wait(lambda m: m["t"] == "event" and m["d"]["code"] == "session.lost", timeout=4)
     ended = [p for t, p in grig.bus.log if t.endswith("/cmd/req") and p["type"] == "session.end"]
     assert ended
+    # H1: el evento de la pasarela va por su propio tópico (la ACL no le deja escribir en .../event, que es del puente)
+    assert any(t.endswith("/event/gw") and p["code"] == "session.lost" for t, p in grig.bus.log)
+    assert not any(t.endswith("/event") and p["src"] == "pasarela" for t, p in grig.bus.log)
     assert grig.api.state.hub.control_session is None
     a = await w.cmd("tracker.target", {"az": 150, "tilt": 20})
     assert not a["ok"]

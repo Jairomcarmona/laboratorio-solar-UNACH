@@ -1,0 +1,8 @@
+# Límites eléctricos de la carga electrónica. PLANTILLA: copia a load_limits.yaml. Los aprueba ingeniería, no se inventan.
+v_max_v: POR_DEFINIR            # tensión máxima admisible en la carga, V
+i_max_a: POR_DEFINIR            # corriente máxima, A
+p_max_w: POR_DEFINIR            # potencia máxima, W
+sweep_s_min: POR_DEFINIR        # duración mínima del barrido I-V, s
+sweep_s_max: POR_DEFINIR        # duración máxima, s. sweep.seconds de bridge.yaml debe quedar dentro de [min, max]
+on_exceed: POR_DEFINIR          # open_circuit | abort_sweep: qué hace el banco si se supera un límite
+signed_off_by: POR_DEFINIR

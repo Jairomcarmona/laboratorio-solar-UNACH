@@ -255,11 +255,16 @@ class BridgeApp:
                     "sweepT": (time.monotonic() - sw["t0"]) if sw else 0.0, "sweepSeconds": self.cfg.sweep_seconds}
             await self._watch_state_change(st)
         self.seq += 1
-        tele = {"ts": self.clock(), "seq": self.seq, "source": "fake" if self.ctrl.name == "fake" else "real", "quality": quality,
+        tele = {"ts": self.clock(), "seq": self.seq, "source": self._source(), "quality": quality,
                 "env": env, "A": A, "B": B, "tracker": tracker, "safety": safety, "load": load}
         await self.bus.publish_msg(self.cfg.bank, "tele", tele)
         self.stats["tele"] += 1
         await self._publish_state()
+
+    def _source(self) -> str:
+        """'real' solo si PLC y adquisición son reales; 'fake' si ambos son virtuales; si no, 'mixed' (puesta en marcha por etapas)."""
+        fakes = (self.ctrl.name == "fake", self.daq.name == "fake")
+        return "fake" if all(fakes) else "mixed" if any(fakes) else "real"
 
     def _block_reason(self, st: PlcState) -> str:
         if st.state == "ESTOP":

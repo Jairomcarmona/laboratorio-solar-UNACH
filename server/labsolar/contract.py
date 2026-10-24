@@ -22,7 +22,8 @@ PREFIX = "labsolar/v1"
 TOPICS: dict[str, dict[str, Any]] = {
     "tele": {"qos": 0, "retain": False, "publisher": "bridge"},
     "state": {"qos": 1, "retain": True, "publisher": "bridge"},
-    "event": {"qos": 1, "retain": False, "publisher": "bridge,gateway"},
+    "event": {"qos": 1, "retain": False, "publisher": "bridge"},
+    "event/gw": {"qos": 1, "retain": False, "publisher": "gateway"},      # eventos propios de la pasarela: tópico aparte para que no pueda suplantar al puente
     "cmd/req": {"qos": 1, "retain": False, "publisher": "gateway"},
     "cmd/ack": {"qos": 1, "retain": False, "publisher": "bridge"},
     "sweep": {"qos": 1, "retain": False, "publisher": "bridge"},
@@ -31,7 +32,7 @@ TOPICS: dict[str, dict[str, Any]] = {
 }
 
 # Esquema que valida el payload de cada tópico
-TOPIC_SCHEMA = {"tele": "tele", "state": "state", "event": "event", "cmd/req": "req", "cmd/ack": "ack",
+TOPIC_SCHEMA = {"tele": "tele", "state": "state", "event": "event", "event/gw": "event", "cmd/req": "req", "cmd/ack": "ack",
                 "sweep": "sweep", "twin": "twin", "hb/gateway": "hb"}
 
 

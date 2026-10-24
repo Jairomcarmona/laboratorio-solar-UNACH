@@ -16,12 +16,17 @@ from typing import Any
 import yaml
 
 from .. import contract
+from . import hardware
 from ..bus import Bus, bus_from_config
 from .app import BridgeApp, BridgeConfig
 from .daq.base import DaqDriver
 from .drivers.base import ControllerDriver
 
 log = logging.getLogger("labsolar.bridge")
+
+
+def hardware_dir(cfg: dict) -> Path:
+    return Path(cfg.get("hardware", {}).get("dir", "hardware"))
 
 
 def build(cfg: dict, bus: Bus) -> tuple[ControllerDriver, DaqDriver, Any, Any]:
@@ -51,7 +56,8 @@ def build(cfg: dict, bus: Bus) -> tuple[ControllerDriver, DaqDriver, Any, Any]:
         daq: DaqDriver = FakeDaq(bank)
     elif d["driver"] == "nidaqmx":
         from .daq.nidaqmx import NidaqmxDaq
-        daq = NidaqmxDaq(d["channels"], float(d.get("sample_rate", 1000.0)), int(d.get("samples", 100)))
+        channels = d.get("channels") or hardware.daq_channels(cfg, hardware_dir(cfg))      # calibration.yaml es la única fuente de escalas
+        daq = NidaqmxDaq(channels, float(d.get("sample_rate", 1000.0)), int(d.get("samples", 100)))
     elif d["driver"] == "mqtt":
         from .daq.mqtt import MqttDaq
         daq = MqttDaq(bus, d["topic"], float(d.get("max_age_s", 3.0)))
@@ -72,6 +78,11 @@ def bridge_config(cfg: dict) -> BridgeConfig:
 
 
 async def run(cfg: dict) -> None:
+    problems = hardware.validate(cfg, hardware_dir(cfg))
+    if problems:
+        for p in problems:
+            log.error("Configuración de hardware incompleta: %s", p)
+        raise SystemExit(f"El puente no arranca en mode {cfg.get('mode')}: {len(problems)} problema(s). Ver deploy/hardware/README.md")
     bc = bridge_config(cfg)
     will_state = {"ts": 0, "safety": "FAULT", "appliedMode": "estop", "controlSession": None, "bridge": "offline", "plc": "offline"}
     bus = bus_from_config(cfg.get("bus", {"kind": "mqtt"}), client_id=f"bridge-{bc.bank}", will=(contract.topic(bc.bank, "state"), will_state, 1, True))
@@ -100,6 +111,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Puente del Laboratorio Solar Remoto")
     ap.add_argument("--config", required=True)
     ap.add_argument("-v", "--verbose", action="store_true")
+    ap.add_argument("--check", action="store_true", help="solo valida la configuración de hardware (mode, plc_spec, calibración...) y termina")
     a = ap.parse_args()
     logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     cfg = yaml.safe_load(os.path.expandvars(Path(a.config).read_text(encoding="utf-8")))       # ${VAR} del entorno: los secretos no van en el archivo
@@ -107,6 +119,11 @@ def main() -> None:
     if bus.get("kind", "mqtt") == "mqtt":
         bus.setdefault("username", os.environ.get("MQTT_USER"))
         bus.setdefault("password", os.environ.get("MQTT_PASSWORD"))
+    cfg.setdefault("hardware", {}).setdefault("dir", str(Path(a.config).resolve().parent / "hardware"))
+    if a.check:
+        problems = hardware.validate(cfg, hardware_dir(cfg))
+        print("\n".join(f"- {p}" for p in problems) if problems else f"OK: configuración de hardware completa para mode {cfg.get('mode', 'sim')}")
+        raise SystemExit(1 if problems else 0)
     asyncio.run(run(cfg))
 
 

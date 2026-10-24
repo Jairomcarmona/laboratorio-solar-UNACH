@@ -1,6 +1,7 @@
 """Adquisición por MQTT: un concentrador de campo (PLC, pasarela IoT, estación) publica las medidas y el puente las lee.
 
-Tópico por omisión: labsolar/field/<banco>/daq con el mismo diccionario que devuelve DaqDriver.read().
+Tópico: el que permite la ACL de Mosquitto, labsolar/v1/<banco>/daq/<nombre> (p. ej. labsolar/v1/lab1/daq/cdaq), publicado por el usuario 'daq'
+con el mismo diccionario que devuelve DaqDriver.read(). En bridge.yaml: daq: {driver: mqtt, topic: labsolar/v1/lab1/daq/cdaq}.
 Si la última lectura es más vieja que max_age_s, read() levanta TimeoutError y el puente marca la muestra como 'stale'.
 """
 from __future__ import annotations

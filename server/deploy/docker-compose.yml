@@ -100,7 +100,7 @@ services:
       MQTT_USER: bridge
       MQTT_PASSWORD: ${MQTT_PASSWORD_BRIDGE}
       PLC_HOST: ${PLC_HOST}
-    volumes: [./bridge.yaml:/config/bridge.yaml:ro, ./certs/mqtt/ca.crt:/certs/ca.crt:ro]
+    volumes: [./bridge.yaml:/config/bridge.yaml:ro, ./hardware:/config/hardware:ro, ./certs/mqtt/ca.crt:/certs/ca.crt:ro]
     networks: [core, field]     # única pieza con pie en la red de campo (PLC). El PLC no tiene ruta a internet.
 
   mediamtx:

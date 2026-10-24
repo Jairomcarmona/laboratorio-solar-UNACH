@@ -272,6 +272,8 @@
  "app.modo_simulador_datos_calculados": "Simulator mode: data computed with pvlib. Press ? to see the scope of the model.",
  "app.banco_real_2": "REAL BENCH",
  "app.mediciones_del_banco_fisico": "Measurements from the physical bench through the laboratory gateway.",
+ "app.banco_mixto": "MIXED BENCH",
+ "app.banco_mixto_desc": "Simulated PLC or acquisition: only part of the data comes from the physical bench.",
  "app.banco_virtual": "VIRTUAL BENCH",
  "app.el_puente_esta_conectado": "The bridge is connected to a VIRTUAL test bench, not to hardware: the data are not physical measurements.",
  "app.modelo_del_simulador_alimentado": "Simulator model fed with the measured environment; compares what is expected with what is measured.",

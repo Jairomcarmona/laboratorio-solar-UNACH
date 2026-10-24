@@ -26,6 +26,7 @@
     "source": {
       "enum": [
         "real",
+        "mixed",
         "fake",
         "sim",
         "replay",

@@ -1,0 +1,45 @@
+# Mapa de registros del PLC. PLANTILLA: copia a plc_registers.yaml y confírmalo contra el programa real del PLC.
+# Las direcciones de abajo son las PROVISIONALES de labsolar/bridge/registers.py (docs/REGISTROS.md). No son las del PLC definitivo.
+# El PLC definitivo (S7-1200 recomendado, sin confirmar) y su orden de registros los define la especificación O5.
+#
+# Qué se puede cambiar solo con configuración: un corrimiento constante (ir_offset / hr_offset, y repetirlo en controller de bridge.yaml).
+# Si el PLC real usa otro orden o más registros, hay que actualizar server/labsolar/bridge/registers.py y regenerar docs/REGISTROS.md.
+# El validador compara este archivo con registers.py y avisa de cualquier diferencia.
+confirmed: false        # pasa a true SOLO cuando alguien comprobó estas direcciones contra el PLC real (no cambia nada más)
+confirmed_by: POR_DEFINIR
+confirmed_date: POR_DEFINIR
+ir_offset: 0            # corrimiento sumado a todas las direcciones de registros de entrada (FC4)
+hr_offset: 0            # corrimiento sumado a todas las direcciones de registros de retención (FC3/FC6/FC16)
+byte_order: POR_DEFINIR     # big | little (orden de bytes dentro de cada registro de 16 bits)
+word_order: POR_DEFINIR     # big | little (orden de registros si algún valor usa 32 bits)
+input_registers:
+  IR_HB_ECHO: {address: 0, type: uint16}
+  IR_STATE: {address: 1, type: uint16}
+  IR_APPLIED_MODE: {address: 2, type: uint16}
+  IR_AZ: {address: 3, type: uint16}
+  IR_TILT: {address: 4, type: uint16}
+  IR_TARGET_AZ: {address: 5, type: uint16}
+  IR_TARGET_TILT: {address: 6, type: uint16}
+  IR_FLAGS: {address: 7, type: uint16}
+  IR_FAULT_CODE: {address: 8, type: uint16}
+  IR_WIND: {address: 9, type: uint16}
+  IR_CMD_SEQ_ECHO: {address: 10, type: uint16}
+  IR_AZ_MIN: {address: 11, type: uint16}
+  IR_AZ_MAX: {address: 12, type: uint16}
+  IR_TILT_MIN: {address: 13, type: uint16}
+  IR_TILT_MAX: {address: 14, type: uint16}
+  IR_REJECT_CODE: {address: 15, type: uint16}
+  IR_LOAD_MODE: {address: 16, type: uint16}
+  IR_LOAD_SETPOINT: {address: 17, type: uint16}
+  IR_SWEEP_STATE: {address: 18, type: uint16}
+holding_registers:
+  HR_HB: {address: 0, type: uint16}
+  HR_CMD_SEQ: {address: 1, type: uint16}
+  HR_REQ_AZ: {address: 2, type: uint16}
+  HR_REQ_TILT: {address: 3, type: uint16}
+  HR_REQ_MASK: {address: 4, type: uint16}
+  HR_REQ_MODE: {address: 5, type: uint16}
+  HR_REQ_LOCKS: {address: 6, type: uint16}
+  HR_LOAD_MODE: {address: 10, type: uint16}
+  HR_LOAD_SETPOINT: {address: 11, type: uint16}
+  HR_LOAD_SEQ: {address: 12, type: uint16}
