@@ -39,6 +39,7 @@ async function tabTo(page, sel, max = 120) {
     await page.keyboard.type('Respuesta escrita solo con el teclado: Vmp/Voc ronda 0.8 y P=V·I vale cero en los extremos.', { delay: 2 });
     t.ok('T26 llegar a "Guardar respuesta y continuar" y activarla', (await tabTo(page, '#practiceGuide .q:not([hidden]) .btn.accent', 6)) >= 0);
     await page.keyboard.press('Enter'); await d.adv(page, 1);
+    await d.submitQuestion(page, 'p1q2'); await d.adv(page, 1);
     t.eq('T26 la práctica se completa con la respuesta enviada por teclado', await page.evaluate(() => LAB.ui.practices.state().ps.status), 'completed');
     // exportar reporte, tabla y CSV
     t.ok('T26 llegar a "Revisar e imprimir reporte" con Tab', (await tabTo(page, '#practiceGuide .closure .btn.accent', 60)) >= 0);
@@ -75,7 +76,6 @@ async function tabTo(page, sel, max = 120) {
     });
     for (const id of ['p1', 'p2', 'p3', 'p4']) {
       await d.openPractice(page, id);
-      if (id === 'p4') { await d.click(page, '#btnAcq'); await d.adv(page, 6); }
       await d.doOperative(page, 120); await d.answerAll(page);
       t.eq(`${id} completada por la interfaz`, await page.evaluate(() => LAB.ui.practices.state().ps.status), 'completed');
       for (const [w, hh] of [[1366, 768], [1024, 768], [390, 844]]) {

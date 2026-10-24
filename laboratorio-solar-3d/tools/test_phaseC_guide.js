@@ -24,7 +24,7 @@ const h = require('./lib/harness.js'), d = require('./lib/drive.js');
   t.ok('C16 con la guía minimizada el botón de todos los pasos sigue visible', await page.evaluate(() => { const b = document.getElementById('btnOverview'); const r = b.getBoundingClientRect(); return document.getElementById('practiceGuide').classList.contains('min') && r.width > 0 && getComputedStyle(b).display !== 'none'; }));
   await page.click('#btnOverview'); await d.adv(page, 0.5);
   const ov = await page.evaluate(() => ({ rows: document.querySelectorAll('#ovBody tr').length, head: [...document.querySelectorAll('#ovBody th')].map((x) => x.textContent), ilo: document.querySelectorAll('#ovBody ul li').length, txt: document.getElementById('ovBody').textContent }));
-  t.ok('C16 la vista lista objetivo, acción, observación esperada y evidencia de cada paso', ov.rows === 9 && ['Objetivo', 'Acción', 'Observación esperada', 'Evidencia'].every((k) => ov.head.includes(k)), JSON.stringify(ov.head) + ov.rows);
+  t.ok('C16 la vista lista objetivo, acción, observación esperada y evidencia de cada paso', ov.rows === 12 && ['Objetivo', 'Acción', 'Observación esperada', 'Evidencia'].every((k) => ov.head.includes(k)), JSON.stringify(ov.head) + ov.rows);
   t.ok('C16 la vista incluye los resultados de aprendizaje', ov.ilo >= 3, String(ov.ilo));
   t.ok('C16 todas las filas traen observación esperada', await page.evaluate(() => [...document.querySelectorAll('#ovBody tr')].slice(1).every((r) => r.children[3].textContent.length > 8)));
   await page.keyboard.press('Escape'); await d.adv(page, 0.3);
@@ -36,7 +36,7 @@ const h = require('./lib/harness.js'), d = require('./lib/drive.js');
   const dr = await page.evaluate(() => ({ title: document.getElementById('rpTitle').textContent, html: document.getElementById('reportDlg')._html }));
   t.ok('C16 el borrador está marcado como incompleto', /borrador incompleto/i.test(dr.title) && /Borrador incompleto/.test(dr.html) && /BORRADOR INCOMPLETO/.test(dr.html));
   t.ok('C16 el HTML declara el modo simulador', /Modo simulador/.test(dr.html));
-  t.ok('C16 incluye identidad de demostración, sesión, versión y práctica', /Rosa Informe/.test(dr.html) && /Sesión: /.test(dr.html) && /Versión de la aplicación 2\./.test(dr.html) && /definición de la práctica v2/.test(dr.html));
+  t.ok('C16 incluye identidad de demostración, sesión, versión y práctica', /Rosa Informe/.test(dr.html) && /Sesión: /.test(dr.html) && /Versión de la aplicación 2\./.test(dr.html) && /definición de la práctica v3/.test(dr.html));
   await page.keyboard.press('Escape'); await d.adv(page, 0.3);
 
   // completar la práctica

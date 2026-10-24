@@ -33,7 +33,7 @@ const d = require('./lib/drive.js');
   t.ok('T22 abrir práctica 1 desde el listado', /Comenzar/.test(await d.openPractice(page, 'p1')));
   await d.doOperative(page);
   let st = await d.state(page);
-  t.ok('P1 requisitos operativos completos', ['session', 'cond', 'cam1', 'oc', 'sc', 'sweep', 'mpp'].every((k) => st.steps[k]), JSON.stringify(st.steps));
+  t.ok('P1 requisitos operativos completos', ['session', 'pred', 'cond', 'cam1', 'oc', 'sc', 'sweep', 'mpp', 'calc', 'nubes', 'interp'].every((k) => st.steps[k]), JSON.stringify(st.steps));
   t.eq('T06 con las operaciones hechas y sin respuesta la práctica NO está completada', st.status, 'in_progress');
   t.ok('T06 la guía muestra la respuesta pendiente', /1 pendiente/.test(await page.textContent('#practiceGuide .pgsum')) || /Respuesta pendiente/.test(await page.textContent('#practiceGuide')), await page.textContent('#practiceGuide .pgsum'));
 
@@ -55,7 +55,10 @@ const d = require('./lib/drive.js');
   await page.click('#ta_p1q1 ~ .report button');
   await d.adv(page, 1);
   st = await d.state(page);
-  t.eq('T04/T06 con la respuesta registrada se cierra la práctica', st.status, 'completed');
+  t.eq('T04/T06 con una sola de las dos respuestas la práctica sigue en curso', st.status, 'in_progress');
+  await d.submitQuestion(page, 'p1q2'); await d.adv(page, 1);
+  st = await d.state(page);
+  t.eq('T04/T06 con las respuestas registradas se cierra la práctica', st.status, 'completed');
 
   // T05/T22 recarga
   const wait = async (pg) => pg.waitForFunction('window.__labReady === true', null, { timeout: 90000 });
@@ -84,6 +87,7 @@ const d = require('./lib/drive.js');
   await d.adv(page, 0.5);
   st = await d.state(page);
   t.ok('T22 repetir reinicia solo esa práctica y limpia su evidencia', st.status === 'in_progress' && !st.steps.cond && st.E.sweeps === 0);
+  t.ok('P1 la predicción del alumno se guarda y queda bloqueada', await d.submitQuestion(page, 'p1pred') && await page.evaluate(() => { const ta = document.getElementById('ta_p1pred'); return ta.readOnly && document.querySelector('#ta_p1pred ~ .report button:not([hidden])') === null; }));
   await page.evaluate(() => { LAB.app.source.send({ type: 'sim.cloud', value: 0.97 }); });
   await d.adv(page, 20);
   for (let i = 0; i < 3; i++) { await page.evaluate(() => { const b = Array.from(document.querySelectorAll('#practiceGuide li.cur .stepbtns button')).find((x) => !x.hidden && /Abrir/.test(x.textContent)); if (b) b.click(); }); await d.adv(page, 0.5); }
@@ -187,7 +191,6 @@ const d = require('./lib/drive.js');
     await d.login(p, 'teacher', 'Docente Ciclo');
     for (const id of ['p2', 'p3', 'p4']) {
       await d.openPractice(p, id);
-      if (id === 'p4') { await d.click(p, '#btnAcq'); await d.adv(p, 6); }
       const done = await d.doOperative(p, 120); const s2 = await d.state(p);
       const def = await p.evaluate((id) => LAB.ui.practices.list.find((x) => x.id === id).steps.filter((s) => !s.optional).map((s) => s.id), id);
       t.ok(`${id} requisitos operativos completos por la interfaz`, done && def.every((k) => s2.steps[k]), JSON.stringify(Object.keys(s2.steps)) + ' ' + JSON.stringify(s2.E.runs ? s2.E.runs.map((r) => r.status + ':' + (r.cause || r.kind)) : ''));
@@ -196,9 +199,10 @@ const d = require('./lib/drive.js');
       t.eq(`${id} con respuesta registrada se completa`, s3.status, 'completed');
     }
     const s4 = await p.evaluate(() => LAB.ui.practices.state().progress.practices);
-    t.ok('P3 corridas completas con el mismo escenario', s4.p3.evidence.runs.filter((r) => r.status === 'complete').length === 3 && new Set(s4.p3.evidence.runs.map((r) => r.scenarioId + r.seed + r.cloud)).size === 1, JSON.stringify(s4.p3.evidence.runs.map((r) => [r.kind, r.status, r.gainPct && r.gainPct.toFixed(1)])));
-    t.ok('T28 P4: ráfaga, watchdog y paro observados', s4.p4.evidence.windStow && s4.p4.evidence.watchdog && s4.p4.evidence.reconnected && s4.p4.evidence.estopPressed && s4.p4.evidence.estopReset);
-    t.ok('P4 el CSV exportado contenía muestras reales', s4.p4.evidence.csv && s4.p4.evidence.csv.rows > 0, JSON.stringify(s4.p4.evidence.csv));
+    t.ok('P3 corridas completas con el mismo escenario', s4.p3.evidence.runs.filter((r) => r.status === 'complete').length === 4 && new Set(s4.p3.evidence.runs.map((r) => r.scenarioId + r.seed + r.cloud)).size === 2, JSON.stringify(s4.p3.evidence.runs.map((r) => [r.kind, r.status, r.gainPct && r.gainPct.toFixed(1)])));
+    t.ok('P4 los tres barridos repetidos y los cálculos del alumno quedaron guardados', s4.p4.evidence.sweepList.length >= 3 && s4.p4.measures.p4rep.ok && s4.p4.measures.p4def.ok && s4.p4.measures.p4unc.ok, JSON.stringify(s4.p4.measures));
+    t.ok('P2 los puntos registran la media y la desviación de una ventana de 10 s', Object.values(s4.p2.evidence.points).every((p) => p.n >= 15 && p.sd >= 0 && p.sd < 0.05), JSON.stringify(Object.values(s4.p2.evidence.points).map((p) => [p.n, p.sd])));
+    t.ok('P3 registra los minutos sin señal del sensor en la corrida nublada', s4.p3.evidence.runs.find((r) => r.kind === 'sensor-nub').noSignalMin > 10, JSON.stringify(s4.p3.evidence.runs.map((r) => [r.kind, r.noSignalMin])));
     await c2.ctx.close();
   }
 

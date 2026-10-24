@@ -11,7 +11,7 @@
 
   /** Markdown mínimo (títulos, tablas, listas, citas, negritas/cursivas) → HTML escapado. Solo para los reportes que genera la propia app. */
   function mdToHtml(lines) {
-    const inl = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/_(.+?)_/g, '<i>$1</i>');
+    const inl = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^\w])_(.+?)_(?!\w)/g, '$1<i>$2</i>');
     const out = []; let list = false, tbl = null;
     const close = () => { if (list) { out.push('</ul>'); list = false; } if (tbl) { out.push('</tbody></table>'); tbl = null; } };
     for (const raw of lines) {
@@ -74,7 +74,7 @@
   LAB.ui.reportSite = () => { const i = siteInfo(); return LAB.t(i.measured ? 'report.meta_site_medida' : 'report.meta_site_aprox', i) + (i.tableMatches ? '' : LAB.t('report.meta_site_tabla')); };
   LAB.ui.reportHtml = function (ctx) {
     const p = ctx.practice, title = LAB.t('report.title', { n: p.n, title: p.title }) + (ctx.complete ? '' : LAB.t('report.incompleto'));
-    const answers = p.steps.filter((x) => x.question).map((x) => { const a = ctx.answers[x.question.id]; return `<div class="ans"><p><b>${esc(x.question.text)}</b></p><p>${a && a.submitted ? esc(a.submitted).replace(/\n/g, '<br>') : (a && a.draft ? '<i>' + LAB.t('report.borrador_sin_registrar') + '</i> ' + esc(a.draft) : '<i>' + LAB.t('report.sin_respuesta') + '</i>')}</p></div>`; }).join('');
+    const answers = p.steps.filter((x) => x.question && x.question.kind !== 'predict').map((x) => { const a = ctx.answers[x.question.id]; return `<div class="ans"><p><b>${esc(x.question.text)}</b></p><p>${a && a.submitted ? esc(a.submitted).replace(/\n/g, '<br>') : (a && a.draft ? '<i>' + LAB.t('report.borrador_sin_registrar') + '</i> ' + esc(a.draft) : '<i>' + LAB.t('report.sin_respuesta') + '</i>')}</p></div>`; }).join('');
     const inc = ctx.incidents.length ? '<ul>' + ctx.incidents.map((i) => `<li>${esc(incTm(i))}</li>`).join('') + '</ul>' : `<p>${LAB.t('report.sin_incidentes')}</p>`;
     const css = 'body{font:14px/1.5 system-ui,sans-serif;color:#111;max-width:820px;margin:20px auto;padding:0 16px}h1{font-size:21px;margin:0 0 4px}h2{font-size:16px;border-bottom:1px solid #999;padding-bottom:2px;margin-top:22px}h3{font-size:14px}table{border-collapse:collapse;width:100%;font-size:12px;margin:8px 0}th,td{border:1px solid #888;padding:3px 6px;text-align:left}th{background:#e8edf2}caption{text-align:left;font-size:11.5px;color:#444;padding:2px 0}blockquote{border-left:4px solid #c00;background:#fff0f0;margin:8px 0;padding:6px 10px}.sim{border:2px solid #b36b00;background:#fff6e5;padding:6px 10px;font-size:12.5px}.meta{font-size:12.5px;color:#333}figure{margin:10px 0;break-inside:avoid}figcaption{font-size:12px;color:#444}.ans{break-inside:avoid;margin:8px 0}@media print{body{margin:0;max-width:none}}';
     return `<!doctype html><html lang="${LAB.i18n.lang}"><head><meta charset="utf-8"><title>${esc(title)}</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body>
@@ -88,6 +88,7 @@ ${esc(LAB.t('report.meta2', { user: ctx.user || '—', role: ctx.role || '—', 
 ${esc(LAB.t(ctx.complete ? 'report.meta3_closed' : 'report.meta3_draft', { sim: ctx.simLocal, tz: ctx.tz, real: ctx.realDate }))}</p>
 <p><b>${LAB.t('report.objetivo')}</b> ${esc(p.goal)}</p>
 ${mdToHtml(p.report ? p.report(ctx.snap) : [])}
+${mdToHtml(ctx.extraLines || [])}
 <h2>${LAB.t('report.h_corridas')}</h2>${runsSection(ctx.runs)}
 <h2>${LAB.t('report.h_barridos')}</h2>${sweepsSection(ctx.sweeps)}
 <h2>${LAB.t('report.h_respuestas')}</h2>${answers || `<p>${LAB.t('report.sin_preguntas')}</p>`}
