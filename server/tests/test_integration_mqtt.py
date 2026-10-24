@@ -20,9 +20,11 @@ DEPLOY = Path(__file__).resolve().parent.parent / "deploy" / "mosquitto"
 
 @pytest.fixture(scope="module")
 def broker():
-    exe = shutil.which("mosquitto")
-    if not exe:
-        pytest.skip("mosquitto no está instalado")
+    # LABSOLAR_MQTT_DOCKER=1: Mosquitto en contenedor (CI). El Mosquitto del paquete de Ubuntu trae un perfil AppArmor que le impide leer /tmp.
+    docker = os.environ.get("LABSOLAR_MQTT_DOCKER") == "1"
+    exe = shutil.which("docker" if docker else "mosquitto")
+    if not exe or not shutil.which("mosquitto_passwd"):
+        pytest.skip("mosquitto (o docker con LABSOLAR_MQTT_DOCKER=1) no está instalado")
     d = Path(tempfile.mkdtemp(prefix="mq-"))
     s = socket.socket(); s.bind(("127.0.0.1", 0)); port = s.getsockname()[1]; s.close()
     pw = d / "passwd"
@@ -31,15 +33,21 @@ def broker():
         subprocess.run(["mosquitto_passwd", "-b"] + (["-c"] if i == 0 else []) + [str(pw), u, f"pw-{u}"], check=True)
     acl = d / "acl"                                    # copia dentro del directorio temporal, junto a passwd
     shutil.copy(DEPLOY / "acl", acl)
+    root = Path("/cfg") if docker else d               # ruta de los archivos vista desde Mosquitto
     conf = d / "m.conf"
-    conf.write_text(f"allow_anonymous false\npassword_file {pw}\nacl_file {acl}\nlistener {port} 127.0.0.1\n")
+    conf.write_text(f"allow_anonymous false\npassword_file {root / 'passwd'}\nacl_file {root / 'acl'}\nlistener {port} 127.0.0.1\n")
     for f in (pw, acl):
         f.chmod(0o700)
-        if os.geteuid() == 0:                          # como root, Mosquitto cede privilegios y exige que estos archivos sean suyos
+        if os.geteuid() == 0 and not docker:           # como root, Mosquitto cede privilegios y exige que estos archivos sean suyos
             shutil.chown(f, "mosquitto")
+    if docker:                                         # mismo uid que el runner: lee los archivos 0700 y Mosquitto no cede privilegios
+        cmd = [exe, "run", "--rm", "--network", "host", "--user", f"{os.getuid()}:{os.getgid()}", "-v", f"{d}:/cfg:ro",
+               "eclipse-mosquitto:2.0.18", "mosquitto", "-c", "/cfg/m.conf"]
+    else:
+        cmd = [exe, "-c", str(conf)]
     log = open(d / "mosquitto.log", "wb")
-    p = subprocess.Popen([exe, "-c", str(conf)], stdout=log, stderr=subprocess.STDOUT)
-    for _ in range(50):
+    p = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT)
+    for _ in range(150 if docker else 50):
         try:
             socket.create_connection(("127.0.0.1", port), 0.2).close()
             break
@@ -50,7 +58,7 @@ def broker():
         pytest.fail("Mosquitto no abrió el puerto: " + (d / "mosquitto.log").read_text(errors="replace")[-800:])
     yield port
     p.terminate()
-    p.wait(5)
+    p.wait(15)
     shutil.rmtree(d, ignore_errors=True)
 
 
