@@ -115,7 +115,7 @@
     const pr = q.get('practice');
     if (pr) { if (ui.practices && ui.practices.defs(pr)) setTimeout(() => ui.practices.openFromUrl(pr), 300); else source.log('warn', 'Parámetro de URL practice no reconocido: se ignora.', 'URL'); }
     const tab = q.get('tab');
-    if (tab) { if (['power', 'day', 'iv', 'energy', 'run'].includes(tab)) { chartTab = tab; markTab(); } else source.log('warn', 'Parámetro de URL tab no reconocido: se ignora.', 'URL'); }
+    if (tab) { if (['power', 'day', 'iv', 'energy', 'run', 'analysis'].includes(tab)) { chartTab = tab; markTab(); } else source.log('warn', 'Parámetro de URL tab no reconocido: se ignora.', 'URL'); }
     if (q.get('panels') === '0') document.body.dataset.panels = '0';   // solo escena (capturas y enlaces de demostracion)
   };
 
@@ -448,7 +448,8 @@
 
   // ------------------------------------------------------------------- datos
   function markTab() {
-    const run = chartTab === 'run'; $('#runPane').hidden = !run; $('#sweepPane').hidden = chartTab !== 'iv'; if (chartTab === 'iv') refreshSweeps(); $('.chartbox:not(.rvbox)').hidden = run; $('#chartTableWrap').hidden = run; $('#chartNote').hidden = run;
+    const run = chartTab === 'run', an = chartTab === 'analysis', alt = run || an; $('#runPane').hidden = !run; $('#analysisPane').hidden = !an; $('#sweepPane').hidden = chartTab !== 'iv'; if (chartTab === 'iv') refreshSweeps(); $('.chartbox:not(.rvbox)').hidden = alt; $('#chartTableWrap').hidden = alt; $('#chartNote').hidden = alt;
+    if (an) { if (!ui.analysisview) ui.analysisview = new ui.AnalysisView($('#analysisPane'), { getRuns: allRuns, download, toast: (m, k) => ui.toast(m, k) }); ui.analysisview.refresh(); }
     if (run) { if (!ui.runview) ui.runview = new ui.RunView($('#runPane'), { getRuns: allRuns, download, toast: (m, k) => ui.toast(m, k), announce: ui.announce }); ui.runview.refresh(); }
     $$('#chartTabs button').forEach((b) => { const on = b.dataset.tab === chartTab; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; }); if (ui.practices && chartTab === 'iv') ui.practices.notify('tab', 'iv'); }
   /** Corridas de la sesion (vivas, en memoria) mas las guardadas del perfil; la version viva gana */
@@ -598,7 +599,7 @@
     if (ui.replayTick && t.replay) ui.replayTick(t.replay);
     if (!app) return;
     if (now - lastDom > 180) { lastDom = now; updateDom(); }
-    if (now - lastChart > 110) { lastChart = now; if (chartTab === 'run') { if (tel.acq.status === 'recording' && now - lastRunView > 2000) { lastRunView = now; ui.runview.refresh(); } } else drawChart(); }
+    if (now - lastChart > 110) { lastChart = now; if (chartTab === 'run') { if (tel.acq.status === 'recording' && now - lastRunView > 2000) { lastRunView = now; ui.runview.refresh(); } } else if (chartTab !== 'analysis') drawChart(); }
     if (ui.practices) ui.practices.tick(tel, dt);
   };
 
