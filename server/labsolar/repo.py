@@ -136,9 +136,27 @@ class Repo:
         with self.engine.begin() as c:
             c.execute(sa.insert(db.audit).values(ts=db.utcnow(), username=username, ip=ip, action=action, ok=ok, detail=detail[:1000]))
 
-    def audit_list(self, limit: int = 200) -> list[dict]:
+    def audit_list(self, limit: int = 200, username: str | None = None, action: str | None = None, since: dt.datetime | None = None) -> list[dict]:
+        q = sa.select(db.audit)
+        if username:
+            q = q.where(db.audit.c.username == username)
+        if action:
+            q = q.where(db.audit.c.action.like(action.replace("%", "") + "%"))
+        if since:
+            q = q.where(db.audit.c.ts >= since)
         with self.engine.connect() as c:
-            return [dict(r._mapping) for r in c.execute(sa.select(db.audit).order_by(db.audit.c.id.desc()).limit(limit))]
+            return [dict(r._mapping) for r in c.execute(q.order_by(db.audit.c.id.desc()).limit(max(1, min(limit, 1000))))]
+
+    # ------------------------------------------------------------------ ajustes
+    def get_setting(self, key: str, default: Any = None) -> Any:
+        with self.engine.connect() as c:
+            row = c.execute(sa.select(db.settings.c.value).where(db.settings.c.key == key)).first()
+        return default if row is None else row[0]
+
+    def set_setting(self, key: str, value: Any) -> None:
+        with self.engine.begin() as c:
+            if c.execute(sa.update(db.settings).where(db.settings.c.key == key).values(value=value, updated_at=db.utcnow())).rowcount == 0:
+                c.execute(sa.insert(db.settings).values(key=key, value=value, updated_at=db.utcnow()))
 
     # ------------------------------------------------------------------ registrador
     def insert_samples(self, rows: list[dict]) -> None:

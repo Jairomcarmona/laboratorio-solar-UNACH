@@ -42,7 +42,7 @@ t.eq('los .js generados corresponden a los .json', cp.spawnSync('node', [path.jo
     for (const m of src.matchAll(/LAB\.t\(\s*'([\w.]+)'/g)) if (!(m[1] in es)) missing.add(`${f}: ${m[1]}`);
     for (const m of src.matchAll(/LAB\.tl\(\s*'([\w.]+)'/g)) if (!(`${m[1]}.0` in es)) missing.add(`${f}: lista ${m[1]}`);
   }
-  for (const f of ['index.html', 'login.html', 'reservas.html']) {
+  for (const f of ['index.html', 'login.html', 'reservas.html', 'admin.html']) {
     const src = read(f);
     for (const m of src.matchAll(/data-i18n(?:-html)?="([\w.]+)"/g)) if (!(m[1] in es)) missing.add(`${f}: ${m[1]}`);
     for (const m of src.matchAll(/data-i18n-attr="([^"]+)"/g)) m[1].split(';').forEach((p) => { const k = p.slice(p.indexOf(':') + 1); if (!(k in es)) missing.add(`${f}: ${k}`); });

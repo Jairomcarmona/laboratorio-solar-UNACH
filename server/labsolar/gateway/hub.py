@@ -28,6 +28,7 @@ from .settings import Settings
 log = logging.getLogger("labsolar.gateway")
 
 OPERATE_ROLES = ("student", "teacher")
+ESTOP_STAFF = ("teacher", "admin", "tech")          # personal que puede pedir el paro por software sin tener el control
 FORCED_PREFIX = "forzado: "          # `why` de un session.end impuesto por la administración: el puente manda el banco a estado seguro
 
 
@@ -70,10 +71,12 @@ class Hub:
         self._tasks: list[asyncio.Task] = []
         self._booking_end: dt.datetime | None = None
         self._granted_at = 0.0
+        self.maintenance: dict | None = None            # {"reason", "by", "since"} mientras el banco está bloqueado; se persiste en la base
         self.stats = {"cmd_in": 0, "cmd_rejected_local": 0, "cmd_published": 0, "acks": 0, "timeouts": 0}
 
     # ------------------------------------------------------------------ ciclo de vida
     async def start(self) -> None:
+        self.maintenance = await asyncio.to_thread(self.repo.get_setting, "maintenance") or None
         b = self.bank
         self._sub = self.bus.subscribe(*(contract.topic(b, t) for t in ("tele", "state", "event", "cmd/ack", "sweep", "twin")))
         self._tasks = [asyncio.create_task(self._pump(), name="hub-pump"), asyncio.create_task(self._hb_publisher(), name="hub-hb"),
@@ -194,6 +197,27 @@ class Hub:
         await self._revoke_control("session.revoked", f"La administración liberó el control ({why}).", f"{why} ({who})", forced=True)
         return True
 
+    async def set_maintenance(self, on: bool, reason: str, who: str) -> bool:
+        """Bloquea (o desbloquea) el banco para nuevas sesiones. Al bloquear se corta la sesión en curso. True si había una sesión."""
+        self.maintenance = {"reason": reason[:200], "by": who, "since": dt.datetime.now(dt.timezone.utc).isoformat()} if on else None
+        await asyncio.to_thread(self.repo.set_setting, "maintenance", self.maintenance)
+        had = False
+        if on and self.control is not None:
+            had = True
+            await self._revoke_control("session.revoked", "El banco entró en mantenimiento: se retira el control.", "mantenimiento", forced=True)
+        return had
+
+    def snapshot(self) -> dict:
+        """Vista para la administración: quién tiene el control, quién mira, y el estado del banco."""
+        c = self.control
+        st = self.last_state or {}
+        return {"bank": self.bank, "maintenance": self.maintenance,
+                "control": None if c is None else {"sessionId": self.control_session, "user": c.user["username"], "role": c.user["role"],
+                                                   "heldSeconds": round(time.monotonic() - self._granted_at), "bookingEnd": self._booking_end.isoformat() if self._booking_end else None},
+                "clients": [{"user": x.user["username"], "role": x.user["role"], "control": x is c} for x in self.clients.values()],
+                "state": {"safety": st.get("safety"), "plc": st.get("plc"), "bridge": st.get("bridge"), "controlSession": st.get("controlSession")},
+                "teleAgeMs": None if not self.last_tele else max(0, now_ms() - int(self.last_tele.get("ts", 0)))}
+
     async def set_role(self, uid: int, role: str) -> None:
         for c in self.clients.values():
             if c.user["id"] == uid:
@@ -274,12 +298,17 @@ class Hub:
         ctype, args = msg["type"], msg.get("args") or {}
         user = c.user
         role = user["role"]
-        if ctype == "safety.estop":                          # pedir un paro es siempre posible para cualquier cuenta autenticada
-            sid = self.control_session if self.control is c else f"obs_{c.id}"
-            return await self._send_req(c, cid, ctype, args, sid)
+        if ctype == "safety.estop":                          # solo el operador con control vigente y el personal autorizado; los demás (visitantes, alumnos sin turno) no
+            if self.control is c and self.control_session:
+                return await self._send_req(c, cid, ctype, args, self.control_session)
+            if role in ESTOP_STAFF:
+                return await self._send_req(c, cid, ctype, args, f"obs_{c.id}")
+            return await self._local_reject(c, cid, "interlock", "El paro de emergencia por software solo lo piden el operador con el control y el personal autorizado.", None, ctype)
         if ctype == "session.start":
             if role not in OPERATE_ROLES:
                 return await self._local_reject(c, cid, "interlock", "Tu cuenta es de solo observación." if role == "visitor" else "Las cuentas de administración no operan el banco.", None, ctype)
+            if self.maintenance:
+                return await self._local_reject(c, cid, "interlock", "El banco está bloqueado por mantenimiento" + (f": {self.maintenance['reason']}" if self.maintenance.get("reason") else "."), None, ctype)
             if self.control is not None and self.control is not c:
                 return await self._local_reject(c, cid, "interlock", "Otra sesión tiene el control del banco; tu vista es de solo lectura.", None, ctype)
             if self.control is c:
@@ -289,6 +318,8 @@ class Hub:
                 return await self._local_reject(c, cid, "interlock", "No tienes una reserva vigente para operar el banco.", None, ctype)
             # La consulta anterior cede el turno: otra petición pudo tomar el control mientras tanto. Se vuelve a comprobar y se asigna sin
             # ningún «await» de por medio, para que el otorgamiento sea atómico (si no, dos pestañas de la misma cuenta obtenían el control a la vez).
+            if self.maintenance:
+                return await self._local_reject(c, cid, "interlock", "El banco está bloqueado por mantenimiento.", None, ctype)
             if self.control is not None:
                 return await self._local_reject(c, cid, "interlock", "Ya tienes una sesión activa." if self.control is c else "Otra sesión tiene el control del banco; tu vista es de solo lectura.", None, ctype)
             if c.closed or c.id not in self.clients:

@@ -11,7 +11,7 @@ def test_migrate_crea_el_esquema_completo_y_es_idempotente(tmp_path):
     names = set(sa.inspect(eng).get_table_names())
     assert set(db.metadata.tables) <= names and "alembic_version" in names
     with eng.connect() as c:
-        assert c.execute(sa.text("select version_num from alembic_version")).scalar() == "0002"
+        assert c.execute(sa.text("select version_num from alembic_version")).scalar() == "0003"
 
 
 def test_el_esquema_migrado_es_igual_al_de_init_db(tmp_path):

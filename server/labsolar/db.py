@@ -1,6 +1,6 @@
 """Esquema y acceso a la base de datos (PostgreSQL 16 en producción; SQLite en pruebas y desarrollo).
 
-Tablas: users, bookings, auth_sessions, sessions, runs, samples, events, commands, sweeps, audit.
+Tablas: users, bookings, auth_sessions, sessions, runs, samples, events, commands, sweeps, audit, settings.
 Regla del plan: nada se borra. acq.discard marca discarded = true; las cuentas se desactivan, no se eliminan.
 """
 from __future__ import annotations
@@ -131,6 +131,11 @@ audit = Table("audit", metadata,                       # bitácora de seguridad:
               Column("username", String(64)), Column("ip", String(64)),
               Column("action", String(48), nullable=False), Column("ok", Boolean, nullable=False),
               Column("detail", Text))
+
+settings = Table("settings", metadata,                 # ajustes de operación que deben sobrevivir a un reinicio (p. ej. el bloqueo por mantenimiento)
+                 Column("key", String(48), primary_key=True),
+                 Column("value", JSONType),
+                 Column("updated_at", DateTime(timezone=True), nullable=False))
 
 
 def utcnow() -> dt.datetime:

@@ -26,6 +26,7 @@ from .drivers.base import ControllerDriver, PlcState, Request, Result
 log = logging.getLogger("labsolar.bridge")
 
 OPERATE_ROLES = {"student", "teacher", "tech"}
+ESTOP_STAFF = {"teacher", "admin", "tech"}
 CR_MIN, CR_MAX, CV_MIN, CV_MAX = 0.4, 30.4, 0.05, 1.0
 
 
@@ -425,7 +426,9 @@ class BridgeApp:
                 except Exception as e:
                     await self._event("bad", "plc.link_lost_fail", f"No se pudo pedir la posición segura al PLC: {e}")
             return await self._ack(req, True)
-        if ctype == "safety.estop":                     # cualquier sesión autenticada puede pedir el paro por software
+        if ctype == "safety.estop":                     # el operador con el control o personal autorizado (la pasarela ya filtró; aquí, defensa en profundidad)
+            if self.control_session != req["sessionId"] and req["role"] not in ESTOP_STAFF:
+                return await self._ack(req, False, "interlock", "El paro por software solo lo piden el operador con el control y el personal autorizado.")
             r = await self.ctrl.request_stop()
             ok, kind, reason = self._map(r)
             return await self._ack(req, ok, kind, reason)
