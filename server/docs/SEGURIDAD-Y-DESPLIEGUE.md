@@ -68,6 +68,7 @@ Internet ──443──▶ [nginx] ──front──▶ [gateway] ──core─
 ## Administración global y roles (admin.html)
 
 - **admin:** todo: control en vivo, liberar el control, bloqueo por mantenimiento, usuarios (alta, rol, activar/desactivar, contraseña), reservas de todos, auditoría con filtros.
+- **teacher (docente):** ve el control en vivo, la conexión, las alarmas y las reservas en solo lectura (sin ids de sesión); no actúa.
 - **tech (técnico):** ve el control en vivo, libera el control, bloquea/reabre el banco por mantenimiento y puede pedir el paro por software. No gestiona usuarios ni ve la auditoría. No opera el banco desde la pasarela.
 - **Paro de emergencia por software:** solo el operador con el control vigente, `teacher`, `admin` y `tech`. Visitantes y alumnos sin turno son rechazados (pasarela y puente).
 - **Cortes inmediatos:** desactivar una cuenta, restablecer su contraseña, cambiar su rol a uno que no opera, cancelar su reserva en curso, «liberar el control» y el mantenimiento retiran el control al instante y el puente pide al PLC la posición segura (modo de pérdida de enlace; el siguiente operador lo reconoce con `safety.ack`).
@@ -75,3 +76,17 @@ Internet ──443──▶ [nginx] ──front──▶ [gateway] ──core─
 - **Sesión huérfana:** si pasarela y puente discrepan sobre quién tiene el control durante más de `session_reconcile_s` (4 s), el que no es reconocido se libera solo.
 - `/api/health` sin sesión solo responde `{"ok": true}`.
 - La pasarela mantiene el estado de control en memoria: corre un solo proceso (no escalar horizontalmente).
+
+### Revisión del panel por rol (comprobada con navegador)
+| Función | admin | tech | teacher |
+|---|---|---|---|
+| Control en vivo, conexión (PLC, puente, adquisición, modo real/mixto/simulado), alarmas y eventos | sí | sí | solo lectura |
+| Liberar control, bloquear/reabrir por mantenimiento | sí | sí | no |
+| Reconocer alarma (`safety.ack`), posición segura, paro por software (con confirmación) | sí | sí | no |
+| Usuarios: crear, desactivar, cambiar rol, restablecer contraseña | sí | no | no |
+| Reservas: ver todas | sí | no | solo lectura |
+| Reservas: cancelar o mover | sí | no | no |
+| Auditoría con filtros y exportación CSV; sesiones y comandos por sesión en CSV | sí | no | no |
+
+Toda acción pide confirmación en la interfaz y deja registro en la bitácora (`control.release`, `maintenance.on/off`, `safety.ack/stow/estop`, `booking.move`, `user.update`, `export.*`). Las exportaciones también se registran.
+Pendiente (no incluido): estado de la adquisición solo distingue «con datos recientes / sin datos» (la telemetría no trae un estado más fino del DAQ); no hay descarga masiva de corridas de todos los alumnos desde el panel.

@@ -125,6 +125,26 @@ class Repo:
                 q = q.where(db.bookings.c.user_id == uid)
             return c.execute(q).rowcount > 0
 
+    def get_booking(self, bid: int) -> dict | None:
+        with self.engine.connect() as c:
+            return _row(c.execute(sa.select(db.bookings).where(db.bookings.c.id == bid)).first())
+
+    def move_booking(self, bid: int, start: dt.datetime, end: dt.datetime) -> str | None:
+        """Cambia el horario de una reserva vigente. None si se hizo; 'missing' si no existe o está cancelada; 'clash' si se traslapa con otra."""
+        with self.engine.begin() as c:
+            b = c.execute(sa.select(db.bookings).where(db.bookings.c.id == bid, db.bookings.c.cancelled == False)).first()    # noqa: E712
+            if not b:
+                return "missing"
+            clash = c.execute(sa.select(db.bookings.c.id).where(sa.and_(db.bookings.c.bank == b._mapping["bank"], db.bookings.c.cancelled == False, db.bookings.c.id != bid,    # noqa: E712
+                                                                        db.bookings.c.start_at < end, db.bookings.c.end_at > start))).first()
+            if clash:
+                return "clash"
+            try:
+                c.execute(sa.update(db.bookings).where(db.bookings.c.id == bid).values(start_at=start, end_at=end))
+            except sa.exc.IntegrityError:
+                return "clash"
+        return None
+
     def active_booking(self, uid: int, bank: str, now: dt.datetime | None = None) -> dict | None:
         now = now or db.utcnow()
         with self.engine.connect() as c:
@@ -146,6 +166,14 @@ class Repo:
             q = q.where(db.audit.c.ts >= since)
         with self.engine.connect() as c:
             return [dict(r._mapping) for r in c.execute(q.order_by(db.audit.c.id.desc()).limit(max(1, min(limit, 1000))))]
+
+    def list_op_sessions(self, limit: int = 500) -> list[dict]:
+        with self.engine.connect() as c:
+            return [dict(r._mapping) for r in c.execute(sa.select(db.sessions).order_by(db.sessions.c.started_ms.desc()).limit(max(1, min(limit, 5000))))]
+
+    def session_commands(self, sid: str) -> list[dict]:
+        with self.engine.connect() as c:
+            return [dict(r._mapping) for r in c.execute(sa.select(db.commands).where(db.commands.c.session_id == sid).order_by(db.commands.c.ts))]
 
     # ------------------------------------------------------------------ ajustes
     def get_setting(self, key: str, default: Any = None) -> Any:

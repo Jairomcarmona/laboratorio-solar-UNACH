@@ -20,16 +20,33 @@
     <h2 id="hLive" data-i18n="admin.hLive.control_en_vivo">Control en vivo</h2>
     <dl class="kv" id="live"></dl>
     <ul class="blist" id="watchers"></ul>
-    <div class="rowbtn">
+    <div class="rowbtn" data-staff>
       <button class="btn" id="release" type="button" data-i18n="admin.release.liberar_el_control">Liberar el control</button>
     </div>
+    <p class="hint" id="roHint" hidden data-i18n="admin.roHint.vista_de_solo_lectura">Vista de solo lectura.</p>
   </section>
 
-  <section aria-labelledby="hMaint">
+  <section aria-labelledby="hLink">
+    <h2 id="hLink" data-i18n="admin.hLink.conexion_y_modo">Conexión y modo</h2>
+    <dl class="kv" id="link"></dl>
+  </section>
+
+  <section aria-labelledby="hSafe">
+    <h2 id="hSafe" data-i18n="admin.hSafe.seguridad_y_alarmas">Seguridad y alarmas</h2>
+    <p class="alarm" id="alarm" role="status" aria-live="polite"></p>
+    <div class="rowbtn" data-staff>
+      <button class="btn" id="ack" type="button" data-i18n="admin.ack.reconocer_alarma">Reconocer alarma</button>
+      <button class="btn" id="stow" type="button" data-i18n="admin.stow.posicion_segura">Posición segura</button>
+      <button class="btn danger" id="estop" type="button" data-i18n="admin.estop.paro_de_emergencia">Paro de emergencia</button>
+    </div>
+    <ul class="blist" id="events"></ul>
+  </section>
+
+  <section aria-labelledby="hMaint" id="maintBox">
     <h2 id="hMaint" data-i18n="admin.hMaint.mantenimiento">Mantenimiento</h2>
     <p class="hint" id="maintState"></p>
     <label for="mReason" data-i18n="admin.mReason.motivo">Motivo</label><input id="mReason" type="text" maxlength="200">
-    <div class="rowbtn"><button class="btn" id="maintOn" type="button" data-i18n="admin.maintOn.bloquear_el_banco">Bloquear el banco</button><button class="btn" id="maintOff" type="button" data-i18n="admin.maintOff.reabrir_el_banco">Reabrir el banco</button></div>
+    <div class="rowbtn" data-staff><button class="btn" id="maintOn" type="button" data-i18n="admin.maintOn.bloquear_el_banco">Bloquear el banco</button><button class="btn" id="maintOff" type="button" data-i18n="admin.maintOff.reabrir_el_banco">Reabrir el banco</button></div>
   </section>
 
   <section aria-labelledby="hUsers" id="usersBox">
@@ -56,8 +73,12 @@
       <input id="aUser" type="text" placeholder="Usuario" data-i18n-attr="placeholder:admin.aUser.usuario_ph" aria-label="Usuario">
       <input id="aAction" type="text" placeholder="Acción" data-i18n-attr="placeholder:admin.aAction.accion_ph" aria-label="Acción">
       <button class="btn" type="submit" data-i18n="admin.auditForm.buscar">Buscar</button>
+      <a class="btn" id="auditCsv" href="/api/admin/audit.csv" download data-i18n="admin.auditCsv.exportar_csv">Exportar CSV</a>
     </form>
     <ul class="blist" id="audit"></ul>
+    <h2 id="hSessions" data-i18n="admin.hSessions.sesiones_de_operacion">Sesiones de operación</h2>
+    <p class="rowbtn"><a class="btn" href="/api/admin/sessions.csv" download data-i18n="admin.sessionsCsv.exportar_sesiones_csv">Exportar sesiones (CSV)</a></p>
+    <ul class="blist" id="sessions"></ul>
   </section>
 
   <div class="rowbtn"><a class="btn" href="reservas.html" data-i18n="admin.back.volver_a_reservas">Volver a reservas</a><button class="btn" id="logout" type="button" data-i18n="reservas.logout.cerrar_sesion">Cerrar sesión</button></div>

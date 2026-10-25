@@ -34,7 +34,7 @@
       if (!me.ok) { location.href = 'login.html?next=' + encodeURIComponent('/reservas.html'); return; }
       const u = me.data.user;
       $('#who').textContent = `${u.display_name} · ${ROLE()[u.role] || u.role}`;
-      $('#adminLink').hidden = !['admin', 'tech'].includes(u.role);
+      $('#adminLink').hidden = !['admin', 'tech', 'teacher'].includes(u.role);
       $('#newBox').hidden = !['student', 'teacher', 'admin'].includes(u.role);
       const r = await api('GET', '/api/bookings');
       const ul = $('#list'); ul.textContent = '';

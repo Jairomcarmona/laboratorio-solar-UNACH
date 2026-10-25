@@ -52,7 +52,7 @@ async def test_el_panel_muestra_quien_tiene_el_control_y_quien_mira(arig):
 async def test_los_endpoints_de_control_solo_son_de_admin_y_tecnico(arig, role):
     arig.add_user("zeta", role)
     h = await arig.client("zeta")
-    assert (await h.get("/api/admin/control")).status_code == 403
+    assert (await h.get("/api/admin/control")).status_code == (200 if role == "teacher" else 403)       # el docente lo ve en solo lectura
     assert (await h.post("/api/admin/control/release")).status_code == 403
     assert (await h.post("/api/admin/maintenance", json={"on": True})).status_code == 403
     assert (await h.get("/api/admin/audit")).status_code == 403
@@ -125,3 +125,81 @@ async def test_la_bitacora_se_filtra_por_usuario_y_accion(arig):
     b = (await adm.get("/api/admin/audit", params={"action": "booking"})).json()["audit"]
     assert b and all(r["action"].startswith("booking") for r in b)
     assert (await adm.get("/api/admin/audit", params={"hours": 0.0001, "limit": 1})).status_code == 200
+
+
+# ---------------------------------------------------------------------------- bloque final: docente en lectura, seguridad, reservas, exportaciones
+async def test_el_docente_ve_el_panel_en_solo_lectura(arig):
+    await operador(arig)
+    arig.add_user("profe", "teacher")
+    h = await arig.client("profe")
+    snap = (await h.get("/api/admin/control")).json()
+    assert snap["control"]["user"] == "ana" and snap["control"]["sessionId"] is None and snap["state"]["controlSession"] is None
+    assert snap["link"]["source"] and snap["alarm"]["state"]
+    assert (await h.post("/api/admin/control/release")).status_code == 403
+    assert (await h.post("/api/admin/maintenance", json={"on": True})).status_code == 403
+    for path in ("safety/ack", "safety/stow", "safety/estop"):
+        assert (await h.post(f"/api/admin/{path}")).status_code == 403
+    assert (await h.get("/api/admin/audit")).status_code == 403 and (await h.get("/api/admin/audit.csv")).status_code == 403
+    assert (await h.get("/api/admin/sessions.csv")).status_code == 403
+    assert arig.api.state.hub.control is not None
+
+
+async def test_posicion_segura_y_reconocimiento_desde_administracion(arig):
+    arig.add_user("root", "admin")
+    adm = await arig.client("root")
+    r = (await adm.post("/api/admin/safety/stow")).json()
+    assert r["ok"], r
+    await asyncio.sleep(0.5)
+    assert arig.bank.comms_stow
+    snap = (await adm.get("/api/admin/control")).json()
+    assert snap["alarm"]["state"] == "COMMS_STOW"
+    assert (await adm.post("/api/admin/safety/ack")).json()["ok"]
+    await asyncio.sleep(0.5)
+    assert not arig.bank.comms_stow
+    acts = [a["action"] for a in arig.repo.audit_list()]
+    assert "safety.stow" in acts and "safety.ack" in acts
+
+
+async def test_paro_desde_administracion_queda_registrado_y_el_tecnico_tambien_puede(arig):
+    arig.add_user("tec", "tech")
+    h = await arig.client("tec")
+    assert (await h.post("/api/admin/safety/estop")).json()["ok"]
+    await asyncio.sleep(0.4)
+    assert arig.bank.estop
+    assert any(a["action"] == "safety.estop" and a["username"] == "tec" for a in arig.repo.audit_list())
+
+
+async def test_mover_una_reserva_valida_traslapes_y_corta_si_deja_sin_turno(arig):
+    import datetime as dt
+    w = await operador(arig)
+    arig.add_user("root", "admin")
+    adm = await arig.client("root")
+    ana = arig.repo.user_by_name("ana")
+    bid = arig.repo.list_bookings(ana["id"])[0]["id"]
+    now = db.utcnow()
+    otro = arig.repo.create_booking(arig.repo.create_user("beto", "x", "student")["id"], arig.settings.bank, now + dt.timedelta(hours=3), now + dt.timedelta(hours=4), None)
+    assert otro is not None
+    r = await adm.patch(f"/api/admin/bookings/{bid}", json={"start": (now + dt.timedelta(hours=3, minutes=30)).isoformat(), "end": (now + dt.timedelta(hours=5)).isoformat()})
+    assert r.status_code == 409
+    assert (await adm.patch("/api/admin/bookings/9999", json={"start": (now + dt.timedelta(hours=8)).isoformat(), "end": (now + dt.timedelta(hours=9)).isoformat()})).status_code == 404
+    r = await adm.patch(f"/api/admin/bookings/{bid}", json={"start": (now + dt.timedelta(hours=6)).isoformat(), "end": (now + dt.timedelta(hours=7)).isoformat()})
+    assert r.status_code == 200 and r.json()["sessionCut"] is True
+    await asyncio.sleep(0.4)
+    assert arig.api.state.hub.control is None
+    assert any(a["action"] == "booking.move" for a in arig.repo.audit_list())
+
+
+async def test_exportar_auditoria_y_sesiones_queda_registrado(arig):
+    arig.add_user("root", "admin")
+    adm = await arig.client("root")
+    arig.repo.open_session("ses_x", "lab1", None, "ana", "student", 1_700_000_000_000)
+    arig.repo.upsert_command("lab1", {"id": "k1", "ts": 1_700_000_000_500, "sessionId": "ses_x", "user": "ana", "role": "student", "type": "tracker.target", "args": {"az": 150}})
+    a = await adm.get("/api/admin/audit.csv")
+    assert a.status_code == 200 and "attachment" in a.headers["content-disposition"] and a.text.splitlines()[0].lstrip("﻿").startswith("id,utc_iso")
+    s = await adm.get("/api/admin/sessions.csv")
+    assert "ses_x" in s.text
+    c = await adm.get("/api/admin/sessions/ses_x/commands.csv")
+    assert "tracker.target" in c.text and "150" in c.text
+    assert (await adm.get("/api/admin/sessions")).json()["sessions"][0]["id"] == "ses_x"
+    acts = [x["action"] for x in arig.repo.audit_list()]
+    assert {"export.audit", "export.sessions", "export.commands"} <= set(acts)
