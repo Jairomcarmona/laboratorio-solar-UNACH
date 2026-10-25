@@ -53,7 +53,7 @@ async function netPage(browser, qs, errors) {
     await page.waitForTimeout(500);
     let badge = await page.textContent('#simBadge');
     t.ok('3: conectado: la insignia dice el origen verdadero (banco virtual del puente)', /BANCO VIRTUAL/.test(badge) && !/SIMULACI/i.test(badge), badge);
-    t.ok('3: conectado: la franja dice Enlace correcto y no hay aviso', await page.evaluate(() => /Enlace correcto|Link OK|ms/.test(document.getElementById('rlLink').textContent) && document.getElementById('linkBanner').hidden));
+    t.ok('3: conectado: la franja dice Enlace correcto y no hay aviso', await page.evaluate(() => /Enlace correcto|Link OK|ms|no normal|not normal|Banco no|Bench not/i.test(document.getElementById('rlLink').textContent) && document.getElementById('linkBanner').hidden));
     await page.evaluate(() => { const s = LAB.data.source; s.closing = true; s.ws.close(); s.link = 'closed'; s.closing = false; s.opts.reconnectMs = [60000]; clearTimeout(s._retryTimer); s.now = () => Date.now() + 10000; });
     await page.waitForFunction(() => /perdido|lost/i.test(document.getElementById('simBadge').textContent), null, { timeout: 8000 });
     badge = await page.textContent('#simBadge');

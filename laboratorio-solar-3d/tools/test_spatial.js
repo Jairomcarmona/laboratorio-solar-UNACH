@@ -320,6 +320,8 @@ const fs = require('fs');
     let ref = null;
     for (const [W, H] of SIZES.concat([[1366, 768]])) {
       await page.setViewportSize({ width: W, height: H }); await page.waitForTimeout(600);
+      // el diseño (ancho/medio/estrecho) se reasigna con un retraso variable: se espera a que se estabilice antes de elegir la pestaña
+      await page.evaluate(() => new Promise((res) => { let last = '', n = 0; const iv = setInterval(() => { const l = document.body.dataset.layout; n = l === last ? n + 1 : 0; last = l; if (n >= 3) { clearInterval(iv); res(); } }, 250); }));
       await page.evaluate(() => { const b = document.body; if (b.dataset.layout !== 'wide') { const tb = document.querySelector('#viewtabs [data-view=scene]'); if (tb) tb.click(); } });
       await page.waitForTimeout(600); await waitAspect();
       const r = await page.evaluate(() => {
