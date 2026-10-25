@@ -354,6 +354,12 @@
     });
     $('#btnCam1').hidden = true; $('#btnCam2').hidden = true; $('#btnPip').hidden = true;
     $('#realViews').hidden = false;
+    $('#btnEstopCard').addEventListener('click', () => $('#btnEstop').click());
+    $$('#left > .panel > h3').forEach((h) => h.addEventListener('click', (e) => {          // pantalla ancha: carga, seguridad y modos se abren como ventana sobre el video
+      if (document.body.dataset.layout !== 'wide' || e.target.closest('.fold')) return;
+      const p = h.parentNode, on = !p.classList.contains('pop');
+      $$('#left > .panel').forEach((x) => x.classList.remove('pop')); p.classList.toggle('pop', on);
+    }));
     $('#realViews').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) realView(b.dataset.rv); });
     realView('cam2');                       // la cámara del seguidor es la vista principal: confirma que el panel de verdad se movió
   }
@@ -402,6 +408,7 @@
     bar.className = 'movebar ' + (!hasData ? 'off' : pct < 100 ? 'run' : 'done');
     setText('moveTxt', !hasData ? LAB.t('real.sin_datos') : pct < 100 ? LAB.t('real.moviendo', { n: fmt(diff, 0), pct }) : LAB.t('real.en_posicion', { az: Math.round(T.targetAz), tilt: Math.round(T.targetTilt) }));
     ui.camviewer.setMoving(hasData && pct < 100);
+    $('#btnEstopCard').disabled = $('#btnEstop').disabled;
     if (pose) { pose.setCurrent(hasData ? T.az : NaN, hasData ? T.tilt : NaN); pose.setTarget(az, tilt); pose.setEnabled(can); }
   }
 

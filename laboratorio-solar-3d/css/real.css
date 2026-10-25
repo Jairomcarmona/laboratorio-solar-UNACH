@@ -97,3 +97,32 @@ body.src-ws[data-layout="wide"] #poseHost { height: clamp(140px, 24vh, 280px); }
 body.src-ws[data-layout="wide"] #ctlSlot .stepper label { margin-bottom: 2px; }
 body.src-ws[data-layout="wide"] #ctlCard { gap: 6px; }
 body.src-ws[data-layout="wide"] #pTracker .lbl { display: block; margin: 8px 0 3px; }
+
+/* ---- equilibrio: el video del banco manda; lo demás se compacta ---- */
+body.src-ws #rlNote { display: none; }
+#btnEstopCard { margin-left: auto; min-height: 28px; padding: 0 10px; font-size: 11px; letter-spacing: 0; text-transform: none; }
+#ctlCard h3 { display: flex; align-items: center; }
+body.src-ws[data-layout="wide"] #app { grid-template-columns: minmax(0, 1fr) clamp(250px, 19vw, 300px) 8px clamp(250px, 21vw, 300px); }
+body.src-ws[data-layout="wide"] #poseHost { height: clamp(120px, 19vh, 200px); }
+body.src-ws[data-layout="wide"] #ctlCard .hint { display: none; }
+body.src-ws[data-layout="wide"] #ctlSlot { gap: 6px; }
+body.src-ws[data-layout="wide"] #ctlSlot .stat b { font-size: 18px; }
+body.src-ws[data-layout="wide"] #ctlSlot .stat small { font-size: 10px; }
+body.src-ws[data-layout="wide"] #ctlSlot .stepbtns output { font-size: 17px; }
+body.src-ws[data-layout="wide"] #btnMove { min-height: 40px; font-size: 14px; }
+/* barra inferior: cada panel es una pestaña y su contenido se abre como ventana encima */
+body.src-ws[data-layout="wide"] #left { position: relative; display: flex; flex-wrap: wrap; gap: 8px; overflow: visible; max-height: none; margin-top: 6px; align-items: stretch; }
+body.src-ws[data-layout="wide"] #left > .robanner, body.src-ws[data-layout="wide"] #left > p { flex: 1 1 100%; order: -1; }
+body.src-ws[data-layout="wide"] #left > .panel { flex: 0 0 auto; position: static; }
+body.src-ws[data-layout="wide"] #left > .panel > h3 { margin: 0; cursor: pointer; min-height: 38px; padding: 0 12px; }
+body.src-ws[data-layout="wide"] #left > .panel .fold { display: none; }
+body.src-ws[data-layout="wide"] #left > .panel > .body { display: none; }
+body.src-ws[data-layout="wide"] #left > .panel.pop > h3 { box-shadow: inset 0 -3px 0 var(--col-b); }
+body.src-ws[data-layout="wide"] #left > .panel.pop > .body { display: block; position: absolute; left: 0; bottom: calc(100% + 6px); width: min(440px, 100%); max-height: 55vh; overflow: auto; z-index: 9;
+  padding: 12px; background: rgba(6, 16, 32, .97); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
+body.src-ws[data-layout="wide"] #pTracker .body { display: block; }
+body.src-ws[data-layout="wide"] #left > .panel { width: auto; }
+body.src-ws[data-layout="wide"] #left > .panel > h3 { white-space: nowrap; }
+body.src-ws[data-layout="wide"] #left { flex-direction: row; z-index: 20; }
+body.src-ws[data-layout="wide"] #left > .panel.pop > .body { width: 400px; max-width: 60vw; }
+body.src-ws[data-layout="wide"] #left > #pSafety.pop > .body { left: auto; right: 0; width: 360px; }
