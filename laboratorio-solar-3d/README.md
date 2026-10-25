@@ -1,6 +1,6 @@
 # Laboratorio Solar Remoto UNACH · Gemelo digital 3D
 
-Interfaz preliminar (simulada) del banco remoto de seguimiento solar del proyecto EU-COLMEV WP3.
+Interfaz preliminar (simulada) del banco remoto de seguimiento solar del proyecto EU-COLMEV.
 Los alumnos practican aquí con la misma interfaz que usarán después con el banco real.
 
 ## Cómo abrirlo
