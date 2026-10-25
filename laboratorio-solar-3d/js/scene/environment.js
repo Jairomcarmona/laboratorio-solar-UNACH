@@ -21,6 +21,7 @@
       this.windowMats = [];
       this.buildRoof();
       this.buildSurroundings();
+      this.buildCanyon();
       this.buildSky();
       this.buildLights();
       this.buildClouds();
@@ -210,19 +211,70 @@
         b.position.set(x, gy + h / 2, z); b.rotation.y = rot; b.castShadow = b.receiveShadow = true; g.add(b);
       }
 
-      // sierra al horizonte (anillo con silueta de montanas)
+      // borde lejano: mesetas escalonadas del altiplano chiapaneco (misma estetica del canon, sin cerros genericos)
       const seg = 160, geo = new THREE.CylinderGeometry(1250, 1250, 1, seg, 1, true);
       const pos = geo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         const a = Math.atan2(pos.getZ(i), pos.getX(i));
         const top = pos.getY(i) > 0;
-        const n = Math.sin(a * 3 + 1.2) * 0.5 + Math.sin(a * 7 + 0.3) * 0.28 + Math.sin(a * 17 + 2.1) * 0.12 + Math.sin(a * 41) * 0.05;
-        pos.setY(i, top ? 40 + (n + 0.7) * 95 : -60);
+        const n = Math.sin(a * 3 + 1.2) * 0.5 + Math.sin(a * 7 + 0.3) * 0.28 + Math.sin(a * 17 + 2.1) * 0.12;
+        pos.setY(i, top ? 40 + Math.floor((n + 0.7) * 5) * 18 : -60);
       }
       geo.computeVertexNormals();
-      const mtn = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col(0x3d5a49), side: THREE.BackSide, fog: true }));
+      const mtn = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col(0x2c4c4a), side: THREE.BackSide, fog: true }));
       mtn.position.y = gy; g.add(mtn);
       this.mountains = mtn;
+    }
+
+
+    // ------------------------------------------- Cañón del Sumidero (fondo)
+    /** Fondo estilizado del Cañón del Sumidero (Chiapas): paredes escalonadas de baja poligonación, malla de aristas
+     *  tipo "digital" y el río Grijalva serpenteando al fondo (al norte, detrás del edificio). Está lejos del
+     *  edificio y de los equipos, es solo visual (sin sombras) y sigue la luz, la niebla y el ciclo día/noche. */
+    buildCanyon() {
+      const g = new THREE.Group(); g.name = 'canyonSumidero'; g.position.y = -13;
+      const r = T.rng(77);
+      const river = (z) => Math.sin(z * 0.0075 + 0.9) * 110 + Math.sin(z * 0.021 + 2.0) * 30;   // eje del rio segun la profundidad
+      const NX = 110, NZ = 30, X0 = -1100, X1 = 1100, Z0 = -1150, Z1 = -250;
+      const pos = new Float32Array((NX + 1) * (NZ + 1) * 3), idx = [], rc = [];
+      const terrace = (h) => { const st = 22; return Math.floor(h / st) * st + smoothstep(0, 1, (h % st) / st) * 5; };   // terrazas
+      for (let j = 0; j <= NZ; j++) {
+        const z = lerp(Z0, Z1, j / NZ), cz = river(z);
+        for (let i = 0; i <= NX; i++) {
+          const x = lerp(X0, X1, i / NX), d = Math.abs(x - cz);
+          const wall = smoothstep(34, 150, d);                                  // pared casi vertical, ~120 m a cada lado del rio
+          const plateau = 205 + Math.sin(x * 0.006 + z * 0.004) * 55 + Math.sin(x * 0.021 - z * 0.013) * 22 + r() * 14;
+          const fade = smoothstep(-640, -380, z);   // hacia el frente el terreno baja al nivel del suelo
+          let h = terrace(plateau * wall) * (1 - 0.88 * fade);
+          if (d < 30) h = -1.5;                                                  // cauce
+          pos.set([x, h, z], (j * (NX + 1) + i) * 3);
+        }
+        rc.push([cz, z]);
+      }
+      for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
+        const a = j * (NX + 1) + i, b = a + 1, c = a + NX + 1, d = c + 1;
+        idx.push(a, c, b, b, c, d);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+      const flat = geo.toNonIndexed(); flat.computeVertexNormals();
+      this.canyonMat = new THREE.MeshStandardMaterial({ color: col(0x2c4c4a), roughness: 0.95, metalness: 0, flatShading: true, fog: false, side: THREE.DoubleSide });
+      const mesh = new THREE.Mesh(flat, this.canyonMat); g.add(mesh);
+      // aristas luminosas (estilo digital)
+      this.canyonWire = new THREE.LineSegments(new THREE.WireframeGeometry(geo), new THREE.LineBasicMaterial({ color: col(0x3fd8e6), transparent: true, opacity: 0.12, fog: false, depthWrite: false }));
+      this.canyonWire.position.y = 0.4; g.add(this.canyonWire);
+      // rio Grijalva: cinta autoiluminada siguiendo el cauce
+      const rp = [], ri = [];
+      for (let j = 0; j <= NZ * 2; j++) {
+        const z = lerp(Z0, Z1, j / (NZ * 2)), cz = river(z), w = 22 + Math.sin(z * 0.01) * 5;
+        rp.push(cz - w - 4, 0.2, z, cz + w + 4, 0.2, z);
+        if (j < NZ * 2) { const a = j * 2; ri.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+      }
+      const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(rp, 3)); rg.setIndex(ri);
+      this.canyonRiver = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: col(0x2aa9d8), transparent: true, opacity: 0.8, fog: false, depthWrite: false }));
+      g.add(this.canyonRiver);
+      g.traverse((o) => { o.castShadow = false; o.receiveShadow = false; });
+      this.canyon = g; this.group.add(g);
     }
 
     // ------------------------------------------------------------- cielo
@@ -376,7 +428,11 @@
       const fogCol = skyCol.clone().multiplyScalar(0.9);
       this.scene.fog.color.copy(fogCol.convertSRGBToLinear ? fogCol.convertSRGBToLinear() : fogCol);
       this.scene.fog.density = 0.0010 + 0.0012 * cloud + 0.0006 * (env.rainLevel || 0);
-      this.mountains.material.color.copy(col(0x3d5a49)).multiplyScalar(lerp(0.05, 1, dayF));
+      this.mountains.material.color.copy(col(0x2c4c4a)).multiplyScalar(lerp(0.05, 1, dayF));
+      // canon: roca mas oscura de noche, aristas y rio algo mas vivos al oscurecer (sobrio de dia)
+      this.canyonMat.color.copy(col(0x143a33)).multiplyScalar(lerp(0.35, 1, dayF)).lerp(this.scene.fog.color, 0.12);   // bruma atmosferica propia (sin niebla del motor)
+      this.canyonWire.material.opacity = lerp(0.16, 0.14, dayF);
+      this.canyonRiver.material.color.copy(col(0x2aa9d8)).multiplyScalar(lerp(0.4, 1, dayF) * lerp(1, 0.85, cloud));
 
       // ambiente: mas difuso y mas azul con nubes
       this.hemi.intensity = (0.075 + 0.145 * dayF) * lerp(0.9, 1.4, cloud);      // piso nocturno: la escena nunca queda negra
