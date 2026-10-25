@@ -621,3 +621,5 @@ body.src-twin #left .panel button, body.src-twin #left .panel input { cursor: no
 .dmmunc { min-height: 1.3em; font: 500 11.5px var(--mono, monospace); color: var(--tx-2); text-align: right; }
 .dmmsel { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 8px; font-size: 12.5px; }
 .dmm .seg button:disabled, .dmm select:disabled { opacity: .55; }
+.robanner.fakebench { font-weight: 600; background: rgba(255, 176, 32, .2); border-color: #ffb020; border-width: 2px; }
+.simbadge[data-kind="fake"] { background: rgba(255, 176, 32, .2); }

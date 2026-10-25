@@ -274,7 +274,7 @@
  "app.mediciones_del_banco_fisico": "Measurements from the physical bench through the laboratory gateway.",
  "app.banco_mixto": "MIXED BENCH",
  "app.banco_mixto_desc": "Simulated PLC or acquisition: only part of the data comes from the physical bench.",
- "app.banco_virtual": "VIRTUAL BENCH",
+ "app.banco_virtual": "SIMULATED · VIRTUAL BENCH",
  "app.el_puente_esta_conectado": "The bridge is connected to a VIRTUAL test bench, not to hardware: the data are not physical measurements.",
  "app.modelo_del_simulador_alimentado": "Simulator model fed with the measured environment; compares what is expected with what is measured.",
  "app.reproduccion": "REPLAY",
@@ -1844,5 +1844,7 @@
  "conn.r_stale": "No recent data from the bench: no measurement.",
  "conn.r_sweep": "An I-V sweep is running: wait for it to finish.",
  "conn.r_timeout": "The load did not confirm the change in time; it was cancelled and the previous mode restored.",
- "conn.r_changed": "Someone changed the load during the measurement; cancelled."
+ "conn.r_changed": "Someone changed the load during the measurement; cancelled.",
+ "app.banner_banco_virtual": "Virtual test bench: the figures, the 3D scene and the telemetry are SIMULATED by the bridge, not measurements from the physical bench. No hardware is connected.",
+ "app.control_banco_virtual": "Control of the VIRTUAL test bench: commands apply to a simulation, not to physical equipment."
 }

@@ -86,7 +86,7 @@
       const ws = netSrc();
       ws.on('ack', (a) => {
         if (!a.ok) { if (a.reason) ui.toast(a.reason, a.kind === 'timeout' ? 'bad' : 'warn', 6000); return; }
-        if (a.cmd && a.cmd.type === 'session.start') { const m = $('#loginModal'); if (!m.hidden) hideModal(m); ui.toast(LAB.t('app.tienes_el_control_del'), 'ok', 6000); }
+        if (a.cmd && a.cmd.type === 'session.start') { const m = $('#loginModal'); if (!m.hidden) hideModal(m); ui.toast(LAB.t(tel && tel.source === 'fake' ? 'app.control_banco_virtual' : 'app.tienes_el_control_del'), tel && tel.source === 'fake' ? 'warn' : 'ok', 6000); }
       });
       ws.on('auth', () => ui.toast(LAB.t('app.tu_sesion_de_acceso'), 'bad', 8000));
     }
@@ -662,6 +662,7 @@
       if (el) { el.lastChild.textContent = label; el.title = title; el.dataset.kind = kind; el.dataset.link = ls || ''; }
       document.body.dataset.srcKind = t.source;
     }
+    const fk = $('#fakeBanner'); if (fk) { const on = t.source === 'fake'; if (fk.hidden === on) fk.hidden = !on; if (on && !$('#fakeTxt').textContent) setText('fakeTxt', LAB.t('app.banner_banco_virtual')); }
     if (ui.replayTick && t.replay) ui.replayTick(t.replay);
     if (!app) return;
     if (now - lastDom > 180) { lastDom = now; updateDom(); }
