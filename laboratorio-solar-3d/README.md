@@ -11,7 +11,8 @@ Doble clic en `index.html` (Chrome/Edge/Firefox con WebGL). No necesita servidor
 - `js/sim/` motor físico: posición solar, nubes, modelo de diodo único, seguidor, seguridad, engine
 - `js/data/dataSource.js` capa de datos intercambiable (`sim` hoy, `MqttSource` pendiente del banco real)
 - `js/scene/` escena 3D (entorno, módulos, seguidor, estación, equipos, etiquetas, cámaras)
-- `js/ui/` paneles, gráficas, prácticas guiadas
+- `js/ui/` paneles, gráficas, prácticas guiadas; `connections.js` es la vista «Conexiones del módulo» (ilustrativa hasta tener fotos del banco) con el multímetro virtual
+- `js/core/meter.js` multímetro virtual (Voc e Isc): no tiene física propia, pone la carga del banco en oc/sc con el comando real `load.set`, lee el punto de operación y devuelve la carga al modo anterior; el cortocircuito se limita a `meter.scMaxS` (10 s)
 - `i18n/` textos ES/EN: se editan `es.json` y `en.json`; `node tools/build_i18n.js` regenera `es.js`/`en.js` (los que carga el navegador; `--check` verifica que estén al día). `js/i18n.js` ofrece `LAB.t('clave', {param})`; si falta una clave en inglés se usa el español
 - `css/theme.css`, `js/theme.js` tema oscuro/claro y paleta UNACH (los colores A/B salen de `LAB.config.palette`)
 - `data/pvlib_tuxtla.js` datos generados con pvlib
@@ -28,7 +29,7 @@ Latitud, longitud, altitud y zona horaria viven en un solo lugar: `LAB.config.si
 Español por defecto y respaldo. Los mensajes del motor y de las sesiones se guardan siempre en español (CSV, corridas, bitácora del motor) y se traducen solo al mostrarlos con `LAB.tm`, mediante las plantillas `msg.*` de `i18n/*.json`; así `js/sim` no cambia. Al agregar un mensaje nuevo en el motor, agrega su plantilla `msg.*` (`tools/test_i18n.js` lo detecta).
 
 ## Pruebas
-`node tools/test_domain.js`, `test_i18n.js`, `test_phaseC.js` (sin navegador) y, con Playwright: `test_clock`, `test_phaseA_ui`, `test_phaseB`, `test_phaseB_flows`, `test_phaseC_ui`, `test_phaseC_guide`, `test_phaseD`, `test_phaseD_c19`, `test_spatial`, `test_spatial_practices`, `test_i18n_ui` (idioma, tema, contraste, foco), `test_ui_states` (estados del enlace y gemelo; usa la pila de desarrollo) y `test_ui_shading`. Sin navegador: `test_shading`. Variable `LAB_ROOT` para probar otra copia. Todas devuelven código distinto de cero si algo falla.
+`node tools/test_domain.js`, `test_i18n.js`, `test_phaseC.js` (sin navegador) y, con Playwright: `test_clock`, `test_phaseA_ui`, `test_phaseB`, `test_phaseB_flows`, `test_phaseC_ui`, `test_phaseC_guide`, `test_phaseD`, `test_phaseD_c19`, `test_spatial`, `test_spatial_practices`, `test_i18n_ui` (idioma, tema, contraste, foco), `test_ui_states` (estados del enlace y gemelo; usa la pila de desarrollo) `test_ui_shading` y `test_ui_meter`. Sin navegador: `test_shading` y `test_meter`. Variable `LAB_ROOT` para probar otra copia. Todas devuelven código distinto de cero si algo falla.
 
 ## Documentos
 `docs/ENTREGA_SECCION16.md` (requisitos, matriz de pruebas, limitaciones), `CONTRATO_DATOS.md`, `FORMATO_PERSISTIDO.md`, `DISTRIBUCION_ESPACIAL.md`.

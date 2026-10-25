@@ -103,6 +103,7 @@
     });
     if (ui.practices) ui.practices.init(app);
     if (ui.onboarding) ui.onboarding.init();
+    if (ui.connections) ui.connections.init();
     /** Las ayudas 3D en modo «auto» aparecen cuando la tarea las necesita: práctica de orientación en curso o ficha de un módulo abierta */
     ui.aidsAuto = () => infoPart === 'moduleB' || infoPart === 'moduleA' || (() => { const st = ui.practices && ui.practices.state(); return !!(st && st.current === 'p2' && st.ps && st.ps.status === 'in_progress'); })();
 
@@ -247,6 +248,7 @@
     if (ui.runview) { $('#runPane').textContent = ''; ui.runview = null; }
     if (ui.analysisview) { $('#analysisPane').textContent = ''; ui.analysisview = null; }
     markTab();
+    if (ui.connections) ui.connections.render();
   }
 
   // ------------------------------------------------------------------ barra superior
@@ -665,6 +667,7 @@
     if (now - lastDom > 180) { lastDom = now; updateDom(); }
     if (now - lastChart > 110) { lastChart = now; if (chartTab === 'run') { if (tel.acq.status === 'recording' && now - lastRunView > 2000) { lastRunView = now; ui.runview.refresh(); } } else if (chartTab !== 'analysis') drawChart(); }
     if (ui.practices) ui.practices.tick(tel, dt);
+    if (ui.connections) ui.connections.update(tel, dt);
   };
 
   function drawCompass() {
