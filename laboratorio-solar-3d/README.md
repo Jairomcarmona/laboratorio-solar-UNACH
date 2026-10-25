@@ -28,7 +28,7 @@ Latitud, longitud, altitud y zona horaria viven en un solo lugar: `LAB.config.si
 Español por defecto y respaldo. Los mensajes del motor y de las sesiones se guardan siempre en español (CSV, corridas, bitácora del motor) y se traducen solo al mostrarlos con `LAB.tm`, mediante las plantillas `msg.*` de `i18n/*.json`; así `js/sim` no cambia. Al agregar un mensaje nuevo en el motor, agrega su plantilla `msg.*` (`tools/test_i18n.js` lo detecta).
 
 ## Pruebas
-`node tools/test_domain.js`, `test_i18n.js`, `test_phaseC.js` (sin navegador) y, con Playwright: `test_clock`, `test_phaseA_ui`, `test_phaseB`, `test_phaseB_flows`, `test_phaseC_ui`, `test_phaseC_guide`, `test_phaseD`, `test_phaseD_c19`, `test_spatial`, `test_spatial_practices`, `test_i18n_ui` (idioma, tema, contraste, foco). Variable `LAB_ROOT` para probar otra copia. Todas devuelven código distinto de cero si algo falla.
+`node tools/test_domain.js`, `test_i18n.js`, `test_phaseC.js` (sin navegador) y, con Playwright: `test_clock`, `test_phaseA_ui`, `test_phaseB`, `test_phaseB_flows`, `test_phaseC_ui`, `test_phaseC_guide`, `test_phaseD`, `test_phaseD_c19`, `test_spatial`, `test_spatial_practices`, `test_i18n_ui` (idioma, tema, contraste, foco), `test_ui_states` (estados del enlace y gemelo; usa la pila de desarrollo) y `test_ui_shading`. Sin navegador: `test_shading`. Variable `LAB_ROOT` para probar otra copia. Todas devuelven código distinto de cero si algo falla.
 
 ## Documentos
 `docs/ENTREGA_SECCION16.md` (requisitos, matriz de pruebas, limitaciones), `CONTRATO_DATOS.md`, `FORMATO_PERSISTIDO.md`, `DISTRIBUCION_ESPACIAL.md`.
@@ -42,4 +42,5 @@ Implementar `MqttSource` en `js/data/dataSource.js` con la misma interfaz: `tele
 ## Supuestos y límites
 - Coordenadas aproximadas de Tuxtla, panel genérico de 500 Wp, cielo despejado Solis simplificado (AOD 0.08).
 - Parámetros del diodo ajustados a mano (EgRef calibrado), no a una hoja de datos real: sustituir al tener el módulo definitivo.
+- Sombra parcial (`LAB.config.shading`, `mppt`): 3 subcadenas con diodo de bypass (0.5 V), repartidas por tercios del eje largo; las celdas sombreadas conservan solo la luz difusa. La sombra viene de la geometría A/B (malla de 7×5 puntos). Es un modelo típico de 500 Wp de media celda, no la hoja de datos del banco: sustituir al tener las fotos. El MPPT es perturbar y observar y puede quedar en un pico local (`mpptLossW`); `mppt.globalScanS > 0` emula un barrido global.
 - Rendimiento en GPU real no verificado (se probó con render por software). La calidad se adapta sola o con `q=`.

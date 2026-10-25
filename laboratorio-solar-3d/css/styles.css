@@ -585,3 +585,7 @@ body.src-replay #btnResetE, body.src-replay #btnResetRain, body.src-replay #btnC
 .twinwarn.okmsg { background: rgba(53, 208, 127, .12); border-color: rgba(53, 208, 127, .5); color: var(--ok); }
 body.src-twin #left .panel { opacity: .6; filter: saturate(.7); }
 body.src-twin #left .panel button, body.src-twin #left .panel input { cursor: not-allowed; }
+
+/* ---------- sombra parcial: línea bajo la potencia de cada módulo ---------- */
+.shadeinfo { margin: 4px 0 0; font-size: 11px; line-height: 1.35; color: var(--solar, #ffb020); }
+.shadeinfo[hidden] { display: none; }
