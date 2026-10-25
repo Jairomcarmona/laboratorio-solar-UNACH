@@ -602,6 +602,7 @@
       const A = mod(this.A), B = mod(this.B);
       // Comparacion: potencia instantanea y energia son magnitudes distintas (C13). null = sin referencia suficiente.
       const comparison = {
+        powerDiffBandPct: 1,        // banda de incertidumbre (~±1 %): dentro de ella A y B no se distinguen del ruido de medida
         powerDiffPct: A.p >= 5 ? (B.p / A.p - 1) * 100 : null,
         energyGainPct: A.wh >= 1 ? (B.wh / A.wh - 1) * 100 : null,
         netGainPct: A.wh >= 1 ? ((B.wh - this.motorWh) / A.wh - 1) * 100 : null,
@@ -636,7 +637,7 @@
           status: this.acq.status, runId: this.acq.runId, segmentId: run && run.segments.length ? run.segments[run.segments.length - 1].id : null, samples: run ? run.samples.length : 0, limit: run ? run.limit : cfg.acq.limit,
           elapsedReal: this.acq.elapsedReal, startedReal: this.acq.startedReal, reason: this.acq.reason, everyS: cfg.acq.sampleEveryS, basis: cfg.acq.basis, runs: this.runs.filter((r) => r.sessionId === sf.session.id).length,
         },
-        comms: { latency: this.latency, ok: !sf.commsCut },
+        comms: { latency: this.latency, ok: !sf.commsCut, state: 'local' },
         quality: [A.shadeFrac > 0.05 || B.shadeFrac > 0.05 ? 'shade_mutual' : null].filter(Boolean),
       };
     }

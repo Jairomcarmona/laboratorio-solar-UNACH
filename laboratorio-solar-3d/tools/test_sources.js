@@ -49,13 +49,18 @@ const ok = (body) => ({ ok: true, status: 200, json: async () => body, text: asy
     fetchImpl: fetchFor({ 'POST /api/ws-ticket': ok({ ticket: 'tk1', ttl: 30 }), 'GET /api/runs': ok({ runs: [{ id: 'run_a', label: 'x', practiceId: null, status: 'open', samples: 3 }] }), 'GET /api/runs/run_a.csv': ok('#c\nn,x\n0,1\n1,2\n') }) });
   src.on('ack', (a) => events.push(a));
   t.ok('antes de conectar: telemetria bloqueada y obsoleta', src.telemetry.quality.includes('stale') && !src.telemetry.safety.canOperate);
+  t.eq('enlace: antes de conectar = conectando', src.telemetry.comms.state, 'connecting');
   await src.connect(); await tick();
   const ws = FakeWS.last;
+  t.eq('enlace: socket abierto sin telemetria = validando', src.linkState(), 'validating');
+  ws.recv({ t: 'tele', v: 1, d: { ts: 'x' } });
+  t.ok('enlace: telemetria malformada se descarta y sigue validando', src.linkState() === 'validating' && src.rejected === 1);
   t.ok('usa el ticket en la URL del WebSocket', ws.url === 'ws://x/ws?ticket=tk1');
   await tick(60);
   t.ok('envia latidos cada hbMs', ws.sent.filter((m) => m.t === 'hb').length >= 2);
   ws.recv({ t: 'hello', v: 1, user: 'ana', role: 'student', control: false, state: null });
   ws.recv({ t: 'tele', v: 1, d: tele() });
+  t.eq('enlace: con telemetria valida = conectado', src.linkState(), 'connected');
   t.ok('con telemetria nueva ya no esta obsoleta', !src.telemetry.quality.includes('stale') && src.telemetry.B.p === 260);
   t.ok('sin control el comando se rechaza localmente', src.send({ type: 'tracker.target', az: 150, tilt: 20 }).kind === 'interlock');
   t.eq('comando de simulador: unsupported', src.send({ type: 'sim.cloud', value: 0.5 }).kind, 'unsupported');
@@ -126,6 +131,14 @@ const ok = (body) => ({ ok: true, status: 200, json: async () => body, text: asy
     t.ok('gemelo: fuente twin con ambiente medido', tw.telemetry.source === 'twin' && Math.abs(tw.telemetry.env.ghi - 800) < 1 && Math.abs(tw.telemetry.env.ta - 31) < 0.5);
     t.ok('gemelo: el seguidor del modelo esta donde el real', Math.abs(tw.telemetry.tracker.az - 180) < 1e-6 && Math.abs(tw.telemetry.tracker.tilt - 20) < 1e-6);
     t.ok('gemelo: residuo B = real - modelo', tw.telemetry.residual.B && Math.abs(tw.telemetry.residual.B.diff - (150 - tw.telemetry.B.p)) < 1e-6 && tw.telemetry.residual.B.pct < -10);
+    t.ok('gemelo: a mediodia y con enlace vivo es valido y trae incertidumbre', tw.telemetry.twin.valid && tw.telemetry.twin.link === 'connected' && tw.telemetry.residual.B.uncertaintyPct > 2 && tw.telemetry.residual.B.uncertaintyPct < 6);
+    const night = tele({ ts: LAB.fromLocal(2026, 10, 23, 22, 0) }); clock = night.ts; wsk.recv({ t: 'tele', v: 1, d: night });
+    for (let i = 0; i < 20; i++) tw.step(0.05);
+    t.ok('gemelo: de noche avisa que no es valido', !tw.telemetry.twin.valid && tw.telemetry.twin.reasons.includes('night'));
+    const sh = LAB.data.twinValidity({ sun: { el: 40 }, A: { poa: 800, shadeFrac: 0 }, B: { poa: 800, shadeFrac: 0.2 } }, null, 'connected');
+    t.ok('gemelo: con sombra avisa', !sh.valid && sh.reasons.includes('shade'));
+    clock += 10000;
+    t.ok('gemelo: sin enlace vivo no hay residuo ni validez', (() => { tw.step(0.05); return tw.telemetry.twin.link === 'lost' && tw.telemetry.residual === null && !tw.telemetry.twin.valid; })());
     t.eq('gemelo: los comandos van al banco real y se validan', tw.send({ type: 'sim.cloud', value: 0.5 }).kind, 'unsupported');
     w.close();
   }

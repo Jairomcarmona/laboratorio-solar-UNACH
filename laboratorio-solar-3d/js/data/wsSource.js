@@ -69,6 +69,7 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
         rain: (num(e.rainRate) || 0) > 0, rainLevel: 0, rainRate: num(e.rainRate) || 0, rainMm: 0 },
       A, B,
       comparison: {
+        powerDiffBandPct: 1,        // banda de incertidumbre (~±1 %): dentro de ella A y B no se distinguen del ruido de medida
         powerDiffPct: Number.isFinite(A.p) && Number.isFinite(B.p) && A.p >= 5 ? (B.p / A.p - 1) * 100 : null,
         energyGainPct: A.wh >= 1 ? (B.wh / A.wh - 1) * 100 : null,
         netGainPct: A.wh >= 1 ? (B.wh / A.wh - 1) * 100 : null,
@@ -91,7 +92,7 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
       session,
       acq: { status: acq.status, runId: acq.runId, segmentId: acq.segmentId || null, samples: acq.samples || 0, limit: cfg.acq.limit, elapsedReal: acq.elapsedReal || 0, startedReal: acq.startedReal || 0,
         reason: acq.reason || '', everyS: cfg.acq.sampleEveryS, basis: 'tiempo real', runs: acq.runs || 0 },
-      comms: { latency: ctx.latency != null ? ctx.latency : 0, ok: !stale && ctx.link === 'open' },
+      comms: { latency: ctx.latency != null ? ctx.latency : 0, ok: !stale && ctx.link === 'open', state: ctx.linkState || (stale ? 'lost' : 'connected'), attempts: ctx.attempts || 0, lastRx: ctx.lastRx || 0 },
       quality: Array.from(new Set([...(t.quality || []), ...(stale ? ['stale'] : [])])),
       link: ctx.link || 'open', control: hasControl, twin: ctx.twin || null,
     };
@@ -176,14 +177,21 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
       this.hello = null; this.state = null; this.control = false; this.sessionId = null; this.sessionSince = null; this.profileId = null;
       this.acq = { status: 'stopped', runId: null, samples: 0, elapsedReal: 0, startedReal: 0, reason: '', runs: 0 };
       this.pending = new Map(); this._n = 0; this.entry = null;
-      this.lastRx = 0; this.prev = null; this.latency = 0; this.twin = null; this.attempts = 0; this.closing = false;
+      this.lastRx = 0; this.everValid = false; this.rejected = 0; this.prev = null; this.latency = 0; this.twin = null; this.attempts = 0; this.closing = false;
       this.telemetry = skeleton(this._ctx());
       this._hbTimer = null; this._staleLogged = false;
     }
 
     _ctx(extra) {
-      return { state: this.state, hello: this.hello, control: this.control, sessionId: this.sessionId, sessionSince: this.sessionSince, acq: this.acq, prev: this.prev, link: this.link,
+      return { state: this.state, hello: this.hello, control: this.control, sessionId: this.sessionId, sessionSince: this.sessionSince, acq: this.acq, prev: this.prev, link: this.link, linkState: this.linkState(), attempts: this.attempts, lastRx: this.lastRx,
         source: this.sourceKind || 'real', latency: this.latency, profileId: this.profileId, stale: this._isStale(), twin: this.twin, ...extra };
+    }
+    /** Estado del enlace que ve el alumno: connecting (sin socket), validating (socket abierto, aún sin telemetría válida),
+     *  connected (telemetría fresca) o lost (hubo datos y el enlace cayó o se atrasó). Nunca se rellena con datos locales. */
+    linkState() {
+      if (this.link === 'unauthorized') return 'lost';
+      if (this.link === 'open') return this.everValid ? (this._isStale() ? 'lost' : 'connected') : 'validating';
+      return this.everValid ? 'lost' : 'connecting';
     }
     _isStale() { return !this.lastRx || this.now() - this.lastRx > this.opts.staleMs || this.link !== 'open'; }
     available() { return this.link === 'open'; }
@@ -255,7 +263,11 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
         default: break;
       }
     }
+    /** Telemetría mínima aceptable: sello de tiempo y los dos módulos. Si no cumple se descarta y el enlace sigue en «validando». */
+    _validTele(t) { return !!t && typeof t === 'object' && Number.isFinite(t.ts) && !!t.A && typeof t.A === 'object' && !!t.B && typeof t.B === 'object'; }
     _onTele(t) {
+      if (!this._validTele(t)) { this.rejected++; return; }
+      this.everValid = true;
       const now = this.now();
       this.latency = clamp(now - t.ts, 0, 60000);
       this.lastRx = now;
@@ -350,10 +362,10 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
         this.telemetry = mapTele(this._lastTele || this._rebuildLast(), this._ctx({ stale: true }));
       }
       if (stale && this.lastRx && !this._staleLogged) { this._staleLogged = true; this.log('warn', `Sin telemetría del banco desde hace más de ${this.opts.staleMs / 1000} s; los datos mostrados son los últimos recibidos.`, 'Red'); }
-      this.telemetry.comms.latency = this.latency;
+      this.telemetry.comms.latency = this.latency; this.telemetry.comms.state = this.linkState(); this.telemetry.comms.attempts = this.attempts;
       this._pushHistory(dt);
     }
-    _rebuildLast() { return { ts: this.telemetry.simMs, source: 'real', quality: [], env: this.telemetry.env, A: this.telemetry.A, B: this.telemetry.B, tracker: this.telemetry.tracker,
+    _rebuildLast() { return { ts: this.telemetry.simMs, source: this.telemetry.source || 'real', quality: [], env: this.telemetry.env, A: this.telemetry.A, B: this.telemetry.B, tracker: this.telemetry.tracker,
       safety: { state: this.telemetry.safety.state, canOperate: false }, load: this.telemetry.load }; }
 
     // ------------------------------------------------------------ corridas del servidor
@@ -499,13 +511,31 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
       const m = this.telemetry;
       m.source = 'twin';
       m.real = r;
-      m.twin = { ws: this.ws.twin };
-      m.residual = r ? { A: resid(m.A.p, r.A.p), B: resid(m.B.p, r.B.p) } : null;
+      const link = this.ws.linkState(), v = twinValidity(m, r, link);
+      m.twin = { ws: this.ws.twin, link, valid: v.valid, reasons: v.reasons };
+      m.residual = r && link === 'connected' ? { A: resid(m.A.p, r.A.p, m.A.poa), B: resid(m.B.p, r.B.p, m.B.poa) } : null;
     }
     on(evt, fn) { super.on(evt, fn); if (evt !== 'log') this.ws.on(evt, fn); }
   }
-  const resid = (model, real) => (model != null && real != null ? { model, real, diff: real - model, pct: model > 1 ? (real / model - 1) * 100 : null } : null);
+  /** Incertidumbre relativa (%) de la comparación Medido–Modelo: sensor de irradiancia (2 %), medida de V e I (1 %),
+   *  temperatura de celda (0.35 %/K × 2 K) y un término fijo de 20 W/m² que domina con poca luz. Se combinan en cuadratura. */
+  const twinUncertaintyPct = (poa) => (Number.isFinite(poa) && poa > 20 ? Math.sqrt(2 ** 2 + 1 ** 2 + (0.35 * 2) ** 2 + (20 / poa * 100) ** 2) : null);
+  /** El gemelo solo es una referencia válida con enlace vivo, Sol sobre el horizonte, luz suficiente y sin sombra (el modelo no conoce la sombra real). */
+  function twinValidity(m, r, link) {
+    const reasons = [];
+    if (link !== 'connected') reasons.push('link');
+    if (m.sun.el < 5) reasons.push('night');
+    else if (Math.max(m.A.poa, m.B.poa) < 100) reasons.push('lowlight');
+    if ((m.A.shadeFrac > 0.01 || m.B.shadeFrac > 0.01) || (r && (r.A.shadeFrac > 0.01 || r.B.shadeFrac > 0.01))) reasons.push('shade');
+    return { valid: reasons.length === 0, reasons };
+  }
+  const resid = (model, real, poa) => {
+    if (model == null || real == null || !Number.isFinite(model) || !Number.isFinite(real)) return null;
+    const pct = model > 1 ? (real / model - 1) * 100 : null, u = twinUncertaintyPct(poa);
+    return { model, real, diff: real - model, pct, uncertaintyPct: u, within: pct != null && u != null ? Math.abs(pct) <= u : null };
+  };
 
+  LAB.data.twinValidity = twinValidity; LAB.data.twinUncertaintyPct = twinUncertaintyPct;
   LAB.data.mapTele = mapTele;
   LAB.data.skeleton = skeleton;
   LAB.data.parseRunCsv = parseRunCsv;
