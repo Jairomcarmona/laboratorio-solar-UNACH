@@ -99,6 +99,7 @@
           </div>
           <div class="slider" id="loadSliderWrap"><label for="loadSp"><span id="loadSpLabel">Tensión</span> <output id="loadSpOut">82 % Voc</output></label><input type="range" id="loadSp" min="5" max="100" step="1" value="82"></div>
           <div class="numrow" id="loadNumRow"><input type="number" id="loadNum" step="0.1" aria-label="Valor de consigna" data-i18n-attr="aria-label:index.loadNum.valor_de_consigna"><span id="loadNumUnit">% Voc</span><button class="btn" id="btnLoadNum" data-i18n="index.btnLoadNum.aplicar">Aplicar</button></div>
+          <button class="btn wide" id="btnConn" data-i18n="index.btnConn.conexiones_y_multimetro">Conexiones y multímetro…</button>
           <button class="btn wide accent" id="btnSweep">Barrido I‑V automático (10 s)</button>
           <p class="hint" data-i18n="index.pLoad.el_barrido_fija_el">El barrido fija el tiempo en ×1 y recorre la tensión de 0 a Voc en ambos módulos al mismo tiempo.</p>
         </div>
@@ -258,6 +259,59 @@
     </footer>
 </div>
 <div id="practiceDrawer" class="glass" hidden></div>
+<div id="connDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="connTitle" hidden>
+  <div class="card glass widecard conncard">
+    <button class="x" type="button" aria-label="Cerrar" data-i18n-attr="aria-label:index.connDlg.cerrar">×</button>
+    <h2 id="connTitle" data-i18n="index.connDlg.conexiones_del_modulo">Conexiones del módulo</h2>
+    <p class="robanner" id="connIllus" role="note"><b data-i18n="index.connDlg.ilustrativo">ILUSTRATIVO</b> <span data-i18n="index.connDlg.ilustrativo_desc">Esquema típico de un módulo de 500 Wp de media celda. La disposición real del banco (caja, conectores y puntos de medida) se confirmará con fotos del banco.</span></p>
+    <div class="connwrap">
+      <div class="connleft">
+        <div class="seg" id="connMod" role="group" aria-label="Módulo" data-i18n-attr="aria-label:index.connDlg.modulo"><button type="button" data-m="A" data-i18n="index.connDlg.modulo_a">Módulo A (fijo)</button><button type="button" data-m="B" data-i18n="index.connDlg.modulo_b">Módulo B (móvil)</button></div>
+        <svg id="connSvg" viewBox="0 0 580 330" role="img" aria-labelledby="connSvgT connSvgD" data-mod="B">
+          <title id="connSvgT" data-i18n="index.connDlg.svg_titulo">Vista posterior del módulo con su caja de conexiones</title>
+          <desc id="connSvgD" data-i18n="index.connDlg.svg_desc">Esquema ilustrativo: tres subcadenas con un diodo de bypass cada una en la caja de conexiones, cables con conectores MC4 hacia la carga y puntos de medida positivo y negativo.</desc>
+          <rect class="c-mod" x="14" y="30" width="380" height="270" rx="6"/>
+          <g class="c-cells"><path d="M14 120H394M14 210H394"/></g>
+          <path class="c-sub" d="M140 30V300M268 30V300"/>
+          <text class="c-t" x="76" y="200" text-anchor="middle" data-i18n="index.connDlg.sub1">Subcadena 1</text>
+          <text class="c-t" x="204" y="200" text-anchor="middle" data-i18n="index.connDlg.sub2">Subcadena 2</text>
+          <text class="c-t" x="332" y="200" text-anchor="middle" data-i18n="index.connDlg.sub3">Subcadena 3</text>
+          <text class="c-t dim" id="connModTitle" x="204" y="290" text-anchor="middle"></text>
+          <rect class="c-box" x="150" y="38" width="108" height="64" rx="5"/>
+          <text class="c-t b" x="204" y="54" text-anchor="middle" data-i18n="index.connDlg.caja">Caja de conexiones</text>
+          <g class="c-diode"><path d="M165 66l10 14h-20z"/><path d="M155 82h20"/><path d="M199 66l10 14h-20z"/><path d="M189 82h20"/><path d="M233 66l10 14h-20z"/><path d="M223 82h20"/></g>
+          <text class="c-t s" x="165" y="96" text-anchor="middle">D1</text><text class="c-t s" x="199" y="96" text-anchor="middle">D2</text><text class="c-t s" x="233" y="96" text-anchor="middle">D3</text>
+          <path class="c-w" d="M165 82L76 120V130M199 82V120M243 82L332 120V130"/>
+          <path class="c-cab pos" d="M258 56H430"/><path class="c-cab neg" d="M258 86H430"/>
+          <rect class="c-mc4 pos" x="400" y="46" width="30" height="20" rx="3"/><rect class="c-mc4 neg" x="400" y="76" width="30" height="20" rx="3"/>
+          <text class="c-t s" x="415" y="40" text-anchor="middle">MC4 +</text><text class="c-t s" x="415" y="112" text-anchor="middle">MC4 −</text>
+          <path class="c-cab pos" d="M430 56H520"/><path class="c-cab neg" d="M430 86H520"/>
+          <rect class="c-load" x="520" y="30" width="56" height="86" rx="5"/>
+          <text class="c-t s" x="548" y="60" text-anchor="middle" data-i18n="index.connDlg.carga">Carga CC</text><text class="c-t s" x="548" y="76" text-anchor="middle">oc / sc</text><text class="c-t s" x="548" y="94" text-anchor="middle">DAQ V·I</text>
+          <g class="c-tp" id="tpPos" data-tp="B+" role="button" tabindex="0"><circle cx="470" cy="56" r="9"/><text x="470" y="34" text-anchor="middle">TP+</text></g>
+          <g class="c-tp" id="tpNeg" data-tp="B-" role="button" tabindex="0"><circle cx="470" cy="86" r="9"/><text x="470" y="112" text-anchor="middle">TP−</text></g>
+          <g class="c-pe"><path d="M30 318v-10M20 308h20M24 313h12M28 318h4"/></g><text class="c-t s" x="48" y="318" data-i18n="index.connDlg.pe">Marco a tierra (PE)</text>
+          <text class="c-stamp" x="290" y="170" text-anchor="middle" transform="rotate(-12 290 170)" data-i18n="index.connDlg.ilustrativo">ILUSTRATIVO</text>
+        </svg>
+        <p class="hint" data-i18n="index.connDlg.pista">Haz clic en un punto de medida (TP) para colocar la punta roja y luego la negra; también puedes elegirlos en las listas.</p>
+      </div>
+      <div class="connright">
+        <div class="dmm" id="dmm" role="group" aria-label="Multímetro virtual" data-i18n-attr="aria-label:index.connDlg.multimetro">
+          <div class="dmmscr" aria-live="polite" aria-atomic="true"><b id="dmmVal">—</b><span id="dmmUnit">V</span></div>
+          <div class="dmmunc" id="dmmUnc"></div>
+          <div class="seg" id="dmmFn" role="group" aria-label="Función" data-i18n-attr="aria-label:index.connDlg.funcion"><button type="button" data-fn="voc">Voc (V)</button><button type="button" data-fn="isc">Isc (A)</button></div>
+          <label class="dmmsel"><span data-i18n="index.connDlg.punta_roja">Punta roja</span><select id="dmmRed"><option value="A+">A +</option><option value="A-">A −</option><option value="B+">B +</option><option value="B-">B −</option></select></label>
+          <label class="dmmsel"><span data-i18n="index.connDlg.punta_negra">Punta negra</span><select id="dmmBlack"><option value="A+">A +</option><option value="A-">A −</option><option value="B+">B +</option><option value="B-">B −</option></select></label>
+          <div class="robanner linklost" id="dmmScWarn" role="alert" hidden></div>
+          <div class="row3"><button type="button" class="btn accent" id="dmmGo" data-i18n="index.connDlg.medir">Medir</button><button type="button" class="btn" id="dmmCancel" hidden data-i18n="index.connDlg.cancelar">Cancelar</button></div>
+          <p class="hint" id="dmmMsg" role="status"></p>
+          <p class="hint" id="dmmRef"></p>
+          <p class="hint" data-i18n="index.connDlg.nota_carga">El multímetro usa la misma carga programable del banco (modos Abierto y Cortocircuito) y devuelve la carga al modo anterior al terminar. La carga es común: mientras mide, ambos módulos están en ese modo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="overviewDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="ovTitle" hidden>
   <div class="card glass widecard"><button class="x" type="button" aria-label="Cerrar la vista de todos los pasos" data-i18n-attr="aria-label:index.overviewDlg.cerrar_la_vista_de">×</button><div id="ovBody"></div></div>
 </div>
@@ -365,6 +419,7 @@
   <script src="js/core/calibration.js"></script>
   <script src="js/core/analysis.js"></script>
   <script src="js/core/store.js"></script>
+  <script src="js/core/meter.js"></script>
   <script src="js/sim/engine.js"></script>
   <script src="js/data/wsSource.js"></script>
   <script src="js/data/dataSource.js"></script>
@@ -389,6 +444,7 @@
   <script src="js/ui/analysisview.js"></script>
   <script src="js/ui/report.js"></script>
   <script src="js/ui/practices.js"></script>
+  <script src="js/ui/connections.js"></script>
   <script src="js/ui/onboarding.js"></script>
   <script src="js/ui/app.js"></script>
 

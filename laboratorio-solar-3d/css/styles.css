@@ -589,3 +589,35 @@ body.src-twin #left .panel button, body.src-twin #left .panel input { cursor: no
 /* ---------- sombra parcial: línea bajo la potencia de cada módulo ---------- */
 .shadeinfo { margin: 4px 0 0; font-size: 11px; line-height: 1.35; color: var(--solar, #ffb020); }
 .shadeinfo[hidden] { display: none; }
+
+/* ---------- Conexiones del módulo y multímetro virtual ---------- */
+.conncard { width: min(1040px, 100%) !important; }
+.connwrap { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(250px, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 820px) { .connwrap { grid-template-columns: 1fr; } }
+#connIllus { margin: 8px 0 12px; }
+#connSvg { width: 100%; height: auto; margin-top: 8px; background: var(--glass-2); border: 1px solid var(--line-2); border-radius: 10px; }
+#connSvg .c-mod { fill: var(--glass-2); stroke: var(--tx-3); stroke-width: 2; }
+#connSvg .c-cells path { stroke: var(--line-2); stroke-width: 1; stroke-dasharray: 3 5; fill: none; }
+#connSvg .c-sub { stroke: var(--tx-3); stroke-width: 1.5; stroke-dasharray: 6 4; fill: none; }
+#connSvg .c-box { fill: var(--surface-0, var(--glass-2)); stroke: var(--accent); stroke-width: 2; }
+#connSvg .c-diode path { stroke: var(--tx-1, currentColor); stroke-width: 1.6; fill: none; }
+#connSvg .c-w { stroke: var(--tx-3); stroke-width: 1.4; fill: none; }
+#connSvg .c-cab { fill: none; stroke-width: 4; stroke-linecap: round; }
+#connSvg .c-cab.pos, #connSvg .c-mc4.pos { stroke: #e0443c; } #connSvg .c-cab.neg, #connSvg .c-mc4.neg { stroke: var(--tx-1, #111); }
+#connSvg .c-mc4 { fill: var(--glass-2); stroke-width: 3; }
+#connSvg .c-load { fill: var(--glass-2); stroke: var(--violet, #a98bff); stroke-width: 2; }
+#connSvg .c-pe path { stroke: var(--ok); stroke-width: 2; fill: none; }
+#connSvg .c-t { fill: var(--tx-1, currentColor); font: 600 11px var(--sans, system-ui, sans-serif); }
+#connSvg .c-t.s { font-size: 10px; fill: var(--tx-2); } #connSvg .c-t.b { fill: var(--accent); } #connSvg .c-t.dim { fill: var(--tx-3); }
+#connSvg .c-stamp { fill: none; stroke: var(--solar); stroke-width: 1; font: 800 34px var(--sans, system-ui, sans-serif); letter-spacing: 4px; opacity: .55; paint-order: stroke; pointer-events: none; }
+#connSvg .c-tp { cursor: pointer; outline: none; }
+#connSvg .c-tp circle { fill: var(--glass-2); stroke: var(--accent); stroke-width: 3; }
+#connSvg .c-tp text { fill: var(--tx-1, currentColor); font: 700 11px var(--mono, monospace); }
+#connSvg .c-tp:hover circle, #connSvg .c-tp:focus-visible circle { stroke-width: 5; }
+#connSvg .c-tp.pr circle { fill: #e0443c; } #connSvg .c-tp.pb circle { fill: #111; stroke: var(--tx-1, #fff); }
+.dmm { background: var(--glass-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+.dmmscr { background: #0d1d14; color: #8dffb8; border-radius: 8px; padding: 10px 14px; text-align: right; font: 700 38px var(--mono, monospace); letter-spacing: 1px; }
+.dmmscr span { font-size: 18px; margin-left: 6px; }
+.dmmunc { min-height: 1.3em; font: 500 11.5px var(--mono, monospace); color: var(--tx-2); text-align: right; }
+.dmmsel { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 8px; font-size: 12.5px; }
+.dmm .seg button:disabled, .dmm select:disabled { opacity: .55; }
