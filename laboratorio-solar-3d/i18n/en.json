@@ -1846,5 +1846,7 @@
  "conn.r_timeout": "The load did not confirm the change in time; it was cancelled and the previous mode restored.",
  "conn.r_changed": "Someone changed the load during the measurement; cancelled.",
  "app.banner_banco_virtual": "Virtual test bench: the figures, the 3D scene and the telemetry are SIMULATED by the bridge, not measurements from the physical bench. No hardware is connected.",
- "app.control_banco_virtual": "Control of the VIRTUAL test bench: commands apply to a simulation, not to physical equipment."
+ "app.control_banco_virtual": "Control of the VIRTUAL test bench: commands apply to a simulation, not to physical equipment.",
+ "index.btnMeter.multimetro": "Multimeter",
+ "index.btnMeter.title": "Virtual multimeter and module connections: measure Voc and Isc (needs a session with control)"
 }

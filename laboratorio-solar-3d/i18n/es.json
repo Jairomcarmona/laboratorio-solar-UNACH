@@ -1846,5 +1846,7 @@
  "conn.r_timeout": "La carga no confirmó el cambio a tiempo; se canceló y se restituyó el modo anterior.",
  "conn.r_changed": "Alguien cambió la carga durante la medida; se canceló.",
  "app.banner_banco_virtual": "Banco virtual de pruebas: las cifras, la escena 3D y la telemetría son SIMULADAS por el puente, no son mediciones del banco físico. No hay hardware conectado.",
- "app.control_banco_virtual": "Control del banco VIRTUAL de pruebas: los comandos se aplican a una simulación, no a equipo físico."
+ "app.control_banco_virtual": "Control del banco VIRTUAL de pruebas: los comandos se aplican a una simulación, no a equipo físico.",
+ "index.btnMeter.multimetro": "Multímetro",
+ "index.btnMeter.title": "Multímetro virtual y conexiones del módulo: mide Voc e Isc (necesita una sesión con control)"
 }
