@@ -715,6 +715,19 @@
     $('#btnComms').classList.toggle('on', S.commsCut);
     $('#btnEstop').disabled = S.estop;
 
+    // banco real: en lugar de los controles de simulación, hora real, operador y estado del enlace
+    $('#gReal').hidden = source.kind !== 'ws';
+    if (!$('#gReal').hidden) {
+      const hhmm = `${pad2(Math.floor(lt.hours))}:${pad2(Math.floor(lt.hours * 60) % 60)}`;
+      setText('rlClock', LAB.t('app.real_hora_real', { t: hhmm }));
+      const ss = S.session, since = ss.active && ss.since ? LAB.localTime(ss.since) : null;
+      setText('rlOperator', ss.active ? LAB.t('app.real_operador', { u: ss.user || '—', t: since ? `${pad2(Math.floor(since.hours))}:${pad2(Math.floor(since.hours * 60) % 60)}` : '—' }) : LAB.t('app.real_solo_lectura'));
+      const stale = tel.quality.includes('stale'), safe = S.state !== 'NORMAL';
+      setText('rlLink', stale ? LAB.t('app.real_datos_atrasados') : safe ? LAB.t('app.real_banco_en_seguro', { s: stateTxt[0] }) : LAB.t('app.real_enlace_ok', { ms: fmt(tel.comms.latency || 0, 0) }));
+      $('#rlLink').className = 'chip ' + (stale ? 'bad' : safe ? 'warn' : 'ok');
+      $('#rlOperator').className = 'chip ' + (ss.active ? 'ok' : '');
+    }
+
     // dock
     setText('btnPlay', tel.playing ? '❚❚' : '▶');
     { const bp = $('#btnPlay'), t = tel.playing ? LAB.t('app.pausar_reloj_solar_el') : LAB.t('app.reanudar_reloj_solar'); bp.title = t; bp.setAttribute('aria-label', t); bp.setAttribute('aria-pressed', String(!tel.playing)); }

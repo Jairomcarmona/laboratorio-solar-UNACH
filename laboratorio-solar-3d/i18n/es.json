@@ -1759,5 +1759,12 @@
  "world.sign_place": "Tuxtla Gutiérrez, Chiapas, México",
  "world.sign_org": "Universidad Autónoma de Chiapas",
  "world.view_building": "Edificio",
- "app.edificio": "Edificio"
+ "app.edificio": "Edificio",
+ "index.gReal.condiciones_del_dia": "Las condiciones (Sol, nubes, viento y lluvia) son las del día: no se pueden cambiar ni acelerar el tiempo.",
+ "app.real_hora_real": "Hora real {t}",
+ "app.real_operador": "Operador: {u} · desde {t}",
+ "app.real_solo_lectura": "Solo lectura: sin el control del banco",
+ "app.real_datos_atrasados": "Datos atrasados: operación bloqueada",
+ "app.real_banco_en_seguro": "Banco no normal: {s}",
+ "app.real_enlace_ok": "Enlace correcto · {ms} ms"
 }

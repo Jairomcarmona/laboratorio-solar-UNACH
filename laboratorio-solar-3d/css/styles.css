@@ -556,3 +556,9 @@ body.src-replay #btnResetE, body.src-replay #btnResetRain, body.src-replay #btnC
 #gReplay { display: flex; align-items: center; gap: 10px; flex: 1; }
 #gReplay input[type=range] { flex: 1; min-width: 120px; }
 #gReplay output { font: 12px var(--mono); color: var(--muted, #9bb0c4); white-space: nowrap; }
+
+/* ---------- banco real: en el lugar de los controles de simulación (ocultos arriba) va el estado del banco ---------- */
+#gReal { gap: 8px; flex-wrap: wrap; }
+#gReal .chip { font-size: 12px; padding: 5px 10px; }
+#gReal .chip.ok { border-color: rgba(53, 208, 127, .5); } #gReal .chip.warn { border-color: rgba(255, 176, 32, .6); color: var(--solar); } #gReal .chip.bad { border-color: rgba(255, 77, 77, .6); color: var(--bad); }
+#gReal .hint { max-width: 360px; }

@@ -343,8 +343,10 @@
       const dayF = smoothstep(-6, 8, el);               // 0 noche .. 1 dia
       const twil = 1 - smoothstep(0, 22, Math.abs(el));  // calidez cerca del horizonte
       this.dayFactor = dayF;
-      const cloud = env.cloud;
-      const dniF = clamp(env.dni / 900, 0, 1.15);
+      // banco real: la nubosidad no se mide y la DNI puede faltar (null): sin esto el cálculo da NaN y la escena queda negra
+      const cloud = Number.isFinite(env.cloud) ? env.cloud : 0.25;
+      const dni = Number.isFinite(env.dni) ? env.dni : 800 * smoothstep(2, 25, el);
+      const dniF = clamp(dni / 900, 0, 1.15);
 
       // luz solar: directa segun DNI real simulado; cambia de color cerca del horizonte
       const warm = new THREE.Color().setHSL(0.09 - 0.02 * twil, 0.35 + 0.5 * twil, 0.95 - 0.28 * twil);
