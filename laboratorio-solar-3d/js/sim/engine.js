@@ -33,7 +33,7 @@
       this.cv = null; this.cvAge = 99;
       this.op = { v: 0, i: 0, p: 0 };
       this.poa = { total: 0, beam: 0, circ: 0, iso: 0, sky: 0, ground: 0, aoi: 90, cosAoi: 0 };
-      this.shade = 0;
+      this.shade = 0; this.shadeSub = [0, 0, 0]; this.mpptLossW = 0; this.scanTimer = 0;
       this.gMeas = 0;
     }
     restart() { this.init = false; this.vTrack = 36; this.dir = 1; this.lastP = 0; this.poTimer = 0; this.cvAge = 99; }
@@ -483,11 +483,12 @@
       } else this._limitLogged = false;
       if (this.sweep.active && (sf.estop || sf.stowRequired)) this.abortSweep(sf.estop ? 'paro de emergencia' : 'posición segura');
 
-      // modulos
+      // sombra mutua (geometria, con el reparto por subcadena) y modulos
+      const none = { frac: 0, subs: [0, 0, 0] };
+      const sh = sun.el > 0 ? LAB.sim.shade.mutualDetail(sunVec, tr.az, tr.tilt) : { A: none, B: none };
+      this.A.shade = sh.A.frac; this.B.shade = sh.B.frac; this.A.shadeSub = sh.A.subs; this.B.shadeSub = sh.B.subs;
       this._module(this.A, cfg.fixed, sunVec, irr, w, hSim, h);
       this._module(this.B, { az: tr.az, tilt: tr.tilt }, sunVec, irr, w, hSim, h);
-      const sh = sun.el > 0 ? LAB.sim.shade.mutual(sunVec, tr.az, tr.tilt) : { A: 0, B: 0 };
-      this.A.shade = sh.A; this.B.shade = sh.B;
       this.jumped = false;
 
       // carga (la carga se desconecta con el paro de emergencia)
@@ -531,7 +532,12 @@
       // lo que MIDE el sensor del plano (S5), no la verdad
       m.gMeas = LAB.sim.sensors.poaSensor(m.poa, cfg.sensors[m.id === 'A' ? 'poaA' : 'poaB'], m.tBack, this._noise(m, 'g'));
       m.cvAge += dtReal;
-      if (!m.cv || m.cvAge > 0.12) { m.cv = PV.curve(m.poa.total, m.Tc, 70); m.cvAge = 0; }
+      if (!m.cv || m.cvAge > 0.12) {
+        // con sombra parcial las celdas sombreadas pierden el haz (y el circumsolar) y el bypass reparte la curva en varios picos
+        const subs = m.shadeSub, shaded = cfg.shading.electrical && subs && subs.some((x) => x > 0.002) && m.poa.total > 2;
+        m.cv = shaded ? PV.curveShaded(m.poa.total, Math.max(0, m.poa.total - m.poa.beam - m.poa.circ), m.Tc, subs, 160) : PV.curve(m.poa.total, m.Tc, 70);
+        m.cvAge = 0;
+      }
     }
 
     _operate(m, mode, setpoint, dtReal, dtSim) {
@@ -551,10 +557,16 @@
           }
         }
         if (cv.pmp <= 0) m.vTrack = 0.8 * (cv.voc || 40);
+        // barrido global opcional: con varios picos (sombra parcial) salta al mayor; sin el, P&O se queda en el pico local donde estaba
+        const scan = cfg.mppt.globalScanS;
+        m.scanTimer = (m.scanTimer || 0) + dtReal;
+        if (scan > 0 && m.scanTimer >= scan) { m.scanTimer = 0; if (cv.peaks && cv.peaks.length > 1 && cv.pmp > 0) m.vTrack = cv.vmp; }
       }
       const op = PV.operating(cv, mode, setpoint, m.vTrack);
       const v = op.v * (1 + 0.0015 * this._noise(m, 'v')), i = Math.max(0, op.i * (1 + 0.0015 * this._noise(m, 'i')));
       m.op = { v, i, p: v * i };
+      // MPPT atrapado: hay varios picos y el punto de operacion esta en uno local, lejos del maximo global
+      m.mpptLossW = mode === 'mppt' && cv.peaks && cv.peaks.length > 1 ? Math.max(0, cv.pmp - m.op.p) : 0;
       m.energyWh += m.op.p * dtSim / 3600;
     }
 
@@ -593,7 +605,7 @@
       const tr = this.tracker, sf = this.safety, w = this.weather;
       this.latency += (45 + 30 * Math.abs(LAB.util.noise1(this.realT / 3, 2)) - this.latency) * 0.05;
       const mod = (m) => ({
-        az: m.az, tilt: m.tilt, poa: m.gMeas, poaTrue: m.poa.total, beam: m.poa.beam, circ: m.poa.circ, aoi: m.poa.aoi, shadeFrac: m.shade,
+        az: m.az, tilt: m.tilt, poa: m.gMeas, poaTrue: m.poa.total, beam: m.poa.beam, circ: m.poa.circ, aoi: m.poa.aoi, shadeFrac: m.shade, shadeSub: m.shadeSub ? m.shadeSub.slice() : [0, 0, 0], mpptLossW: m.mpptLossW || 0,
         tcell: m.Tc, tback: m.tBack, v: m.op.v, i: m.op.i, p: m.op.p, wh: m.energyWh,
         voc: m.cv.voc, isc: m.cv.isc, vmp: m.cv.vmp, imp: m.cv.imp, pmp: m.cv.pmp,
         eff: m.poa.total > 20 ? m.op.p / (m.poa.total * cfg.module.area) * 100 : 0,

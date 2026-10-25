@@ -157,7 +157,8 @@ const login = (e, role = 'student', user = 'Ana') => e.send({ type: 'session.sta
     let guard = 0; while (e.telemetry.local.hours < 17.5 && guard++ < 20000) e.step(0.1);
     res.push({ EA: e.telemetry.A.wh, EB: e.telemetry.B.wh, gain: e.telemetry.comparison.energyGainPct, net: e.telemetry.comparison.netGainPct, cloud: e.telemetry.settings.cloud, seed: e.telemetry.settings.seed, sc: e.telemetry.settings.scenarioId });
   }
-  t.ok('T20 el módulo A (referencia) produce la misma energía en las tres corridas', res.length === 3 && Math.abs(res[0].EA - res[1].EA) < 1 && Math.abs(res[0].EA - res[2].EA) < 1, res.map((r) => r.EA.toFixed(1)).join(' / '));
+  // la sombra de B sobre A entra al modelo eléctrico (O4): A deja de ser idéntica al milésimo, pero sigue siendo la referencia (±0.2 %)
+  t.ok('T20 el módulo A (referencia) produce la misma energía en las tres corridas', res.length === 3 && Math.abs(res[0].EA - res[1].EA) < 0.002 * res[0].EA && Math.abs(res[0].EA - res[2].EA) < 0.002 * res[0].EA, res.map((r) => r.EA.toFixed(1)).join(' / '));
   t.ok('T20 metadatos comunes (nubes, semilla, escenario)', res.every((r) => r.cloud === 0.1 && r.seed === 20261023 && r.sc === 'p3'));
   t.ok('T20 fórmula de ganancia consistente: E_B/E_A−1', res.every((r) => Math.abs(r.gain - (r.EB / r.EA - 1) * 100) < 1e-9), res.map((r) => r.gain.toFixed(1)).join(' / '));
   t.ok('T20 dos ejes ≥ un eje en un día claro', res[0].EB >= res[1].EB * 0.98, `${res[0].EB.toFixed(0)} vs ${res[1].EB.toFixed(0)}`);

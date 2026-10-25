@@ -52,6 +52,13 @@
     // Banco de cargas discreto (S7): null = carga electronica continua; o lista de resistencias en ohm
     load: { bank: null },
 
+    // Sombra parcial en el modelo electrico (O4): 3 subcadenas con diodo de bypass (caida bypassV, tipica de un diodo Schottky).
+    // PROVISIONAL: el reparto en subcadenas por tercios del eje largo y la caida del diodo salen de un modulo tipico de 500 W
+    // de media celda, no de la hoja de datos del modulo del banco. electrical:false vuelve al modelo anterior (la sombra solo es geometria).
+    shading: { electrical: true, bypassV: 0.5 },
+    // MPPT: perturbar y observar. globalScanS > 0 emula un seguidor con barrido global periodico (s de tiempo fisico); 0 = solo P&O, que puede quedar en un pico local.
+    mppt: { globalScanS: 0 },
+
     fixed: { az: 180, tilt: 17 },
 
     tracker: {

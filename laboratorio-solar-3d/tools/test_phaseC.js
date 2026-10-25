@@ -21,7 +21,7 @@ const runs = [strategy('astro', false), strategy('astro', true), strategy('senso
 const sums = runs.map(LAB.core.runSummary);
 t.ok('C12 cada corrida guarda acumuladores por segmento', runs.every((r) => r.segments[0].start && r.segments[0].end && r.segments[0].ctx));
 t.ok('C12 resumen: E_A, E_B y motor con valores finitos', sums.every((s) => s.hasEnergy && s.EA > 100 && s.EB > 100 && s.motorWh >= 0), sums.map((s) => `${s.EA.toFixed(0)}/${s.EB.toFixed(0)}/${s.motorWh.toFixed(1)}`).join(' | '));
-t.ok('C12 E_A idéntica entre estrategias (misma referencia)', Math.abs(sums[0].EA - sums[1].EA) < 1 && Math.abs(sums[0].EA - sums[2].EA) < 1);
+t.ok('C12 E_A idéntica entre estrategias (misma referencia)', Math.abs(sums[0].EA - sums[1].EA) < 0.002 * sums[0].EA && Math.abs(sums[0].EA - sums[2].EA) < 0.002 * sums[0].EA);   // ±0.2 %: la sombra de B sobre A entra al modelo (O4)
 t.ok('C13 ganancia bruta = E_B/E_A−1 y neta = (E_B−motor)/E_A−1', sums.every((s) => Math.abs(s.grossPct - (s.EB / s.EA - 1) * 100) < 1e-9 && Math.abs(s.netPct - ((s.EB - s.motorWh) / s.EA - 1) * 100) < 1e-9));
 t.ok('C13 neta ≤ bruta', sums.every((s) => s.netPct <= s.grossPct + 1e-9));
 const cmp = LAB.core.compareRuns(runs);
