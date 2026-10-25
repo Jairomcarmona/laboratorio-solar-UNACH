@@ -1,6 +1,7 @@
 /* Sombra mutua entre los modulos A y B (S6): oclusion GEOMETRICA analitica, sin Three.js.
  * Para un modulo receptor se toma una malla de 7x5 puntos sobre su cara, se lanza el rayo hacia el Sol y se comprueba si
- * cruza el rectangulo del otro modulo. Mide solo geometria: NO entra al modelo electrico (eso es O4).
+ * cruza el rectangulo del otro modulo. Ademas de la fraccion total reparte la sombra entre las 3 subcadenas del modulo
+ * (tercios del eje largo, un diodo de bypass cada una) para el modelo electrico de pvmodel.curveShaded.
  * Ejes de escena: +X este, +Y arriba, -Z norte (igual que solar.js). Las posiciones salen de LAB.config.shadeSites(). */
 (function () {
   'use strict';
@@ -32,13 +33,15 @@
     return rect([L.moduleB[0] + off * n[0], E.axisY + off * n[1], L.moduleB[2] + off * n[2]], az, tilt);
   }
 
-  /** Fraccion (0-1) de la cara de 'target' sombreada por 'caster'. sunVec unitario hacia el Sol. */
-  function fraction(sunVec, target, caster) {
+  /** Sombra de 'target' por 'caster': fraccion total y fraccion por subcadena (tercios del eje largo; cada columna de la malla
+   *  se reparte entre las subcadenas que cubre). sunVec unitario hacia el Sol. */
+  function detail(sunVec, target, caster) {
+    const none = { frac: 0, subs: [0, 0, 0] };
     const sn = S.dot(sunVec, target.n);
-    if (sn <= 0.02) return 0;                          // la cara no ve el Sol: no hay sombra que medir
+    if (sn <= 0.02) return none;                       // la cara no ve el Sol: no hay sombra que medir
     const den = S.dot(sunVec, caster.n);
-    if (Math.abs(den) < 1e-9) return 0;
-    let shaded = 0;
+    if (Math.abs(den) < 1e-9) return none;
+    let shaded = 0; const col = new Array(NX).fill(0);
     for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) {
       const u = (i / (NX - 1) - 0.5) * 2 * target.hl * EDGE, v = (j / (NZ - 1) - 0.5) * 2 * target.hs * EDGE;
       const p = [0, 1, 2].map((k) => target.c[k] + u * target.e1[k] + v * target.e2[k] + 0.03 * target.n[k]);
@@ -46,16 +49,28 @@
       const t = S.dot(d, caster.n) / den;
       if (t <= 0.02) continue;
       const q = [0, 1, 2].map((k) => p[k] + t * sunVec[k] - caster.c[k]);
-      if (Math.abs(S.dot(q, caster.e1)) <= caster.hl && Math.abs(S.dot(q, caster.e2)) <= caster.hs) shaded++;
+      if (Math.abs(S.dot(q, caster.e1)) <= caster.hl && Math.abs(S.dot(q, caster.e2)) <= caster.hs) { shaded++; col[i]++; }
     }
-    return shaded / (NX * NZ);
+    const subs = [0, 1, 2].map((k) => {
+      let num = 0, w = 0;
+      for (let i = 0; i < NX; i++) { const ov = Math.max(0, Math.min((i + 1) / NX, (k + 1) / 3) - Math.max(i / NX, k / 3)); num += ov * col[i] / NZ; w += ov; }
+      return w > 0 ? num / w : 0;
+    });
+    return { frac: shaded / (NX * NZ), subs };
   }
+  /** Fraccion (0-1) de la cara de 'target' sombreada por 'caster' */
+  const fraction = (sunVec, target, caster) => detail(sunVec, target, caster).frac;
 
   /** Fracciones mutuas {A: sombra de B sobre A, B: sombra de A sobre B} para la orientacion actual de B */
   function mutual(sunVec, azB, tiltB) {
     const a = rectA(), b = rectB(azB, tiltB);
     return { A: fraction(sunVec, a, b), B: fraction(sunVec, b, a) };
   }
+  /** Igual que mutual pero con el reparto por subcadena: {A: {frac, subs}, B: {frac, subs}} */
+  function mutualDetail(sunVec, azB, tiltB) {
+    const a = rectA(), b = rectB(azB, tiltB);
+    return { A: detail(sunVec, a, b), B: detail(sunVec, b, a) };
+  }
 
-  LAB.sim.shade = { rect, rectA, rectB, fraction, mutual, GRID: NX * NZ };
+  LAB.sim.shade = { rect, rectA, rectB, fraction, detail, mutual, mutualDetail, GRID: NX * NZ };
 })();

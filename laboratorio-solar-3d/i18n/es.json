@@ -1794,5 +1794,7 @@
  "app.twin_sin_incertidumbre": "Sin incertidumbre calculable: falta irradiancia medida.",
  "app.twin_dentro": "dentro de ±{u} %",
  "app.twin_fuera": "fuera de ±{u} %",
- "app.diff_en_banda": "Dentro de ±{b} %: A y B no se distinguen del ruido de medida."
+ "app.diff_en_banda": "Dentro de ±{b} %: A y B no se distinguen del ruido de medida.",
+ "app.sombra_info": "Sombra {pct} % · subcadenas {a}/{b}/{c} % · {n} afectadas (el bypass las salta al subir la corriente)",
+ "app.sombra_mppt_local": "MPPT en un pico local: pierde {w} W frente al máximo global."
 }

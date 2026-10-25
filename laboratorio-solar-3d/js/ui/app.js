@@ -798,6 +798,14 @@
       $('#p' + k + 'bar').style.width = clamp(m.p / scale * 100, 0, 100) + '%';
       $('#p' + k + 'max').style.left = clamp(m.pmp / scale * 100, 0, 100) + '%';
     }
+    // sombra mutua: reparto por subcadena, bypass y pérdida del MPPT si queda en un pico local
+    for (const k of ['A', 'B']) {
+      const m = tel[k], el = document.getElementById('sh' + k), sub = m.shadeSub || [0, 0, 0], on = m.shadeFrac > 0.01;
+      el.hidden = !on; if (!on) continue;
+      const by = sub.filter((x) => x > 0.002).length;
+      setText('sh' + k, LAB.t('app.sombra_info', { pct: fmt(m.shadeFrac * 100, 0), a: fmt(sub[0] * 100, 0), b: fmt(sub[1] * 100, 0), c: fmt(sub[2] * 100, 0), n: by })
+        + (m.mpptLossW > 1 ? ' ' + LAB.t('app.sombra_mppt_local', { w: fmt(m.mpptLossW, 0) }) : ''));
+    }
     setText('bOrient', `${fmt(tel.B.az, 0)}° / ${fmt(tel.B.tilt, 0)}°`);
     { const C = tel.comparison, d = C.powerDiffPct, g = C.energyGainPct, sg = (v) => (v == null ? LAB.t('app.no_disponible') : (v >= 0 ? '+' : '') + fmt(v, 1) + ' %');
       const band = C.powerDiffBandPct != null ? C.powerDiffBandPct : 1, inBand = d != null && Math.abs(d) <= band;

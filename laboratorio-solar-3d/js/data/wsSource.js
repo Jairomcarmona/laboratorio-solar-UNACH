@@ -19,7 +19,7 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
   const OPERATE_ROLES = ['student', 'teacher', 'tech'];
 
   // ---------------------------------------------------------------- telemetria del contrato -> telemetria de la interfaz
-  const emptyCurve = () => ({ d: { IL: null, Io: null, a: null, Rs: null, Rsh: null }, voc: null, isc: null, vmp: null, imp: null, pmp: null, v: [], i: [], p: [] });
+  const emptyCurve = () => ({ d: { IL: null, Io: null, a: null, Rs: null, Rsh: null }, voc: null, isc: null, vmp: null, imp: null, pmp: null, v: [], i: [], p: [], shaded: false });
 
   function mapModule(m, fixed) {
     m = m || {};
@@ -28,7 +28,7 @@ const nan = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);   //
     const p = num(m.p);
     return {
       az: num(m.az) != null ? m.az : fixed ? fixed.az : NaN, tilt: num(m.tilt) != null ? m.tilt : fixed ? fixed.tilt : NaN,
-      poa: nan(poa), poaTrue: nan(poaTrue != null ? poaTrue : poa), beam: nan(m.beam), circ: NaN, aoi: NaN, shadeFrac: num(m.shadeFrac) || 0,
+      poa: nan(poa), poaTrue: nan(poaTrue != null ? poaTrue : poa), beam: nan(m.beam), circ: NaN, aoi: NaN, shadeFrac: num(m.shadeFrac) || 0, shadeSub: Array.isArray(m.shadeSub) ? m.shadeSub : [0, 0, 0], mpptLossW: num(m.mpptLossW) || 0,
       tcell: nan(m.tcell), tback: nan(m.tback), v: nan(m.v), i: nan(m.i), p: nan(p), wh: num(m.wh) || 0,
       voc: nan(c.voc), isc: nan(c.isc), vmp: nan(c.vmp), imp: nan(c.imp), pmp: nan(c.pmp),
       eff: poa != null && poa > 20 && p != null ? p / (poa * cfg.module.area) * 100 : 0,
