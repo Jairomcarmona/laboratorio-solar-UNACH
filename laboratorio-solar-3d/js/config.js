@@ -21,7 +21,7 @@
     // Criterios provisionales para dar por comparables dos corridas (H03); los fija el protocolo de cada practica
     compare: { startTolS: 120, durTolFrac: 0.05, durTolMinS: 30, minDurS: 60 },
     limits: { windMax: 25, cloudMax: 100 },          // rangos de las consignas del entorno (el motor y la interfaz leen los mismos)
-    views: ['general', 'moduleA', 'moduleB', 'station', 'load', 'cabinet', 'aerial'],
+    views: ['general', 'moduleA', 'moduleB', 'station', 'load', 'cabinet', 'aerial', 'building'],
     roles: ['visitor', 'student', 'teacher'],        // roles de demostracion admitidos por URL y por el acceso
 
     // UBICACION DEL SITIO: unico lugar de configuracion (posicion solar, hora local, reportes y etiquetas lo leen de aqui).

@@ -133,3 +133,14 @@ def test_encabezado_y_fila_csv_son_iguales_a_los_del_simulador(tmp_path):
     script.write_text(js.replace("process.stdout.write(LAB.core.runToCsv(run));", "process.stdout.write(JSON.stringify(cols));"))
     cols = json.loads(subprocess.run([node, str(script)], capture_output=True, text=True, check=True).stdout)
     assert VALUE_COLS == cols[4:]
+
+
+async def test_eventos_de_la_pasarela_se_guardan_sin_error(rec, caplog):
+    """event/gw es un tópico aparte del puente: el registrador debe consumirlo igual que a event (antes lanzaba AttributeError)."""
+    rig, app, repo = rec
+    ev = contract.event(1_700_000_000_000, "info", "pasarela", "gw.test", "evento propio de la pasarela", {})
+    n0 = repo.count(db.events)
+    await rig.bus.publish_msg(BANK, "event/gw", ev)
+    await settle(app)
+    assert repo.count(db.events) == n0 + 1
+    assert "AttributeError" not in caplog.text

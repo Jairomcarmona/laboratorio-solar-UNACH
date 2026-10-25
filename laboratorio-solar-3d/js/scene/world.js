@@ -106,19 +106,28 @@
       const zAB = (L.moduleA[2] + L.moduleB[2]) / 2;
       this.insets = { top: 0 };
       this.viewSpecs = {
-        general: { points: pts(...all), target: V3(gen.c.x, 1.4, zAB - 0.4), dir: norm([0.6, 5.8, 12.4]), fov: 42, margin: 1.08, get label() { return LAB.t('world.view_general'); } },
+        general: { points: pts(...all).concat(this.signPts()), target: V3(gen.c.x, 1.4, zAB - 0.4), dir: norm([0.6, 5.8, 12.4]), fov: 42, margin: 1.08, get label() { return LAB.t('world.view_general'); } },
         moduleA: { points: pts('moduleA'), target: c('moduleA', 0.75), dir: norm([-0.55, 0.28, 1]), fov: 42, margin: 1.12, get label() { return LAB.t('world.view_moduleA'); } },
         moduleB: { points: pts('moduleB'), target: c('moduleB', 1.8), dir: norm([-0.6, 0.32, 1]), fov: 42, margin: 1.1, get label() { return LAB.t('world.view_moduleB'); } },
         station: { points: pts('weather'), target: c('weather', 2.1), dir: norm([0.75, 0.2, 1]), fov: 42, margin: 1.1, get label() { return LAB.t('world.view_station'); } },
         load: { points: pts('load'), target: c('load', 0.9), dir: norm([-0.5, 0.3, 1]), fov: 42, margin: 1.35, get label() { return LAB.t('world.view_load'); } },
         cabinet: { points: pts('cabinet'), target: c('cabinet', 1.2), dir: norm([0.8, 0.2, 0.6]), fov: 42, margin: 1.3, get label() { return LAB.t('world.view_cabinet'); } },
         aerial: { points: pts(...all, 'cam1', 'cam2'), target: V3(gen.c.x, 0, gen.c.z), dir: norm([0.045, 1, 0.58]), fov: 42, margin: 1.12, get label() { return LAB.t('world.view_aerial'); } },
+        building: { points: [V3(-13, -13, 9), V3(13, -13, 9), V3(-13, 1, 9), V3(13, 1, 9)], target: V3(0, -5, 9), dir: norm([0.25, 0.12, 1]), fov: 42, margin: 1.08, get label() { return LAB.t('world.view_building'); } },
         // acercamientos desde "Abrir componente" de las camaras IP (no aparecen en la barra de vistas)
         camFocus1: { points: pts('cam1'), target: c('cam1', 2.9), dir: norm([0.55, 0.12, 1]), fov: 42, margin: 1.25, get label() { return LAB.t('world.view_camFocus1'); } },
         camFocus2: { points: pts('cam2'), target: c('cam2', 2.9), dir: norm([-0.55, 0.12, 1]), fov: 42, margin: 1.25, get label() { return LAB.t('world.view_camFocus2'); } },
         front: { points: pts('moduleA', 'moduleB', 'load', 'cabinet'), target: V3(gen.c.x, 1.3, zAB), dir: norm([0, 0.1, 1]), fov: 40, margin: 1.1, get label() { return LAB.t('world.view_front'); } },
       };
       this.views = this.viewSpecs;
+    }
+
+    /** Esquinas del letrero institucional de la fachada: la vista general las incluye para que el edificio se reconozca */
+    signPts() {
+      const sg = this.env.sign; if (!sg) return [];
+      const b = new THREE.Box3().setFromObject(sg), mx = b.max, mn = b.min;
+      const y = mn.y + (mx.y - mn.y) * 0.8;       // basta con ver la parte alta del letrero: no empequeñece el banco
+      return [V3(mn.x * 0.4, y, mx.z), V3(mx.x * 0.4, y, mx.z)];
     }
 
     /** Posicion, punto de mira y campo de vision de una vista para un area util de relacion de aspecto `aspect` */

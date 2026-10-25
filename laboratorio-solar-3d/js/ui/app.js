@@ -11,7 +11,7 @@
   const SENSOR_TXT = () => ({ TRACK: LAB.t('app.sensor_enganchado'), NO_SIGNAL: LAB.t('app.sensor_sin_senal_nube'), ACQUIRE: LAB.t('app.sensor_adquiriendo_sol'), NIGHT: LAB.t('app.noche_estacionado') });
   const PART_VIEW = { moduleA: 'moduleA', irrA: 'moduleA', dcA: 'moduleA', moduleB: 'moduleB', irrB: 'moduleB', azAxis: 'moduleB', tiltAxis: 'moduleB', dcB: 'moduleB',
     pyr: 'station', anemo: 'station', shield: 'station', rain: 'station', load: 'load', cabinet: 'cabinet', estop: 'cabinet', cam1: 'camFocus1', cam2: 'camFocus2' };
-  const VIEW_BTNS = () => [['general', LAB.t('app.vista_general')], ['moduleA', 'A'], ['moduleB', 'B'], ['station', LAB.t('app.estacion')], ['load', LAB.t('app.carga')], ['cabinet', LAB.t('app.gabinete')], ['aerial', LAB.t('app.aerea')]];
+  const VIEW_BTNS = () => [['general', LAB.t('app.vista_general')], ['moduleA', 'A'], ['moduleB', 'B'], ['station', LAB.t('app.estacion')], ['load', LAB.t('app.carga')], ['cabinet', LAB.t('app.gabinete')], ['aerial', LAB.t('app.aerea')], ['building', LAB.t('app.edificio')]];
 
   const ui = LAB.ui;
   const store = LAB.core.store;

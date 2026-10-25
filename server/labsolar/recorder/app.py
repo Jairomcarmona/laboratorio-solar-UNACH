@@ -94,6 +94,10 @@ class RecorderApp:
         self.stats["events"] += 1
         await asyncio.to_thread(self.repo.insert_event, self.bank, e)
 
+    async def _on_event_gw(self, e: dict) -> None:
+        """Eventos propios de la pasarela (tópico event/gw): se guardan igual que los del puente; el tópico aparte solo evita que se suplanten."""
+        await self._on_event(e)
+
     async def _on_cmd_req(self, req: dict) -> None:
         self.pending_req[req["id"]] = req
         if len(self.pending_req) > 500:

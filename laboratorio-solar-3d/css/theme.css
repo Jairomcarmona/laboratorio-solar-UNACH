@@ -6,6 +6,8 @@
  *
  * Jerarquía de botones:  .btn.accent = acción principal (una por zona) · .btn = secundaria · .btn.quiet / .chips button / .tbtn = terciaria
  *                        .btn.danger = acción que detiene o es irreversible · estado activo = relleno + barra inferior (no solo color).
+ * Tema oscuro «Noche UNACH»: fondos en azul marino institucional (no negro neutro), dorado solar #f2b134 como segundo color de la
+ * marca (marcas de panel, estado activo, línea del encabezado y del reloj) y azul UNACH aclarado para la acción principal.
  * Temas: oscuro (por defecto, la escena 3D es nocturna/neutra) y claro; se elige con el botón de la barra superior,
  * con ?theme=light|dark o con LAB.theme.set(). */
 
@@ -139,6 +141,87 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px co
 :root[data-theme="light"] #topbar::after { opacity: 1; }
 :root[data-theme="light"] .led.off { background: #8b9bb2; }
 :root[data-theme="light"] .ferr { color: var(--bad); }
+
+/* =====================================================================================================
+   TEMA OSCURO «NOCHE UNACH». Solo aplica cuando data-theme != light; el tema claro no cambia.
+   Jerarquía visual: marino profundo (fondo) < marino medio (paneles) < azul de acento (selección) < dorado (marca y estado activo).
+   ===================================================================================================== */
+:root:not([data-theme="light"]) {
+  --gold: #f2b134;
+  --gold-soft: #ffd98a;
+  --bg: #04122a;
+  --glass: rgba(8, 30, 66, .88);
+  --glass-2: rgba(22, 56, 108, .62);
+  --line: rgba(120, 170, 245, .22);
+  --line-2: rgba(130, 180, 255, .42);
+  --tx: #edf3fc;
+  --tx-2: #b4c7e6;
+  --tx-3: #93abd0;
+  --accent: #4f9bff;
+  --brand: #2f74e0;
+  --brand-hi: #7db4ff;
+  --ring: #ffd98a;
+  --surface-0: rgba(2, 14, 36, .55);
+  --surface-1: rgba(120, 170, 245, .09);
+  --bar-line: linear-gradient(90deg, var(--gold), #3a82ee 38%, var(--brand-hi) 70%, transparent);
+}
+html:not([data-theme="light"]), html:not([data-theme="light"]) body { background: radial-gradient(120% 90% at 50% 0%, #0b2a5a 0%, #061a3a 45%, #03102a 100%) fixed; }
+:root:not([data-theme="light"]) .glass { background: linear-gradient(180deg, rgba(14, 42, 88, .9), rgba(7, 26, 58, .9)); border-color: var(--line); box-shadow: 0 10px 34px rgba(0, 8, 24, .5), inset 0 1px 0 rgba(160, 200, 255, .1); }
+:root:not([data-theme="light"]) #practiceGuide.glass, :root:not([data-theme="light"]) #infocard.glass, :root:not([data-theme="light"]) #logpanel.glass, :root:not([data-theme="light"]) #viewbar.glass { background: rgba(6, 22, 50, .95); }
+:root:not([data-theme="light"]) #stagecell { border-color: var(--line-2); background: #02091a; box-shadow: 0 0 0 1px rgba(242, 177, 52, .12), 0 12px 40px rgba(0, 8, 24, .55); }
+
+/* encabezado: banda marino con la línea dorada→azul y el nombre en grande */
+:root:not([data-theme="light"]) #topbar { background: linear-gradient(90deg, rgba(0, 46, 99, .96), rgba(8, 30, 66, .92) 55%, rgba(8, 30, 66, .88)); border-color: var(--line-2); }
+:root:not([data-theme="light"]) #topbar::after { height: 3px; bottom: -1px; opacity: 1; }
+:root:not([data-theme="light"]) .brand b { font-size: 15px; font-weight: 800; letter-spacing: .01em; color: #fff; }
+:root:not([data-theme="light"]) .brand span { color: var(--gold-soft); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 10.5px; }
+:root:not([data-theme="light"]) .clock b { color: #fff; }
+:root:not([data-theme="light"]) .simbadge { border-color: rgba(242, 177, 52, .6); background: rgba(242, 177, 52, .12); color: var(--gold-soft); }
+
+/* paneles: título con marca dorada y banda propia */
+:root:not([data-theme="light"]) .panel h3 { background: linear-gradient(90deg, rgba(0, 62, 147, .55), rgba(0, 62, 147, 0) 80%); color: #fff; border-bottom-color: var(--line-2); border-radius: 13px 13px 0 0; }
+:root:not([data-theme="light"]) .panel h3::before { width: 4px; background: linear-gradient(180deg, var(--gold), #c98a12); }
+:root:not([data-theme="light"]) .panel.folded h3 { border-radius: 13px; }
+:root:not([data-theme="light"]) .lbl, :root:not([data-theme="light"]) label.lbl { color: var(--gold-soft); opacity: .9; }
+
+/* tarjetas de datos: azul más profundo que el panel para que el valor destaque */
+:root:not([data-theme="light"]) .stat > div, :root:not([data-theme="light"]) .mod, :root:not([data-theme="light"]) .env > div,
+:root:not([data-theme="light"]) #infocard dl, :root:not([data-theme="light"]) .steps li, :root:not([data-theme="light"]) .acq,
+:root:not([data-theme="light"]) .gains .gain, :root:not([data-theme="light"]) .pcard, :root:not([data-theme="light"]) .role { background: var(--surface-0); border-color: var(--line); }
+:root:not([data-theme="light"]) .stat b, :root:not([data-theme="light"]) .mod .big b { color: #fff; }
+:root:not([data-theme="light"]) .mod { border-top-width: 3px; }
+:root:not([data-theme="light"]) input[type=date], :root:not([data-theme="light"]) input[type=text], :root:not([data-theme="light"]) .numrow input { background: rgba(2, 14, 36, .7); border-color: var(--line-2); }
+
+/* botones: principal = azul UNACH con base dorada; secundarios = vidrio azul; activo = relleno azul + barra dorada */
+:root:not([data-theme="light"]) .btn { background: var(--glass-2); border-color: var(--line-2); }
+:root:not([data-theme="light"]) .btn:hover:not(:disabled) { background: rgba(47, 116, 224, .38); border-color: var(--brand-hi); }
+:root:not([data-theme="light"]) .btn.accent { background: linear-gradient(180deg, #2f74e0, #0b4aa8); border-color: var(--brand-hi); box-shadow: inset 0 -3px 0 var(--gold), 0 2px 10px rgba(47, 116, 224, .35); }
+:root:not([data-theme="light"]) .btn.accent:hover:not(:disabled) { background: linear-gradient(180deg, #3d84f0, #0d55bf); }
+:root:not([data-theme="light"]) .btn.on, :root:not([data-theme="light"]) .seg button.on, :root:not([data-theme="light"]) .chips button.on, :root:not([data-theme="light"]) .tbtn.on {
+  background: linear-gradient(180deg, rgba(47, 116, 224, .55), rgba(0, 62, 147, .55)); border-color: var(--brand-hi); box-shadow: inset 0 -3px 0 var(--gold); color: #fff; }
+:root:not([data-theme="light"]) .seg { background: rgba(2, 14, 36, .55); border-color: var(--line-2); }
+:root:not([data-theme="light"]) .chips button { background: var(--surface-1); }
+:root:not([data-theme="light"]) .tabs { border-bottom-color: var(--line-2); }
+:root:not([data-theme="light"]) .tabs button.on { color: #fff; border-bottom: 3px solid var(--gold); }
+:root:not([data-theme="light"]) #viewtabs button[aria-selected="true"] { background: linear-gradient(180deg, rgba(47, 116, 224, .55), rgba(0, 62, 147, .55)); border-color: var(--brand-hi); box-shadow: inset 0 -3px 0 var(--gold); }
+:root:not([data-theme="light"]) .btn em { background: var(--gold); color: #1a1200; }
+
+/* deslizadores y reloj solar */
+:root:not([data-theme="light"]) input[type=range] { background: rgba(130, 180, 255, .22); }
+:root:not([data-theme="light"]) input[type=range]::-webkit-slider-thumb { border-color: var(--gold); background: #fff; }
+:root:not([data-theme="light"]) input[type=range]::-moz-range-thumb { border-color: var(--gold); background: #fff; }
+:root:not([data-theme="light"]) .solarclock input { background: var(--daygrad, linear-gradient(90deg, #031a40, #f2b134 50%, #031a40)); }
+
+/* etiquetas 3D y toasts en marino */
+:root:not([data-theme="light"]) .tag { background: rgba(4, 22, 52, .86); border-color: rgba(125, 180, 255, .6); }
+:root:not([data-theme="light"]) .tag:hover, :root:not([data-theme="light"]) .tag.active { background: rgba(0, 62, 147, .92); border-color: var(--gold); }
+:root:not([data-theme="light"]) .tag.active { box-shadow: 0 0 0 2px var(--gold); }
+:root:not([data-theme="light"]) .toast { background: rgba(4, 22, 52, .96); border-left-color: var(--gold); }
+:root:not([data-theme="light"]) .modal { background: radial-gradient(ellipse at center, rgba(2, 16, 40, .6), rgba(1, 8, 22, .9)); }
+:root:not([data-theme="light"]) .sep::after { background: rgba(130, 180, 255, .4); }
+:root:not([data-theme="light"]) .sep:hover::after, :root:not([data-theme="light"]) .sep.drag::after { background: var(--gold); }
+:root:not([data-theme="light"]) .col { scrollbar-color: rgba(130, 180, 255, .4) transparent; }
+:root:not([data-theme="light"]) .helpcard h4, :root:not([data-theme="light"]) .kind { color: var(--gold-soft); }
 
 /* ---------- accesibilidad ---------- */
 @media (forced-colors: active) {

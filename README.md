@@ -1,6 +1,6 @@
 # Laboratorio Remoto Solar UNACH
 
-Gemelo digital y laboratorio remoto de un banco fotovoltaico (módulo fijo A y módulo B con seguidor de dos ejes) de la Facultad de Ciencias en Física y Matemáticas, UNACH. EU-COLMEV · WP3.
+Gemelo digital y laboratorio remoto de un banco fotovoltaico (módulo fijo A y módulo B con seguidor de dos ejes) de la Facultad de Ciencias en Física y Matemáticas, UNACH. EU-COLMEV.
 
 El **mismo navegador** puede mostrar cuatro fuentes de datos: el simulador local (sin red), el banco real (a través del servidor), el gemelo (modelo con el ambiente medido) y la reproducción de una corrida registrada.
 

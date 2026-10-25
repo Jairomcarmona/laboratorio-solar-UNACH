@@ -112,4 +112,16 @@ const PV = LAB.sim.pv, S = LAB.sim.solar, cfg = LAB.config;
   t.ok('banco real no admite sim.*, scenario.apply, safety.reset ni acq.discard', ['sim.cloud', 'scenario.apply', 'safety.reset', 'acq.discard'].every((x) => !LAB.core.cmdAdmits('real', x)) && LAB.core.cmdAdmits('real', 'safety.estop'));
   t.ok('replay solo admite replay.*', LAB.core.cmdAdmits('replay', 'replay.play') && !LAB.core.cmdAdmits('replay', 'tracker.target'));
 }
+
+// ---- Cielo cubierto (DNI = 0): el modulo mas inclinado recibe MENOS que uno casi horizontal (no es un defecto)
+{
+  const D = Math.PI / 180, e = 55 * D, a = 110 * D, sun = [Math.cos(e) * Math.sin(a), Math.sin(e), -Math.cos(e) * Math.cos(a)];
+  const nrm = (az, tl) => [Math.sin(tl * D) * Math.sin(az * D), Math.cos(tl * D), -Math.sin(tl * D) * Math.cos(az * D)];
+  const irr = { ghi: 208, dni: 0, dhi: 208 };
+  const A = S.poa(irr, sun, nrm(180, 17), 17), B = S.poa(irr, sun, nrm(143, 35), 35);
+  t.ok('nubosidad total: B (143°/35°) recibe 4–6 % menos que A (180°/17°)', B.total < A.total && Math.abs(B.total / A.total - 1) > 0.04 && Math.abs(B.total / A.total - 1) < 0.06, `${((B.total / A.total - 1) * 100).toFixed(2)} %`);
+  t.ok('nubosidad total: sin componente directa ni circunsolar', A.beam === 0 && A.circ === 0 && B.beam === 0 && B.circ === 0);
+  const iso = (tl) => Math.max(irr.dhi * (1 + Math.cos(tl * D)) / 2, 0);
+  t.ok('nubosidad total: la difusa de cielo sigue (1+cos β)/2 (la inclinación no depende de la posición del Sol)', Math.abs(A.raw.iso - iso(17)) < 1e-9 && Math.abs(B.raw.iso - iso(35)) < 1e-9);
+}
 t.done();
