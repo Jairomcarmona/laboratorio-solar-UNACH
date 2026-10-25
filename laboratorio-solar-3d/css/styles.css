@@ -565,3 +565,23 @@ body.src-replay #btnResetE, body.src-replay #btnResetRain, body.src-replay #btnC
 #gReal .chip { font-size: 12px; padding: 5px 10px; }
 #gReal .chip.ok { border-color: rgba(53, 208, 127, .5); } #gReal .chip.warn { border-color: rgba(255, 176, 32, .6); color: var(--solar); } #gReal .chip.bad { border-color: rgba(255, 77, 77, .6); color: var(--bad); }
 #gReal .hint { max-width: 360px; }
+
+/* ---------- punto 2: banda de incertidumbre de la diferencia B contra A (neutral dentro de ±1 %) ---------- */
+.gain.eq b { color: var(--tx-2); }
+
+/* ---------- estados del enlace con el banco: la insignia dice el origen verdadero ---------- */
+.simbadge[data-kind="unknown"] { color: #ffd48a; border-color: rgba(255, 176, 32, .8); background: rgba(255, 176, 32, .12); }
+.simbadge[data-kind="unknown"] i { background: #ffb020; box-shadow: 0 0 8px #ffb020; }
+.simbadge[data-link="lost"] { color: #ffb4b4; border-color: rgba(255, 77, 77, .75); background: rgba(255, 77, 77, .12); }
+.simbadge[data-link="lost"] i { background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; }
+
+/* ---------- modo Gemelo: Medido / Modelo / Diferencia y controles atenuados ---------- */
+.twinbox { margin: 0 0 10px; }
+.twinbox .twintbl caption { text-align: left; font: 600 11.5px var(--sans, inherit); color: var(--tx-2); padding: 0 0 4px; }
+.twinbox .twintbl th[scope=row] { text-align: left; color: var(--tx-1, inherit); }
+.twinbox td { white-space: nowrap; }
+.twinbox td.ok { color: var(--ok); } .twinbox td.bad { color: var(--bad); } .twinbox td.dim { color: var(--tx-3); }
+.twinwarn { margin: 0 0 6px; }
+.twinwarn.okmsg { background: rgba(53, 208, 127, .12); border-color: rgba(53, 208, 127, .5); color: var(--ok); }
+body.src-twin #left .panel { opacity: .6; filter: saturate(.7); }
+body.src-twin #left .panel button, body.src-twin #left .panel input { cursor: not-allowed; }

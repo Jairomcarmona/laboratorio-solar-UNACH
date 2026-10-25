@@ -23,6 +23,7 @@
     const aoiArc = mkArc(COL.arc), azArc = mkArc(COL.az);
     const tag = (txt, cls) => { const el = world.labels.add('aid-' + cls, group, V3(), txt, { cls: 'aid ' + cls }); return el; };
     const tAoi = tag('θ', 'aoi'), tAz = tag('Az', 'az'), tNormal = tag(LAB.t('aids.normal_del_panel'), 'nrm'), tRay = tag(LAB.t('aids.rayo_solar'), 'ray');
+    for (const t of [tAoi, tAz, tNormal, tRay]) world.labels.items.find((i) => i.el === t).obj.visible = false;   // nacen ocultas: el CSS2D no hereda la visibilidad del grupo y se apilaban en el origen
     const setText = (el, t) => { const s = el.querySelector('span'); if (s.textContent !== t) s.textContent = t; };
     const origin = V3(), tmp = V3(), base = V3();
     let want = false, shown = false;

@@ -59,8 +59,9 @@
     <button role="tab" data-view="practice" id="vtPractice" aria-controls="sidePractice" data-i18n="index.vtPractice.practica">Práctica</button>
   </nav>
   <aside id="left" class="col">
-      <div id="linkBanner" class="robanner linklost" role="status" hidden><b>⚠</b> <span data-i18n="index.linkBanner.enlace_con_el_banco">Enlace con el banco cortado (simulado). Lo que ves es el estado de la simulación local, no telemetría recibida del banco. Si el enlace sigue cortado, el watchdog llevará el seguidor a posición segura y bloqueará la operación.</span></div>
+      <div id="linkBanner" class="robanner linklost" role="status" hidden><b>⚠</b> <span id="linkTxt" data-i18n="index.linkBanner.enlace_con_el_banco">Enlace con el banco cortado (simulado). Lo que ves es el estado de la simulación local, no telemetría recibida del banco. Si el enlace sigue cortado, el watchdog llevará el seguidor a posición segura y bloqueará la operación.</span></div>
       <div id="roBanner" class="robanner" role="status" hidden><b>🔒</b> <span id="roTxt"></span></div>
+      <p class="robanner" id="twinCtlNote" role="status" hidden data-i18n="index.twinCtlNote.gemelo_solo_observacion">Modo Gemelo: solo observación. Los controles están atenuados porque aquí no se opera el banco; para operarlo usa «Banco real».</p>
       <section class="panel glass" id="pTracker">
         <h3><span data-i18n="index.pTracker.seguidor_modulo_b">Seguidor · Módulo B</span> <button class="fold" aria-label="Plegar" data-i18n-attr="aria-label:index.pTracker.plegar">–</button></h3>
         <div class="body">
@@ -170,6 +171,18 @@
       <section class="panel glass" id="pData">
         <h3><span data-i18n="index.pData.telemetria_en_vivo">Telemetría en vivo</span> <button class="fold" aria-label="Plegar" data-i18n-attr="aria-label:index.pData.plegar">–</button></h3>
         <div class="body">
+          <div class="twinbox" id="twinBox" hidden>
+            <div class="robanner twinwarn" id="twinWarn" role="status" hidden></div>
+            <table class="mini twintbl" aria-labelledby="twinCap">
+              <caption id="twinCap" data-i18n="index.twinbox.medido_modelo_diferencia">Banco medido contra modelo del gemelo</caption>
+              <thead><tr><th scope="col"></th><th scope="col" data-i18n="index.twinbox.medido">Medido</th><th scope="col" data-i18n="index.twinbox.modelo">Modelo</th><th scope="col" data-i18n="index.twinbox.diferencia">Diferencia</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">A</th><td id="twAm">—</td><td id="twAmod">—</td><td id="twAd">—</td></tr>
+                <tr><th scope="row">B</th><td id="twBm">—</td><td id="twBmod">—</td><td id="twBd">—</td></tr>
+              </tbody>
+            </table>
+            <p class="hint" id="twinUnc"></p>
+          </div>
           <div class="cmp">
             <div class="mod a" id="cardA">
               <header><b>A</b><span data-i18n="index.cardA.fijo_180_17">fijo · 180° / 17°</span></header>

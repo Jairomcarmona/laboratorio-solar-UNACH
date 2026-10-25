@@ -258,6 +258,9 @@
     twin: ['GEMELO', LAB.t('app.modelo_del_simulador_alimentado')],
     replay: [LAB.t('app.reproduccion'), LAB.t('app.corrida_registrada_en_solo')],
   });
+  const LINK_LBL = () => ({ connecting: LAB.t('app.link_connecting'), validating: LAB.t('app.link_validating'), connected: LAB.t('app.link_connected'), lost: LAB.t('app.link_lost') });
+  /** Estado del enlace con el banco para fuentes de red (ws, twin); '' en simulación local y reproducción */
+  const linkOf = (t) => (!source ? '' : source.kind === 'ws' ? (t.comms && t.comms.state) || '' : source.kind === 'twin' ? (t.twin && t.twin.link) || '' : '');
   function bindSource() {
     const sw = $('#sourceSwitch'); if (!sw) return;
     const served = /^https?:$/.test(location.protocol);
@@ -612,11 +615,51 @@
     });
   }
 
+  /** Gemelo: Medido, Modelo y Diferencia a la vista, aviso de validez e incertidumbre; controles atenuados por CSS (body.src-twin) */
+  function updateTwin() {
+    const on = source && source.kind === 'twin';
+    $('#twinBox').hidden = !on; $('#twinCtlNote').hidden = !on;
+    if (!on) return;
+    const R = tel.residual, tw = tel.twin || { valid: false, reasons: ['link'] };
+    const w = (v) => (Number.isFinite(v) ? fmt(v, 0) + ' W' : '—');
+    for (const k of ['A', 'B']) {
+      const r = R && R[k];
+      setText('tw' + k + 'm', r ? w(r.real) : '—'); setText('tw' + k + 'mod', r ? w(r.model) : '—');
+      const el = document.getElementById('tw' + k + 'd');
+      if (!r) { setText('tw' + k + 'd', '—'); el.className = ''; continue; }
+      const sg = (v, d) => (v >= 0 ? '+' : '') + fmt(v, d);
+      setText('tw' + k + 'd', `${sg(r.diff, 0)} W` + (r.pct != null ? ` (${sg(r.pct, 1)} %)` : '') + (r.uncertaintyPct != null ? ` · ${r.within ? LAB.t('app.twin_dentro', { u: fmt(r.uncertaintyPct, 1) }) : LAB.t('app.twin_fuera', { u: fmt(r.uncertaintyPct, 1) })}` : ''));
+      el.className = !tw.valid ? 'dim' : r.within === false ? 'bad' : r.within ? 'ok' : '';
+    }
+    const wb = $('#twinWarn');
+    const WHY = { link: LAB.t('app.twin_why_link'), night: LAB.t('app.twin_why_night'), lowlight: LAB.t('app.twin_why_lowlight'), shade: LAB.t('app.twin_why_shade') };
+    const why = (tw.reasons || []).map((x) => WHY[x]).join(' ');
+    wb.hidden = false; wb.classList.toggle('okmsg', !!tw.valid);
+    setText('twinWarn', tw.valid ? LAB.t('app.twin_valido') : LAB.t('app.twin_no_valido', { why }));
+    const ua = R && R.A && R.A.uncertaintyPct, ub = R && R.B && R.B.uncertaintyPct;
+    setText('twinUnc', ua != null && ub != null ? LAB.t('app.twin_incertidumbre', { a: fmt(ua, 1), b: fmt(ub, 1) }) : LAB.t('app.twin_sin_incertidumbre'));
+  }
+  function updateLinkBanner(S) {
+    if (!isNet()) { $('#linkBanner').hidden = !S.commsCut; setText('linkTxt', LAB.t('index.linkBanner.enlace_con_el_banco')); return; }
+    const ls = linkOf(tel), ageS = Math.max(0, Math.round((Date.now() - (netSrc().lastRx || Date.now())) / 1000));
+    $('#linkBanner').hidden = ls === 'connected';
+    setText('linkTxt', ls === 'lost' ? LAB.t('app.banner_enlace_perdido', { s: ageS }) : LAB.t('app.banner_sin_datos'));
+  }
+
   // ====================================================================== actualizacion
   let badgeKey = '';
   ui.update = function (t, dt, now) {
     tel = t;
-    if (t.source !== badgeKey) { badgeKey = t.source; const B = BADGE(), b = B[t.source] || B.sim, el = $('#simBadge'); if (el) { el.lastChild.textContent = b[0]; el.title = b[1]; el.dataset.kind = t.source; } document.body.dataset.srcKind = t.source; }
+    const ls = linkOf(t), key = t.source + '|' + ls;
+    if (key !== badgeKey) {
+      badgeKey = key; const B = BADGE(), b = B[t.source] || B.sim, el = $('#simBadge'); let label = b[0], title = b[1], kind = t.source;
+      if (ls && ls !== 'connected') {      // el origen solo se afirma cuando ya llegaron datos válidos; nunca se muestra el estado local como si fuera del banco
+        const unknown = ls === 'connecting' || ls === 'validating';
+        label = (unknown ? LAB.t('app.badge_bench_unknown') : b[0]) + ' · ' + LINK_LBL()[ls]; title = unknown ? LAB.t('app.badge_bench_unknown_desc') : LAB.t('app.badge_lost_desc'); kind = unknown ? 'unknown' : t.source;
+      }
+      if (el) { el.lastChild.textContent = label; el.title = title; el.dataset.kind = kind; el.dataset.link = ls || ''; }
+      document.body.dataset.srcKind = t.source;
+    }
     if (ui.replayTick && t.replay) ui.replayTick(t.replay);
     if (!app) return;
     if (now - lastDom > 180) { lastDom = now; updateDom(); }
@@ -711,22 +754,26 @@
     const wmax = LAB.config.limits.windMax;
     $('#windBar').style.width = clamp(tel.env.wind / wmax * 100, 0, 100) + '%';
     $('#windThr').style.left = (LAB.config.safety.windStow / wmax * 100) + '%';
-    setText('btnComms', S.commsCut ? LAB.t('app.restablecer_enlace') : LAB.t('app.cortar_enlace')); $('#linkBanner').hidden = !S.commsCut;
+    setText('btnComms', S.commsCut ? LAB.t('app.restablecer_enlace') : LAB.t('app.cortar_enlace')); updateLinkBanner(S);
     $('#btnComms').classList.toggle('on', S.commsCut);
     $('#btnEstop').disabled = S.estop;
 
     // banco real: en lugar de los controles de simulación, hora real, operador y estado del enlace
-    $('#gReal').hidden = source.kind !== 'ws';
+    $('#gReal').hidden = !isNet();
     if (!$('#gReal').hidden) {
       const hhmm = `${pad2(Math.floor(lt.hours))}:${pad2(Math.floor(lt.hours * 60) % 60)}`;
       setText('rlClock', LAB.t('app.real_hora_real', { t: hhmm }));
       const ss = S.session, since = ss.active && ss.since ? LAB.localTime(ss.since) : null;
       setText('rlOperator', ss.active ? LAB.t('app.real_operador', { u: ss.user || '—', t: since ? `${pad2(Math.floor(since.hours))}:${pad2(Math.floor(since.hours * 60) % 60)}` : '—' }) : LAB.t('app.real_solo_lectura'));
-      const stale = tel.quality.includes('stale'), safe = S.state !== 'NORMAL';
-      setText('rlLink', stale ? LAB.t('app.real_datos_atrasados') : safe ? LAB.t('app.real_banco_en_seguro', { s: stateTxt[0] }) : LAB.t('app.real_enlace_ok', { ms: fmt(tel.comms.latency || 0, 0) }));
-      $('#rlLink').className = 'chip ' + (stale ? 'bad' : safe ? 'warn' : 'ok');
+      const ls = linkOf(tel), safe = S.state !== 'NORMAL', ns = netSrc(), ageS = Math.max(0, Math.round((Date.now() - (netSrc().lastRx || Date.now())) / 1000));
+      setText('rlLink', ls === 'connecting' ? LAB.t('app.real_conectando', { n: ns.attempts + 1 }) : ls === 'validating' ? LAB.t('app.real_validando')
+        : ls === 'lost' ? LAB.t('app.real_enlace_perdido', { s: ageS }) : safe ? LAB.t('app.real_banco_en_seguro', { s: stateTxt[0] }) : LAB.t('app.real_enlace_ok', { ms: fmt(tel.comms.latency || 0, 0) }));
+      $('#rlLink').className = 'chip ' + (ls === 'lost' ? 'bad' : ls !== 'connected' || safe ? 'warn' : 'ok');
+      $('#rlLink').dataset.link = ls;
       $('#rlOperator').className = 'chip ' + (ss.active ? 'ok' : '');
     }
+
+    updateTwin();
 
     // dock
     setText('btnPlay', tel.playing ? '❚❚' : '▶');
@@ -753,8 +800,10 @@
     }
     setText('bOrient', `${fmt(tel.B.az, 0)}° / ${fmt(tel.B.tilt, 0)}°`);
     { const C = tel.comparison, d = C.powerDiffPct, g = C.energyGainPct, sg = (v) => (v == null ? LAB.t('app.no_disponible') : (v >= 0 ? '+' : '') + fmt(v, 1) + ' %');
-      setText('diffTxt', sg(d)); setText('gainTxt', sg(g));
-      $('#diffBadge').classList.toggle('neg', d != null && d < 0); $('#diffBadge').title = d == null ? LAB.tm(C.powerNote) : LAB.t('app.diferencia_de_potencia_ahora');
+      const band = C.powerDiffBandPct != null ? C.powerDiffBandPct : 1, inBand = d != null && Math.abs(d) <= band;
+      setText('diffTxt', inBand ? '≈ ' + sg(d) : sg(d)); setText('gainTxt', sg(g));
+      $('#diffBadge').classList.toggle('neg', d != null && d < -band); $('#diffBadge').classList.toggle('eq', inBand);   // rojo solo fuera de la banda de incertidumbre
+      $('#diffBadge').title = d == null ? LAB.tm(C.powerNote) : inBand ? LAB.t('app.diff_en_banda', { b: band }) : LAB.t('app.diferencia_de_potencia_ahora');
       $('#gainBadge').classList.toggle('neg', g != null && g < 0); $('#gainBadge').title = g == null ? LAB.tm(C.energyNote) : LAB.t('app.ganancia_de_energia_desde', { localStr: LAB.core.localStr(tel.energy.startedSimMs) }); }
     setText('eGhi', fmt(tel.env.ghi, 0)); setText('eDni', fmt(tel.env.dni, 0)); setText('eTa', fmt(tel.env.ta, 1)); setText('eRh', fmt(tel.env.rh, 0));
     setText('eWind', fmt(tel.env.wind, 1)); setText('eRain', fmt(tel.env.rainMm, 1));
