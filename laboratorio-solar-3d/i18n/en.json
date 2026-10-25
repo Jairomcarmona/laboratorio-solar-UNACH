@@ -1875,5 +1875,7 @@
  "real.cam_sin_flujo": "No video stream. The camera is not connected or not set up yet.",
  "real.cam_reintento": "Retrying every {s} s.",
  "real.cam_sin_soporte": "This browser cannot play HLS video.",
- "real.mover_en_curso": "Moving…"
+ "real.mover_en_curso": "Moving…",
+ "real.vista_3d": "3D view",
+ "real.vista_principal": "Main view"
 }

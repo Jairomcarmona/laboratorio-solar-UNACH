@@ -1875,5 +1875,7 @@
  "real.cam_sin_flujo": "Sin flujo de video. La cámara no está conectada o aún no se configura.",
  "real.cam_reintento": "Se reintenta cada {s} s.",
  "real.cam_sin_soporte": "Este navegador no reproduce video HLS.",
- "real.mover_en_curso": "Moviéndose…"
+ "real.mover_en_curso": "Moviéndose…",
+ "real.vista_3d": "Vista 3D",
+ "real.vista_principal": "Vista principal"
 }

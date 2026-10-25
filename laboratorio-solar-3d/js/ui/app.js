@@ -352,8 +352,17 @@
       const r = send({ type: 'tracker.target', az: consoleState.az, tilt: consoleState.tilt });
       if (r.ok) { const T = tel.tracker; consoleState.dirty = false; consoleState.last = consoleState.az + '/' + consoleState.tilt; consoleState.maxDiff = Math.max(Math.abs(T.az - consoleState.az) || 0, Math.abs(T.tilt - consoleState.tilt) || 0); ui.announce(LAB.t('real.orden_enviada', { az: consoleState.az, tilt: consoleState.tilt })); updateConsole(); }
     });
-    ui.camviewer.open('cam2');
-    $('#btnCam1').hidden = true; $('#btnCam2').hidden = true; $('#btnPip').hidden = true; $('#btnIpCam').hidden = false;
+    $('#btnCam1').hidden = true; $('#btnCam2').hidden = true; $('#btnPip').hidden = true;
+    $('#realViews').hidden = false;
+    $('#realViews').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) realView(b.dataset.rv); });
+    realView('cam2');                       // la cámara del seguidor es la vista principal: confirma que el panel de verdad se movió
+  }
+  /** Vista principal del banco real: cámara 1, cámara 2 o escena 3D (con la cámara en miniatura). */
+  function realView(v) {
+    $$('#realViews button').forEach((b) => { const on = b.dataset.rv === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    document.body.classList.toggle('camfull', v !== '3d');
+    $('#camPanel').classList.toggle('full', v !== '3d');
+    ui.camviewer.open(v === '3d' ? undefined : v);
   }
   function updateConsole() {
     if (!isReal() || !tel) return;

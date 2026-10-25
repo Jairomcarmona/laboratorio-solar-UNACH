@@ -31,3 +31,47 @@ body.src-ws #pTracker .slider, body.src-ws #trNum { display: none; }       /* el
 .cammove { right: 8px; background: var(--col-b); color: #1a1000; }
 .camlive[hidden], .cammove[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { .movebar i { transition: none; } }
+
+/* ---- vista principal: cámara 1, cámara 2 o escena 3D (esta con la cámara en miniatura) ---- */
+#realViews[hidden] { display: none; }
+body.src-ws #btnIpCam { display: none !important; }
+body.camfull #viewSeg, body.camfull #tools, body.camfull #viewbar > .sep { display: none; }
+#camPanel.full { inset: 0; width: auto; padding: 0; border-radius: 0; border: 0; background: #000; z-index: 0; box-shadow: none; display: flex; }
+#camPanel.full header { display: none; }
+#camPanel.full .camview { flex: 1; aspect-ratio: auto; border-radius: 0; border: 0; }
+#camPanel.full .camview video { object-fit: contain; }
+#camPanel.full.hot .camview { box-shadow: inset 0 0 0 4px var(--col-b), inset 0 0 40px rgba(255, 176, 32, .35); }
+#camPanel.full .camstatus { font-size: 16px; }
+#camPanel.full .camlive, #camPanel.full .cammove { top: auto; bottom: 12px; font-size: 12px; padding: 4px 10px; }
+#camPanel.full .camlive { left: 12px; } #camPanel.full .cammove { right: 12px; }
+
+/* ---- pantalla ancha: escena/cámara arriba, consola de operación abajo, datos a la derecha ---- */
+body.src-ws[data-layout="wide"] #app { grid-template-columns: minmax(0, 1fr) 10px var(--wR); grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "top top top" "stage sepR right" "left sepR right" "dock dock dock"; }
+body.src-ws[data-layout="wide"] #sepL { display: none; }
+body.src-ws[data-layout="wide"] #left { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: start; align-content: start;
+  margin-top: var(--gap); max-height: min(310px, 40vh); overflow-y: auto; }
+body.src-ws[data-layout="wide"] #left > .robanner, body.src-ws[data-layout="wide"] #left > p { grid-column: 1 / -1; margin: 0; }
+body.src-ws[data-layout="wide"] #pTracker .body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 6px 14px; align-items: start; }
+body.src-ws[data-layout="wide"] #pTracker .body > * { grid-column: 1; }
+body.src-ws[data-layout="wide"] #pTracker .body > #trConsole { grid-column: 2; grid-row: 1 / span 6; margin: 0; }
+body.src-ws[data-layout="wide"] #pTracker .body > #trPresets, body.src-ws[data-layout="wide"] #pTracker .body > #trHint { grid-column: 1 / -1; }
+body.src-ws[data-layout="wide"] #pTracker .stat b { font-size: 24px; }
+body.src-ws[data-layout="wide"] #sidePractice { grid-area: left; }
+body.src-ws[data-layout="wide"] #left { max-height: min(330px, 42vh); }
+body.src-ws[data-layout="wide"] #pTracker .body > #trHint { display: none; }
+body.src-ws[data-layout="wide"] #pTracker .stat > div { min-width: 0; padding: 6px 8px; }
+body.src-ws[data-layout="wide"] #pTracker .stat b { font-size: 20px; }
+body.src-ws[data-layout="wide"] #pTracker .stat small { font-size: 10.5px; }
+body.src-ws[data-layout="wide"] #pTracker .seg button { padding: 0 6px; font-size: 12px; }
+body.src-ws[data-layout="wide"] #topbar { gap: 8px; }
+body.src-ws[data-layout="wide"] #btnFull, body.src-ws[data-layout="wide"] #btnHelp { display: none; }
+body.src-ws[data-layout="wide"] #left { grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr) minmax(0, 1fr); }
+body.src-ws[data-layout="wide"] #pTracker .body { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+body.src-ws[data-layout="wide"] #pTracker .seg button { padding: 0 3px; font-size: 11.5px; min-width: 0; white-space: nowrap; }
+body.src-ws[data-layout="wide"] #pTracker .movetxt { font-size: 11.5px; line-height: 1.3; }
+body.src-ws[data-layout="wide"] #pSafety .row3 { grid-template-columns: 1fr; }
+body.src-ws[data-layout="wide"] #pTracker .stat { grid-template-columns: 1fr 1fr; }
+body.src-ws[data-layout="wide"] #pTracker .seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+body.src-ws[data-layout="wide"] #pTracker .seg button { overflow: hidden; text-overflow: ellipsis; }
+body.src-ws[data-layout="wide"] #pSafety .row3 button { white-space: normal; min-height: 34px; }
