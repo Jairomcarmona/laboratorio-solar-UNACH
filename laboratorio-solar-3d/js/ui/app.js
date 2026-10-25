@@ -357,6 +357,21 @@
     $('#realViews').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) realView(b.dataset.rv); });
     realView('cam2');                       // la cámara del seguidor es la vista principal: confirma que el panel de verdad se movió
   }
+  /** Pantalla ancha: el panel 3D de control y los controles numéricos van en una tarjeta junto al video; en las demás, se quedan en el panel del seguidor. */
+  const consoleOrigin = [];
+  let pose = null;
+  function placeConsole() {
+    const wide = document.body.dataset.layout === 'wide', card = $('#ctlCard'), slot = $('#ctlSlot');
+    if (wide && card.hidden) {
+      const nodes = [$('#pTracker .stat'), $('#trConsole'), $('#trPresets')];
+      nodes.forEach((n) => { consoleOrigin.push({ n, parent: n.parentNode, next: n.nextSibling }); slot.appendChild(n); });
+      card.hidden = false;
+      if (!pose) pose = ui.pose3d.create($('#poseHost'), { onTarget: (az, tilt) => consoleStage(az, tilt) });
+    } else if (!wide && !card.hidden) {
+      while (consoleOrigin.length) { const o = consoleOrigin.pop(); o.parent.insertBefore(o.n, o.next); }
+      card.hidden = true;
+    }
+  }
   /** Vista principal del banco real: cámara 1, cámara 2 o escena 3D (con la cámara en miniatura). */
   function realView(v) {
     $$('#realViews button').forEach((b) => { const on = b.dataset.rv === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
@@ -366,6 +381,7 @@
   }
   function updateConsole() {
     if (!isReal() || !tel) return;
+    placeConsole();
     const T = tel.tracker, hasData = Number.isFinite(T.az) && Number.isFinite(T.tilt) && !tel.quality.includes('stale');
     if (!consoleState.dirty) { consoleState.az = Math.round(T.targetAz); consoleState.tilt = Math.round(T.targetTilt); }
     const az = consoleState.az, tilt = consoleState.tilt;
@@ -386,6 +402,7 @@
     bar.className = 'movebar ' + (!hasData ? 'off' : pct < 100 ? 'run' : 'done');
     setText('moveTxt', !hasData ? LAB.t('real.sin_datos') : pct < 100 ? LAB.t('real.moviendo', { n: fmt(diff, 0), pct }) : LAB.t('real.en_posicion', { az: Math.round(T.targetAz), tilt: Math.round(T.targetTilt) }));
     ui.camviewer.setMoving(hasData && pct < 100);
+    if (pose) { pose.setCurrent(hasData ? T.az : NaN, hasData ? T.tilt : NaN); pose.setTarget(az, tilt); pose.setEnabled(can); }
   }
 
   // --------------------------------------------------------------------- carga

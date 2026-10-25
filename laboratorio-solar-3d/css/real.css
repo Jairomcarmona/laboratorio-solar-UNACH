@@ -75,3 +75,25 @@ body.src-ws[data-layout="wide"] #pTracker .stat { grid-template-columns: 1fr 1fr
 body.src-ws[data-layout="wide"] #pTracker .seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 body.src-ws[data-layout="wide"] #pTracker .seg button { overflow: hidden; text-overflow: ellipsis; }
 body.src-ws[data-layout="wide"] #pSafety .row3 button { white-space: normal; min-height: 34px; }
+
+/* ---- tarjeta de control con panel 3D (pantalla ancha) ---- */
+body.src-ws #btnMeter { display: none; }            /* el multímetro virtual mide el modelo del simulador, no el banco físico */
+#ctlCard[hidden] { display: none; }
+#ctlCard { grid-area: ctl; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; min-height: 0; overflow-y: auto; border-radius: 14px; }
+#ctlCard h3 { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--tx-2); }
+#poseHost { position: relative; flex: 0 0 auto; height: clamp(150px, 26vh, 260px); border-radius: 10px; border: 1px solid var(--line-2); overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 0, #14336a 0, #07142b 75%); }
+#poseHost canvas { width: 100%; height: 100%; display: block; }
+#ctlCard .hint { margin: 0; font-size: 11px; color: var(--tx-3); }
+#ctlSlot { display: flex; flex-direction: column; gap: 8px; }
+#ctlSlot .console { margin: 0; }
+body.src-ws[data-layout="wide"] #app { grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 380px) 10px var(--wR);
+  grid-template-areas: "top top top top" "stage ctl sepR right" "left left sepR right" "dock dock dock dock"; }
+body.src-ws[data-layout="wide"] #left { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: min(250px, 32vh); }
+body.src-ws[data-layout="wide"] #pTracker .body { display: block; }
+body.src-ws[data-layout="wide"] #app { grid-template-areas: "top top top top" "stage ctl sepR right" "left ctl sepR right" "dock dock dock dock"; }
+body.src-ws[data-layout="wide"] #poseHost { height: clamp(150px, 28vh, 300px); }
+body.src-ws[data-layout="wide"] #poseHost { height: clamp(140px, 24vh, 280px); }
+body.src-ws[data-layout="wide"] #ctlSlot .stepper label { margin-bottom: 2px; }
+body.src-ws[data-layout="wide"] #ctlCard { gap: 6px; }
+body.src-ws[data-layout="wide"] #pTracker .lbl { display: block; margin: 8px 0 3px; }
