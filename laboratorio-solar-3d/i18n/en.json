@@ -1879,5 +1879,6 @@
  "real.vista_principal": "Main view",
  "real.control_seguidor": "Tracker control",
  "real.pose_aria": "3D tracker panel: drag to set the target",
- "real.pose_hint": "Drag the panel to set the target; it is sent with “Move”."
+ "real.pose_hint": "Drag the panel to set the target; it is sent with “Move”.",
+ "real.ficha_sensor": "Open the sensor card"
 }

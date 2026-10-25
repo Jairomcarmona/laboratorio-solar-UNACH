@@ -126,3 +126,6 @@ body.src-ws[data-layout="wide"] #left > .panel > h3 { white-space: nowrap; }
 body.src-ws[data-layout="wide"] #left { flex-direction: row; z-index: 20; }
 body.src-ws[data-layout="wide"] #left > .panel.pop > .body { width: 400px; max-width: 60vw; }
 body.src-ws[data-layout="wide"] #left > #pSafety.pop > .body { left: auto; right: 0; width: 360px; }
+.sensortile { cursor: pointer; }
+.sensortile:hover, .sensortile:focus-visible { border-color: var(--brand-hi); }
+body.src-ws #icFocus { display: none; }

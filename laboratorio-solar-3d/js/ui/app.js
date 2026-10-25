@@ -354,6 +354,11 @@
     });
     $('#btnCam1').hidden = true; $('#btnCam2').hidden = true; $('#btnPip').hidden = true;
     $('#realViews').hidden = false;
+    [['eGhi', 'pyr'], ['eWind', 'anemo']].forEach(([id, part]) => {           // sin escena 3D, las fichas del piranómetro y el anemómetro se abren desde sus datos
+      const tile = $('#' + id).parentNode; tile.classList.add('sensortile'); tile.tabIndex = 0; tile.setAttribute('role', 'button'); tile.title = LAB.t('real.ficha_sensor');
+      const open = () => ui.showPart(part);
+      tile.addEventListener('click', open); tile.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    });
     $('#btnEstopCard').addEventListener('click', () => $('#btnEstop').click());
     $$('#left > .panel > h3').forEach((h) => h.addEventListener('click', (e) => {          // pantalla ancha: carga, seguridad y modos se abren como ventana sobre el video
       if (document.body.dataset.layout !== 'wide' || e.target.closest('.fold')) return;

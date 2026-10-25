@@ -1879,5 +1879,6 @@
  "real.vista_principal": "Vista principal",
  "real.control_seguidor": "Control del seguidor",
  "real.pose_aria": "Panel 3D del seguidor: arrastra para preparar el objetivo",
- "real.pose_hint": "Arrastra el panel para preparar el objetivo; se envía con «Mover»."
+ "real.pose_hint": "Arrastra el panel para preparar el objetivo; se envía con «Mover».",
+ "real.ficha_sensor": "Ver la ficha del sensor"
 }

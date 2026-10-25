@@ -56,6 +56,12 @@ const t = new T('Banco real: consola y cámaras IP');
   t.ok('«Cámara 1» (la usa la guía de la práctica 1) abre el video IP de la cámara 1', await page.evaluate(() => document.querySelector('#realViews [data-rv="cam1"]').classList.contains('on') && document.querySelector('#camTabs [data-cam="cam1"]').classList.contains('on')));
   await page.evaluate(() => document.getElementById('btnCam2').click());
 
+  await page.click('#eGhi', { force: true }); await page.waitForTimeout(300);
+  const fp = await page.evaluate(() => ({ vis: !document.getElementById('infocard').hidden, title: document.getElementById('icTitle').textContent }));
+  t.ok('GHI abre la ficha del piranómetro sin escena 3D', fp.vis && /iran/i.test(fp.title), JSON.stringify(fp));
+  await page.click('#eWind', { force: true }); await page.waitForTimeout(300);
+  t.ok('Viento abre la ficha del anemómetro', await page.evaluate(() => /anem/i.test(document.getElementById('icTitle').textContent)));
+
   if (haveHls) {
     camOn = true;
     await page.waitForFunction(() => document.getElementById('camView').dataset.state === 'live', null, { timeout: 30000 });
