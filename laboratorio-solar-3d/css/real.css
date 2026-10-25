@@ -1,0 +1,33 @@
+/* Banco real (source=ws): consola de operación junto a la escena 3D y visor de cámaras IP. Hereda la cromía de theme.css. */
+.console[hidden] { display: none; }
+body.src-ws #pTracker .slider, body.src-ws #trNum { display: none; }       /* el objetivo se prepara con pasos y presets y se envía con «Mover» */
+.console { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 12px; }
+.stepper label { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--tx-3); margin-bottom: 4px; }
+.stepbtns { display: grid; grid-template-columns: 1fr 1fr minmax(64px, 1.3fr) 1fr 1fr; gap: 4px; align-items: stretch; }
+.stepbtns .btn { min-width: 0; padding: 0 4px; font-family: var(--mono, ui-monospace, monospace); }
+.stepbtns output { display: flex; align-items: center; justify-content: center; font: 700 20px var(--mono, ui-monospace, monospace); font-variant-numeric: tabular-nums; border: 1px solid var(--line-2); border-radius: 8px; background: var(--surface-0); color: var(--col-b); }
+#btnMove { min-height: 46px; font-size: 15px; white-space: normal; line-height: 1.25; }
+#btnMove:disabled { opacity: .55; cursor: not-allowed; }
+.movebar { --p: 100%; height: 8px; border-radius: 6px; background: var(--surface-1); overflow: hidden; }
+.movebar i { display: block; height: 100%; width: var(--p); border-radius: 6px; background: var(--col-a); transition: width .25s linear; }
+.movebar.run i { background: linear-gradient(90deg, #d98a00, var(--col-b)); }
+.movebar.off i { background: var(--tx-3); width: 0; }
+.movetxt { margin: 0; font-size: 12px; color: var(--tx-2); font-variant-numeric: tabular-nums; }
+.movebar.run + .movetxt { color: var(--warn-ink); font-weight: 600; }
+
+#camPanel { position: absolute; right: 12px; bottom: 12px; z-index: 7; width: min(340px, calc(100% - 24px)); padding: 8px; border-radius: 14px; pointer-events: auto; }
+#camPanel[hidden] { display: none; }
+#camPanel header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+#camPanel header b { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--tx-2); margin-right: auto; }
+#camPanel .x { background: transparent; border: 0; color: var(--tx-2); font-size: 20px; line-height: 1; cursor: pointer; padding: 2px 8px; }
+.camview { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 2px solid var(--line-2); background: radial-gradient(120% 90% at 50% 0, #12305e 0, #091a35 70%); }
+#camPanel.hot .camview { border-color: var(--col-b); box-shadow: 0 0 0 2px rgba(255, 176, 32, .35), 0 0 22px rgba(255, 176, 32, .4); }
+.camview video { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
+.camview[data-state="connecting"] video, .camview[data-state="none"] video, .camview[data-state="nosupport"] video { visibility: hidden; }
+.camstatus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; color: var(--tx-2); font-size: 13px; line-height: 1.4; }
+.camstatus[hidden] { display: none; }
+.camlive, .cammove { position: absolute; top: 8px; font: 700 11px var(--mono, ui-monospace, monospace); border-radius: 6px; padding: 3px 8px; }
+.camlive { left: 8px; background: rgba(0, 0, 0, .6); color: #9df0c0; }
+.cammove { right: 8px; background: var(--col-b); color: #1a1000; }
+.camlive[hidden], .cammove[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .movebar i { transition: none; } }

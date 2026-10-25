@@ -37,6 +37,7 @@
     return r;
   };
   ui.send = send;
+  const isReal = () => source && source.kind === 'ws';
   const isNet = () => source && (source.kind === 'ws' || source.kind === 'twin');
   const netSrc = () => (source.kind === 'twin' ? source.ws : source);
   /** Anuncio para lectores de pantalla (region viva educada) */
@@ -79,14 +80,14 @@
 
     if (ui.layout) ui.layout.init();
     applyRanges();
-    bindTopbar(); bindTracker(); bindLoad(); bindSafety(); bindDock(); bindData(); bindInfo(); bindLog(); bindPanels(); bindKeys(); bindLogin(); bindHelp();
+    bindTopbar(); bindTracker(); bindConsole(); bindLoad(); bindSafety(); bindDock(); bindData(); bindInfo(); bindLog(); bindPanels(); bindKeys(); bindLogin(); bindHelp();
     chart = new ui.Chart($('#chart'));
     source.on('log', onLog);
     if (isNet()) {
       const ws = netSrc();
       ws.on('ack', (a) => {
         if (!a.ok) { if (a.reason) ui.toast(a.reason, a.kind === 'timeout' ? 'bad' : 'warn', 6000); return; }
-        if (a.cmd && a.cmd.type === 'session.start') { const m = $('#loginModal'); if (!m.hidden) hideModal(m); ui.toast(LAB.t(tel && tel.source === 'fake' ? 'app.control_banco_virtual' : 'app.tienes_el_control_del'), tel && tel.source === 'fake' ? 'warn' : 'ok', 6000); }
+        if (a.cmd && a.cmd.type === 'session.start') { const m = $('#loginModal'); if (!m.hidden) hideModal(m); ui.toast(LAB.t('app.tienes_el_control_del'), 'ok', 6000); }
       });
       ws.on('auth', () => ui.toast(LAB.t('app.tu_sesion_de_acceso'), 'bad', 8000));
     }
@@ -323,8 +324,59 @@
     [nAz, nTl].forEach((n) => n.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); }));
     $('#trPresets').addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b) return;
+      if (isReal()) { consoleStage(+b.dataset.az, +b.dataset.tilt); return; }       // en el banco real el preset solo prepara el objetivo; se envía con «Mover»
       send({ type: 'tracker.target', az: +b.dataset.az, tilt: +b.dataset.tilt });
     });
+  }
+
+
+  // ------------------------------------------------- consola de operación del banco real
+  /** El objetivo se prepara con pasos o presets (nada se envía) y se manda de una vez con «Mover». Mientras no se toca, sigue al objetivo del controlador. */
+  const consoleState = { az: NaN, tilt: NaN, dirty: false, last: '', maxDiff: 0 };
+  function consoleStage(az, tilt) {
+    const T = LAB.config.tracker;
+    if (Number.isFinite(az)) consoleState.az = clamp(Math.round(az), T.azMin, T.azMax);
+    if (Number.isFinite(tilt)) consoleState.tilt = clamp(Math.round(tilt), T.tiltMin, T.tiltMax);
+    consoleState.dirty = true; updateConsole();
+  }
+  function bindConsole() {
+    if (!isReal()) return;
+    $('#trConsole').hidden = false;
+    $$('#trConsole .stepper').forEach((st) => st.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      const d = +b.dataset.d, ax = st.dataset.axis, T = tel.tracker;
+      const cur = Number.isFinite(consoleState[ax]) ? consoleState[ax] : (ax === 'az' ? T.targetAz : T.targetTilt);
+      if (ax === 'az') consoleStage(cur + d, NaN); else consoleStage(NaN, cur + d);
+    }));
+    $('#btnMove').addEventListener('click', () => {
+      const r = send({ type: 'tracker.target', az: consoleState.az, tilt: consoleState.tilt });
+      if (r.ok) { const T = tel.tracker; consoleState.dirty = false; consoleState.last = consoleState.az + '/' + consoleState.tilt; consoleState.maxDiff = Math.max(Math.abs(T.az - consoleState.az) || 0, Math.abs(T.tilt - consoleState.tilt) || 0); ui.announce(LAB.t('real.orden_enviada', { az: consoleState.az, tilt: consoleState.tilt })); updateConsole(); }
+    });
+    ui.camviewer.open('cam2');
+    $('#btnCam1').hidden = true; $('#btnCam2').hidden = true; $('#btnPip').hidden = true; $('#btnIpCam').hidden = false;
+  }
+  function updateConsole() {
+    if (!isReal() || !tel) return;
+    const T = tel.tracker, hasData = Number.isFinite(T.az) && Number.isFinite(T.tilt) && !tel.quality.includes('stale');
+    if (!consoleState.dirty) { consoleState.az = Math.round(T.targetAz); consoleState.tilt = Math.round(T.targetTilt); }
+    const az = consoleState.az, tilt = consoleState.tilt;
+    setText('stAz', Number.isFinite(az) ? az + '°' : '—'); setText('stTilt', Number.isFinite(tilt) ? tilt + '°' : '—');
+    const can = !!(tel.safety.session.active && tel.safety.role && tel.safety.role.canOperate), why = tel.safety.blockReason;
+    const moving = !!(T.moving && (T.moving.az || T.moving.tilt));
+    const same = !consoleState.dirty, btn = $('#btnMove');
+    btn.disabled = !can || same || !Number.isFinite(az) || !Number.isFinite(tilt);
+    btn.textContent = same ? LAB.t(moving ? 'real.mover_en_curso' : 'real.mover_igual') : LAB.t('real.mover', { az, tilt });
+    btn.title = can ? '' : LAB.tm(why || '');
+    // avance del movimiento: 100 % cuando la posición coincide con el objetivo del controlador
+    const diff = hasData ? Math.max(Math.abs(T.az - T.targetAz) || 0, Math.abs(T.tilt - T.targetTilt) || 0) : 0;
+    const key = Math.round(T.targetAz) + '/' + Math.round(T.targetTilt);
+    if (key !== consoleState.last) { consoleState.last = key; consoleState.maxDiff = 0; }
+    if (diff > consoleState.maxDiff) consoleState.maxDiff = diff;
+    const pct = !hasData ? 0 : moving || diff > 0.6 ? clamp(Math.round((1 - diff / Math.max(consoleState.maxDiff, 0.001)) * 100), 0, 99) : 100;
+    const bar = $('#moveBar'); bar.style.setProperty('--p', pct + '%'); bar.setAttribute('aria-valuenow', String(pct));
+    bar.className = 'movebar ' + (!hasData ? 'off' : pct < 100 ? 'run' : 'done');
+    setText('moveTxt', !hasData ? LAB.t('real.sin_datos') : pct < 100 ? LAB.t('real.moviendo', { n: fmt(diff, 0), pct }) : LAB.t('real.en_posicion', { az: Math.round(T.targetAz), tilt: Math.round(T.targetTilt) }));
+    ui.camviewer.setMoving(hasData && pct < 100);
   }
 
   // --------------------------------------------------------------------- carga
@@ -426,6 +478,7 @@
 
     $('#btnCam1').addEventListener('click', () => togglePov('cam1'));
     $('#btnCam2').addEventListener('click', () => togglePov('cam2'));
+    $('#btnIpCam').addEventListener('click', () => ui.camviewer.toggle());
     $('#povExit').addEventListener('click', exitPov);
     $('#btnPip').addEventListener('click', () => { const on = !app.pip.on; app.setPip(on, 'cam2'); $('#btnPip').classList.toggle('on', on); });
     $('#btnLabels').addEventListener('click', () => {
@@ -662,7 +715,6 @@
       if (el) { el.lastChild.textContent = label; el.title = title; el.dataset.kind = kind; el.dataset.link = ls || ''; }
       document.body.dataset.srcKind = t.source;
     }
-    const fk = $('#fakeBanner'); if (fk) { const on = t.source === 'fake'; if (fk.hidden === on) fk.hidden = !on; if (on && !$('#fakeTxt').textContent) setText('fakeTxt', LAB.t('app.banner_banco_virtual')); }
     if (ui.replayTick && t.replay) ui.replayTick(t.replay);
     if (!app) return;
     if (now - lastDom > 180) { lastDom = now; updateDom(); }
@@ -726,6 +778,7 @@
     if (!dragging.az) { syncCtl($('#azSlider'), Math.round(T.targetAz)); setText('azOut', Math.round(T.targetAz) + '°'); }
     if (!dragging.tilt) { syncCtl($('#tiltSlider'), Math.round(T.targetTilt)); setText('tiltOut', Math.round(T.targetTilt) + '°'); }
     $('#azSlider').disabled = T.lockAz; $('#tiltSlider').disabled = T.lockTilt;
+    updateConsole();
 
     // carga
     const L = tel.load;

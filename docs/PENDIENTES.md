@@ -20,7 +20,7 @@ Prácticas B2, B3, B8, gráficas de análisis, corrida de calibración A=B, B4/B
 ## No verificado con hardware (todo se probó contra el banco virtual)
 - PLC real (Siemens S7-1200 recomendado, **no confirmado**) por Modbus/OPC UA: los controladores se probaron contra servidores simulados con pymodbus y asyncua.
 - NI-DAQmx en Linux con el cDAQ-9184: soporte **sin verificar**; alternativa prevista: equipo Windows que publique por MQTT.
-- Cámaras IP y MediaMTX.
+- Cámaras IP y MediaMTX: el visor HLS de la interfaz (`js/ui/camviewer.js`) se probó con un HLS de prueba generado con ffmpeg, **no con una cámara real**; sin flujo muestra «Sin flujo de video» y reintenta cada 5 s. La ruta `/cam/<cam1|cam2>/index.m3u8` sigue el `mediamtx.yml` y el Nginx del despliegue.
 - Despliegue con Docker en el servidor institucional: `docker compose config`, Nginx (TLS, cabeceras, límites) y Mosquitto con TLS y ACL se probaron fuera de contenedor; `docker compose up` no se pudo ejecutar (sin demonio de Docker).
 - Rendimiento con carga real de usuarios.
 

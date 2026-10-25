@@ -9,7 +9,7 @@ async function netPage(browser, qs, errors) {
   const ctx = await browser.newContext({ viewport: { width: 1536, height: 864 } });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-  page.on('console', (m) => { if (m.type() === 'error' && !/WebSocket|401|favicon/.test(m.text())) errors.push('console: ' + m.text()); });
+  page.on('console', (m) => { if (m.type() === 'error' && !/WebSocket|401|favicon|404 \(Not Found\)/.test(m.text())) errors.push('console: ' + m.text()); });
   await page.goto(BASE + '/login.html?next=' + encodeURIComponent('/index.html?' + qs));
   await page.fill('#user', 'ana'); await page.fill('#pass', 'dev-password-123'); await page.click('#go');
   await page.waitForURL(/index\.html/, { timeout: 10000 });
@@ -17,7 +17,7 @@ async function netPage(browser, qs, errors) {
 }
 
 (async () => {
-  const b = await launch(); const errs = [];
+  const b = await launch(); const errs = [];   // el 404 de /cam/ es esperado en desarrollo: no hay cámaras conectadas
 
   // ---- 1 y 2: simulador local
   {
