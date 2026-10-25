@@ -71,6 +71,8 @@ class Hub:
         self._tasks: list[asyncio.Task] = []
         self._booking_end: dt.datetime | None = None
         self._granted_at = 0.0
+        self.recent_events: collections.deque = collections.deque(maxlen=30)          # últimos eventos del banco para el panel de administración
+        self._staff_waiters: dict[str, asyncio.Future] = {}
         self.maintenance: dict | None = None            # {"reason", "by", "since"} mientras el banco está bloqueado; se persiste en la base
         self.stats = {"cmd_in": 0, "cmd_rejected_local": 0, "cmd_published": 0, "acks": 0, "timeouts": 0}
 
@@ -118,11 +120,17 @@ class Hub:
                 self.last_tele = payload
             elif name == "state":
                 self.last_state = payload
+            if name == "event":
+                self.recent_events.append(payload)
             kind = {"tele": "tele", "state": "state", "event": "event", "sweep": "sweep", "twin": "twin"}[name]
             for c in list(self.clients.values()):
                 c.send({"t": kind, "v": 1, "d": payload})
 
     async def _on_ack(self, a: dict) -> None:
+        fut = self._staff_waiters.pop(a["id"], None)
+        if fut is not None and not fut.done():
+            fut.set_result(a)
+            return
         ent = self.pending.pop(a["id"], None)
         if not ent:
             return
@@ -207,16 +215,33 @@ class Hub:
             await self._revoke_control("session.revoked", "El banco entró en mantenimiento: se retira el control.", "mantenimiento", forced=True)
         return had
 
-    def snapshot(self) -> dict:
+    def snapshot(self, detail: bool = True) -> dict:
         """Vista para la administración: quién tiene el control, quién mira, y el estado del banco."""
         c = self.control
         st = self.last_state or {}
+        tele = self.last_tele or {}
+        sf = tele.get("safety") or {}
         return {"bank": self.bank, "maintenance": self.maintenance,
-                "control": None if c is None else {"sessionId": self.control_session, "user": c.user["username"], "role": c.user["role"],
+                "link": {"source": tele.get("source"), "plc": st.get("plc"), "bridge": st.get("bridge"), "quality": tele.get("quality") or [], "daqStale": "stale" in (tele.get("quality") or [])},
+                "alarm": {"state": sf.get("state") or st.get("safety"), "canOperate": sf.get("canOperate"), "blockReason": sf.get("blockReason", ""), "appliedMode": st.get("appliedMode")},
+                "events": [{"ts": e.get("ts"), "level": e.get("level"), "code": e.get("code"), "msg": e.get("msg")} for e in list(self.recent_events)[-12:]],
+                "control": None if c is None else {"sessionId": self.control_session if detail else None, "user": c.user["username"], "role": c.user["role"],
                                                    "heldSeconds": round(time.monotonic() - self._granted_at), "bookingEnd": self._booking_end.isoformat() if self._booking_end else None},
                 "clients": [{"user": x.user["username"], "role": x.user["role"], "control": x is c} for x in self.clients.values()],
-                "state": {"safety": st.get("safety"), "plc": st.get("plc"), "bridge": st.get("bridge"), "controlSession": st.get("controlSession")},
+                "state": {"safety": st.get("safety"), "plc": st.get("plc"), "bridge": st.get("bridge"), "controlSession": st.get("controlSession") if detail else None},
                 "teleAgeMs": None if not self.last_tele else max(0, now_ms() - int(self.last_tele.get("ts", 0)))}
+
+    async def staff_command(self, user: dict, ctype: str, args: dict | None = None) -> dict:
+        """Comando del personal (panel de administración) sin sesión de operación: devuelve el acuse del puente o un acuse de tiempo agotado."""
+        cid = f"adm_{uuid.uuid4().hex[:10]}"
+        fut: asyncio.Future = asyncio.get_running_loop().create_future()
+        self._staff_waiters[cid] = fut
+        await self._publish_req(ctype, args or {}, f"adm_{user['id']}", user, user["role"], cid)
+        try:
+            return await asyncio.wait_for(fut, self.cfg.ack_timeout_s)
+        except asyncio.TimeoutError:
+            self._staff_waiters.pop(cid, None)
+            return contract.ack(cid, now_ms(), False, "timeout", "Sin respuesta del banco.")
 
     async def set_role(self, uid: int, role: str) -> None:
         for c in self.clients.values():

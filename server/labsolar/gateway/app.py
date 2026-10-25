@@ -59,6 +59,11 @@ class MaintenanceIn(BaseModel):
     reason: str = Field(default="", max_length=200)
 
 
+class BookingMove(BaseModel):
+    start: dt.datetime
+    end: dt.datetime
+
+
 class UserPatch(BaseModel):
     active: bool | None = None
     role: str | None = None
@@ -365,14 +370,80 @@ def create_app(settings: Settings | None = None, bus: Bus | None = None, repo: R
 
     # ---- control en vivo del banco (administración y técnico)
     @app.get("/api/admin/control")
-    def admin_control(u: dict = Depends(require(*STAFF_OPS))):
-        return hub.snapshot()
+    def admin_control(u: dict = Depends(require(*STAFF_OPS, "teacher"))):
+        """admin y tech ven todo; el docente ve el mismo panel en solo lectura (sin ids de sesión)."""
+        return hub.snapshot(detail=u["role"] in STAFF_OPS)
 
     @app.post("/api/admin/control/release")
     async def admin_release(u: dict = Depends(require(*STAFF_OPS))):
         who = await hub.release_control(u["username"])
         repo.audit("control.release", who, u["username"], None, "liberado por administración" if who else "sin sesión activa")
         return {"released": who}
+
+    # ---- seguridad del banco (admin y tech): cada acción queda en la bitácora con el resultado del puente
+    async def staff_action(u: dict, ctype: str, args: dict, audit_action: str) -> dict:
+        ack = await hub.staff_command(u, ctype, args)
+        repo.audit(audit_action, bool(ack.get("ok")), u["username"], None, "ok" if ack.get("ok") else f"{ack.get('kind')}: {ack.get('reason')}")
+        return {"ok": bool(ack.get("ok")), "kind": ack.get("kind"), "reason": ack.get("reason")}
+
+    @app.post("/api/admin/safety/ack")
+    async def admin_safety_ack(u: dict = Depends(require(*STAFF_OPS))):
+        return await staff_action(u, "safety.ack", {}, "safety.ack")
+
+    @app.post("/api/admin/safety/stow")
+    async def admin_safety_stow(u: dict = Depends(require(*STAFF_OPS))):
+        return await staff_action(u, "session.end", {"why": "forzado: posición segura pedida desde administración"}, "safety.stow")
+
+    @app.post("/api/admin/safety/estop")
+    async def admin_safety_estop(u: dict = Depends(require(*STAFF_OPS))):
+        return await staff_action(u, "safety.estop", {"who": u["username"]}, "safety.estop")
+
+    @app.patch("/api/admin/bookings/{bid}")
+    async def admin_move_booking(bid: int, body: BookingMove, u: dict = Depends(require("admin"))):
+        s, e = check_window(body.start, body.end)
+        res = await asyncio.to_thread(repo.move_booking, bid, s, e)
+        if res == "missing":
+            raise HTTPException(404, "No existe esa reserva (o ya está cancelada)")
+        if res == "clash":
+            raise HTTPException(409, "Ese horario ya está reservado")
+        cut = await hub.revalidate_control()                    # si la nueva hora deja sin turno a quien operaba, se le corta
+        repo.audit("booking.move", True, u["username"], None, f"{bid}: {s.isoformat()} - {e.isoformat()}" + (" (sesión en curso cortada)" if cut else ""))
+        return {"ok": True, "sessionCut": cut}
+
+    # ---- exportaciones (admin); cada descarga queda registrada
+    def csv_response(name: str, head: list[str], rows: list[list[Any]]) -> Response:
+        from ..runs_csv import csv_cell
+        text = "\ufeff" + "\n".join(",".join(csv_cell(c) for c in r) for r in [head, *rows]) + "\n"
+        return Response(text, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+    @app.get("/api/admin/audit.csv")
+    def admin_audit_csv(user: str | None = None, action: str | None = None, hours: float | None = None, limit: int = 1000, u: dict = Depends(require("admin"))):
+        since = db.utcnow() - dt.timedelta(hours=hours) if hours else None
+        rows = repo.audit_list(limit, user, action, since)
+        repo.audit("export.audit", True, u["username"], None, f"{len(rows)} filas")
+        return csv_response("lab-solar-unach_auditoria.csv", ["id", "utc_iso", "usuario", "ip", "accion", "ok", "detalle"],
+                            [[r["id"], aware(r["ts"]).isoformat(), r["username"], r["ip"], r["action"], r["ok"], r["detail"]] for r in rows])
+
+    def iso_ms(ms: int | None) -> str:
+        return "" if ms is None else dt.datetime.fromtimestamp(ms / 1000, dt.timezone.utc).isoformat()
+
+    @app.get("/api/admin/sessions")
+    def admin_sessions(limit: int = 200, u: dict = Depends(require("admin"))):
+        return {"sessions": [{"id": r["id"], "user": r["username"], "role": r["role"], "start": iso_ms(r["started_ms"]), "end": iso_ms(r["ended_ms"]), "why": r["why"]} for r in repo.list_op_sessions(limit)]}
+
+    @app.get("/api/admin/sessions.csv")
+    def admin_sessions_csv(limit: int = 2000, u: dict = Depends(require("admin"))):
+        rows = repo.list_op_sessions(limit)
+        repo.audit("export.sessions", True, u["username"], None, f"{len(rows)} sesiones")
+        return csv_response("lab-solar-unach_sesiones.csv", ["sesion", "usuario", "rol", "inicio_utc", "fin_utc", "motivo_fin"],
+                            [[r["id"], r["username"], r["role"], iso_ms(r["started_ms"]), iso_ms(r["ended_ms"]), r["why"]] for r in rows])
+
+    @app.get("/api/admin/sessions/{sid}/commands.csv")
+    def admin_session_commands_csv(sid: str, u: dict = Depends(require("admin"))):
+        rows = repo.session_commands(sid)
+        repo.audit("export.commands", True, u["username"], None, f"{sid}: {len(rows)} comandos")
+        return csv_response(f"lab-solar-unach_comandos_{sid}.csv", ["id", "utc_iso", "usuario", "rol", "tipo", "args", "ok", "tipo_rechazo", "motivo"],
+                            [[r["id"], iso_ms(r["ts"]), r["username"], r["role"], r["type"], json.dumps(r["args"], ensure_ascii=False) if r["args"] else "", r["ok"], r["kind"], r["reason"]] for r in rows])
 
     @app.post("/api/admin/maintenance")
     async def admin_maintenance(body: MaintenanceIn, u: dict = Depends(require(*STAFF_OPS))):

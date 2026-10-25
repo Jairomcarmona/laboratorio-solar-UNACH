@@ -185,6 +185,16 @@ class BridgeApp:
         await self._event("warn", "session.orphan", "Sesión retirada: la pasarela ya no la reconoce", {"sessionId": old})
         await self._publish_state(force=True)
 
+    async def _safe_position_ack(self, req: dict) -> None:
+        try:
+            r = await self.ctrl.request_link_lost()
+            await self._event("warn", "session.forced", "Posición segura pedida al PLC por la administración" + ("" if r.ok else f" (PLC: {r.reason})"))
+            ok, kind, reason = self._map(r)
+            return await self._ack(req, ok, kind, reason)
+        except Exception as e:
+            await self._event("bad", "plc.link_lost_fail", f"No se pudo pedir la posición segura al PLC: {e}")
+            return await self._ack(req, False, "timeout", f"PLC: {e}")
+
     # ------------------------------------------------------------------ telemetría
     async def _tele_loop(self) -> None:
         loop = asyncio.get_running_loop()
@@ -412,6 +422,14 @@ class BridgeApp:
             self.control_session, self.control_role = req["sessionId"], req["role"]
             await self._publish_state(force=True)
             return await self._ack(req, True)
+        forced = str((req.get("args") or {}).get("why", "")).startswith("forzado: ")
+        if ctype == "session.end" and forced and req["role"] in ESTOP_STAFF and self.control_session != req["sessionId"]:
+            # personal autorizado pide la posición segura sin tener el control (panel de administración); la sesión vigente, si la hay, se retira
+            if self._sweep:
+                await self._finish_sweep("interrupted", "posición segura pedida por el personal")
+            self.control_session = self.control_role = None
+            await self._publish_state(force=True)
+            return await self._safe_position_ack(req)
         if ctype == "session.end":
             if self.control_session != req["sessionId"]:
                 return await self._ack(req, False, "interlock", "No hay sesión activa.")
@@ -419,12 +437,8 @@ class BridgeApp:
                 await self._finish_sweep("interrupted", "sesión terminada")
             self.control_session = self.control_role = None
             await self._publish_state(force=True)
-            if str((req.get("args") or {}).get("why", "")).startswith("forzado: "):      # corte impuesto: el banco queda en posición segura
-                try:
-                    r = await self.ctrl.request_link_lost()
-                    await self._event("warn", "session.forced", "Sesión cortada por la administración: se pidió la posición segura al PLC" + ("" if r.ok else f" (PLC: {r.reason})"))
-                except Exception as e:
-                    await self._event("bad", "plc.link_lost_fail", f"No se pudo pedir la posición segura al PLC: {e}")
+            if forced:                                                                  # corte impuesto: el banco queda en posición segura
+                return await self._safe_position_ack(req)
             return await self._ack(req, True)
         if ctype == "safety.estop":                     # el operador con el control o personal autorizado (la pasarela ya filtró; aquí, defensa en profundidad)
             if self.control_session != req["sessionId"] and req["role"] not in ESTOP_STAFF:
@@ -432,6 +446,10 @@ class BridgeApp:
             r = await self.ctrl.request_stop()
             ok, kind, reason = self._map(r)
             return await self._ack(req, ok, kind, reason)
+        if ctype == "safety.ack" and req["role"] in ESTOP_STAFF and self.control_session != req["sessionId"]:
+            r = await self.ctrl.request_ack()                    # el personal reconoce una alarma sin tener el control (panel de administración)
+            ok, kind, reason = self._map(r)
+            return await self._ack(req, ok, kind, reason or None)
         if self.control_session != req["sessionId"]:
             return await self._ack(req, False, "interlock", "Interlock: no hay sesión activa. Inicia sesión y reserva para operar.")
         if req["role"] not in OPERATE_ROLES:
