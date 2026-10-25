@@ -30,7 +30,7 @@ const t = new T('Banco real: consola y cámaras IP');
   const ro = await page.evaluate(() => ({ dis: document.getElementById('btnMove').disabled, fake: !!document.getElementById('fakeBanner'), badge: document.getElementById('simBadge').textContent }));
   t.ok('sin control el botón Mover está desactivado', ro.dis);
   t.ok('no hay franja permanente de «simulado»; la insignia dice BANCO VIRTUAL', !ro.fake && /BANCO VIRTUAL/.test(ro.badge) && !/SIMULADO/.test(ro.badge), ro.badge);
-  t.ok('en banco real se ocultan los deslizadores y las cámaras virtuales', await page.evaluate(() => ['azSlider', 'tiltSlider', 'numAz'].every((i) => document.getElementById(i).offsetParent === null) && document.getElementById('btnCam1').offsetParent === null && document.getElementById('btnIpCam').offsetParent !== null));
+  t.ok('en banco real se ocultan los deslizadores y las cámaras virtuales, y se muestran las pestañas de cámara', await page.evaluate(() => ['azSlider', 'tiltSlider', 'numAz'].every((i) => document.getElementById(i).offsetParent === null) && document.getElementById('btnCam1').offsetParent === null && document.getElementById('btnIpCam').offsetParent === null && document.getElementById('realViews').offsetParent !== null));
   t.ok('cámara sin flujo: rótulo claro, no video', await page.evaluate(() => /Sin flujo de video/.test(document.getElementById('camStatus').textContent) && document.getElementById('camView').dataset.state === 'none'));
 
   await page.getByText('Tomar el control').click();
@@ -51,6 +51,10 @@ const t = new T('Banco real: consola y cámaras IP');
   t.ok('al mover: «Moviéndose, en curso», objetivo enviado y cámara del seguidor resaltada', /Moviéndose, en curso/.test(mv.txt) && mv.tgt === 120 && mv.hot && /Moviéndose/.test(mv.btn), JSON.stringify(mv));
   await page.waitForFunction(() => document.getElementById('moveBar').classList.contains('done'), null, { timeout: 150000 });
   t.ok('al llegar: «En posición» y se quita el resalte', await page.evaluate(() => /En posición · objetivo 120° \/ 45°/.test(document.getElementById('moveTxt').textContent) && !document.getElementById('camPanel').classList.contains('hot')));
+
+  await page.evaluate(() => document.getElementById('btnCam1').click());
+  t.ok('«Cámara 1» (la usa la guía de la práctica 1) abre el video IP de la cámara 1', await page.evaluate(() => document.querySelector('#realViews [data-rv="cam1"]').classList.contains('on') && document.querySelector('#camTabs [data-cam="cam1"]').classList.contains('on')));
+  await page.evaluate(() => document.getElementById('btnCam2').click());
 
   if (haveHls) {
     camOn = true;

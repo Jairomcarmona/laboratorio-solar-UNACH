@@ -379,7 +379,12 @@
     }
   }
   /** Vista principal del banco real: cámara 1, cámara 2 o escena 3D (con la cámara en miniatura). */
+  let realCur = null;
   function realView(v) {
+    if (v === realCur) return;
+    if (ui.practices && realCur === 'cam1') ui.practices.notify('pov', { id: 'cam1', phase: 'exit' });       // la práctica 1 pide entrar a la cámara 1 y salir de ella
+    if (ui.practices && v === 'cam1') ui.practices.notify('pov', { id: 'cam1', phase: 'enter' });
+    realCur = v;
     $$('#realViews button').forEach((b) => { const on = b.dataset.rv === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     document.body.classList.toggle('camfull', v !== '3d');
     $('#camPanel').classList.toggle('full', v !== '3d');
@@ -509,8 +514,8 @@
       const lvl = ((tel.env.rainLevel || 0) + 1) % LAB.sim.RAIN_LEVELS.length; send({ type: 'sim.rain', level: lvl });
     });
 
-    $('#btnCam1').addEventListener('click', () => togglePov('cam1'));
-    $('#btnCam2').addEventListener('click', () => togglePov('cam2'));
+    $('#btnCam1').addEventListener('click', () => (isReal() ? realView('cam1') : togglePov('cam1')));     // en el banco real, «Cámara 1/2» (también desde la guía de práctica) abren el video IP
+    $('#btnCam2').addEventListener('click', () => (isReal() ? realView('cam2') : togglePov('cam2')));
     $('#btnIpCam').addEventListener('click', () => ui.camviewer.toggle());
     $('#povExit').addEventListener('click', exitPov);
     $('#btnPip').addEventListener('click', () => { const on = !app.pip.on; app.setPip(on, 'cam2'); $('#btnPip').classList.toggle('on', on); });
