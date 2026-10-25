@@ -5,9 +5,12 @@ Regla del plan: nada se borra. acq.discard marca discarded = true; las cuentas s
 """
 from __future__ import annotations
 
+import atexit
 import datetime as dt
 import json
+import os
 import secrets
+import tempfile
 from typing import Any
 
 import sqlalchemy as sa
@@ -146,10 +149,16 @@ def make_engine(url: str) -> sa.Engine:
     if url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+psycopg://", 1)
     kw: dict[str, Any] = {}
+    if url in ("sqlite://", "sqlite:///:memory:"):
+        # Una base en memoria con StaticPool comparte UNA sola conexion entre los hilos de asyncio.to_thread y las transacciones se
+        # pisan ("bad parameter or other API misuse", "cannot start a transaction within a transaction"). Se usa un archivo
+        # temporal: cada hilo tiene su conexion y SQLite serializa las escrituras (busy_timeout). Se borra al salir.
+        fd, path = tempfile.mkstemp(prefix="labsolar-", suffix=".db")
+        os.close(fd)
+        atexit.register(lambda: os.path.exists(path) and os.remove(path))
+        url = f"sqlite:///{path}"
     if url.startswith("sqlite"):
-        kw["connect_args"] = {"check_same_thread": False}
-        if url in ("sqlite://", "sqlite:///:memory:"):
-            kw["poolclass"] = sa.pool.StaticPool
+        kw["connect_args"] = {"check_same_thread": False, "timeout": 10}
     else:
         kw["pool_pre_ping"] = True
         kw["pool_size"] = 5
@@ -158,6 +167,7 @@ def make_engine(url: str) -> sa.Engine:
         @sa.event.listens_for(eng, "connect")
         def _fk(dbapi, _rec):                              # noqa: ANN001
             dbapi.execute("PRAGMA foreign_keys=ON")
+            dbapi.execute("PRAGMA busy_timeout=10000")
     return eng
 
 
