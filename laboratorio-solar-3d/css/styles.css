@@ -447,10 +447,10 @@ body[data-layout="narrow"] #midcol { width: 100%; }
 .brand span { display: block; font-size: 12px; color: var(--tx-2); white-space: nowrap; }
 .brand { flex: 0 1 auto; min-width: 0; }
 #topbar .spacer { flex: 1 1 8px; }
-body[data-layout="narrow"] .brand div, body[data-layout="narrow"] .sunchip, body[data-layout="narrow"] #sourceSwitch, body[data-layout="narrow"] .clock span { display: none; }
+body[data-layout="narrow"] .brand div, body[data-layout="narrow"] .sunchip, body[data-layout="narrow"] .clock span { display: none; }
 body[data-layout="narrow"] #btnPractices { display: none; }
 body[data-layout="narrow"] #topbar .spacer { flex-basis: 0; }
-body[data-layout="narrow"] #sessionTxt { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+body[data-layout="narrow"] #sessionTxt { max-width: 72px; overflow: hidden; text-overflow: ellipsis; }
 body[data-layout="narrow"] .simbadge { font-size: 10px; padding: 3px 7px; }
 
 /* guia en panel (medium / narrow): ocupa el ancho del panel, sin tope de altura propio */
@@ -474,7 +474,10 @@ body[data-layout="narrow"] #dock .grp { flex-wrap: nowrap; }
 #stage { z-index: 0; } #overlay { z-index: 1; } #logpanel, #povOverlay, #freeHud { z-index: 3; }
 #topbar { container: topbar / inline-size; }
 @container topbar (max-width: 1520px) { .sunchip, .brand span { display: none; } }
-@container topbar (max-width: 1420px) { #sourceSwitch { display: none; } }
+/* el selector de fuente (Simulador / Banco real / Gemelo) nunca se oculta: en anchos medios se compacta; en pantallas angostas se encoge más y, si no cabe, baja de fila con el resto */
+@container topbar (max-width: 1420px) { #sourceSwitch button { padding: 5px 8px; font-size: 11.5px; } .clock span { display: none; } #topbar { gap: 8px; } #topbar .btn { padding: 6px 9px; } .brand b { font-size: 13.5px; } #sessionTxt { max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+body[data-layout="narrow"] #sourceSwitch button { padding: 4px 7px; font-size: 11px; min-height: 34px; }
+body[data-layout="narrow"] .simbadge { display: none; }        /* el selector ya marca la fuente activa */
 @container topbar (max-width: 1000px) { .clock span { display: none; } }
 .tablewrap summary { cursor: pointer; font-size: 12px; color: var(--tx-2); padding: 4px 0; }
 .tablewrap table caption { text-align: left; font-size: 12px; color: var(--tx-3); padding: 4px 0; }
@@ -556,3 +559,9 @@ body.src-replay #btnResetE, body.src-replay #btnResetRain, body.src-replay #btnC
 #gReplay { display: flex; align-items: center; gap: 10px; flex: 1; }
 #gReplay input[type=range] { flex: 1; min-width: 120px; }
 #gReplay output { font: 12px var(--mono); color: var(--muted, #9bb0c4); white-space: nowrap; }
+
+/* ---------- banco real: en el lugar de los controles de simulación (ocultos arriba) va el estado del banco ---------- */
+#gReal { gap: 8px; flex-wrap: wrap; }
+#gReal .chip { font-size: 12px; padding: 5px 10px; }
+#gReal .chip.ok { border-color: rgba(53, 208, 127, .5); } #gReal .chip.warn { border-color: rgba(255, 176, 32, .6); color: var(--solar); } #gReal .chip.bad { border-color: rgba(255, 77, 77, .6); color: var(--bad); }
+#gReal .hint { max-width: 360px; }

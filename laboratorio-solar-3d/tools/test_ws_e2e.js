@@ -31,6 +31,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const tel0 = await page.evaluate(() => ({ q: LAB.data.source.telemetry.quality, can: LAB.data.source.telemetry.safety.canOperate, src: LAB.data.source.telemetry.source }));
   t.ok('telemetria viva sin marca de obsoleta; sin control no se puede operar', !tel0.q.includes('stale') && tel0.can === false, JSON.stringify(tel0));
   t.ok('modo ws oculta reloj y clima del simulador', await page.evaluate(() => getComputedStyle(document.querySelector('#gWeather')).display === 'none'));
+  t.ok('modo ws muestra hora real, operador y enlace en lugar de los controles de simulación', await page.evaluate(() => !document.querySelector('#gReal').hidden && ['rlClock', 'rlOperator', 'rlLink'].every((i) => document.getElementById(i).textContent.length > 3)));
+  t.ok('modo ws: sin nubosidad ni DNI medidas la escena sigue iluminada (no NaN)', await page.evaluate(() => { const e = LAB.app.world.env; return Number.isFinite(e.hemi.intensity) && e.hemi.intensity > 0 && Number.isFinite(e.scene.fog.density); }));
 
   // tomar el control
   await page.waitForSelector('#btnTakeControl', { timeout: 5000 });
