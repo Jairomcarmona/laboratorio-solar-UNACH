@@ -18,6 +18,7 @@
     constructor(scene, renderer) {
       this.scene = scene; this.renderer = renderer;
       this.group = new THREE.Group(); scene.add(this.group);
+      this.windowMats = [];
       this.buildRoof();
       this.buildSurroundings();
       this.buildSky();
@@ -40,6 +41,7 @@
       slab.position.set(0, -rf.h / 2, 0); slab.receiveShadow = true; slab.castShadow = true;
       g.add(slab);
       this.slab = slab;
+      this.buildBuilding();
 
       // pretil perimetral
       const wallMat = T.std({ color: 0xd9d6cf, roughness: 0.85, envMapIntensity: 0.6 });
@@ -104,6 +106,49 @@
       }
     }
 
+    // ------------------------------------------------- edificio y letrero
+    /** Cuerpo del edificio bajo la azotea (ventanas que se encienden de noche) y letrero institucional en la fachada sur.
+     *  El letrero es autoiluminado (MeshBasicMaterial sin tone mapping): se reconoce de lejos, con nubes y de noche. */
+    buildBuilding() {
+      const g = this.group;
+      const bh = 13 - rf.h, bw = rf.w - 0.5, bd = rf.d - 0.5;
+      const rep = [Math.round(bw / 4), 3];
+      const paint = (ctx, w, h, lit) => {
+        ctx.fillStyle = lit ? '#000' : '#cfcbc2'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = lit ? '#fff' : '#2f4a63'; ctx.fillRect(10, 28, 236, 86); ctx.fillRect(10, 148, 236, 86);
+        if (!lit) { ctx.fillStyle = 'rgba(255,255,255,.18)'; for (let x = 10; x < 246; x += 59) ctx.fillRect(x, 28, 2, 86), ctx.fillRect(x, 148, 2, 86); }
+      };
+      const map = T.canvasTexture(256, 256, (ctx, w, h) => paint(ctx, w, h, false), { repeat: rep });
+      const glow = T.canvasTexture(256, 256, (ctx, w, h) => paint(ctx, w, h, true), { repeat: rep });
+      const bmat = T.std({ color: 0xffffff, map, emissiveMap: glow, emissive: 0xffd27a, emissiveIntensity: 0, roughness: 0.8, envMapIntensity: 0.6 });
+      this.windowMats.push(bmat);
+      const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), bmat);
+      body.position.set(0, -rf.h - bh / 2, 0); body.castShadow = body.receiveShadow = true; g.add(body);
+      this.building = body;
+
+      // letrero: panel marino con el escudo de la UNACH, el nombre del laboratorio y un filo dorado solar
+      const SW = 20, SH = 3.6, cv = document.createElement('canvas'); cv.width = 2048; cv.height = Math.round(2048 * SH / SW);
+      const cx = cv.getContext('2d'), k = cv.height - 60;
+      const bg = cx.createLinearGradient(0, 0, cv.width, 0); bg.addColorStop(0, '#002e63'); bg.addColorStop(1, '#0a58c9');
+      cx.fillStyle = bg; cx.fillRect(0, 0, cv.width, cv.height);
+      cx.fillStyle = '#ffb020'; cx.fillRect(0, cv.height - 16, cv.width, 16);
+      cx.fillStyle = '#ffffff'; cx.fillRect(30, 30, k, k);
+      cx.textBaseline = 'alphabetic'; const tx = k + 80;
+      cx.fillStyle = '#ffffff'; cx.font = '800 96px Inter, Arial, sans-serif'; cx.fillText(LAB.t('world.sign_title'), tx, 190);
+      cx.fillStyle = '#cfe6ff'; cx.font = '600 68px Inter, Arial, sans-serif'; cx.fillText(LAB.t('world.sign_place'), tx, 290);
+      cx.fillStyle = '#ffd48a'; cx.font = '500 46px Inter, Arial, sans-serif'; cx.fillText(LAB.t('world.sign_org'), tx, 366);
+      const stex = new THREE.CanvasTexture(cv); stex.encoding = THREE.sRGBEncoding; stex.anisotropy = 8;
+      if (LAB.ui && LAB.ui.logoUnachDataUri) {
+        const im = new Image();
+        im.onload = () => { const ar = im.width / im.height, w = Math.min(k - 20, (k - 20) * ar), h = w / ar; cx.drawImage(im, 30 + (k - w) / 2, 30 + (k - h) / 2, w, h); stex.needsUpdate = true; };
+        im.src = LAB.ui.logoUnachDataUri;
+      }
+      const y = -rf.h - 2.3, z = bd / 2;
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), new THREE.MeshBasicMaterial({ map: stex, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+      sign.position.set(0, y, z + 0.2); sign.name = 'facadeSign'; g.add(sign); this.sign = sign;
+      T.box(g, SW + 0.3, SH + 0.3, 0.2, T.std({ color: 0x9aa3ab, roughness: 0.4, metalness: 0.7 }), 0, y, z + 0.05);
+    }
+
     // ------------------------------------------------------ entorno lejano
     buildSurroundings() {
       const g = this.group;
@@ -153,7 +198,6 @@
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         for (let y = 20; y < h; y += 64) for (let x = 12; x < w; x += 44) { ctx.fillStyle = '#fff'; ctx.fillRect(x, y, 30, 34); }
       }, { repeat: [3, 1] });
-      this.windowMats = [];
       const blds = [[-42, -6, 24, 11, 14, 0], [48, -20, 30, 14, 16, 0.2], [20, -60, 40, 9, 22, 0], [-70, 40, 26, 16, 20, 0.1], [80, 50, 32, 12, 18, 0],
         [-20, 70, 36, 8, 14, 0], [10, 120, 60, 20, 18, 0], [-120, -80, 50, 18, 26, 0.3], [140, -100, 54, 24, 30, 0.2], [-160, 30, 44, 14, 20, 0]];
       for (const [x, z, w, h, d, rot] of blds) {
@@ -311,7 +355,7 @@
       this.sun.castShadow = el > 1.5 && dniF > 0.03;
 
       // luz de luna / noche
-      this.moon.intensity = 0.28 * (1 - dayF);
+      this.moon.intensity = 0.4 * (1 - dayF);
       this.moon.position.set(-30, 40, 25);
 
       // cielo
@@ -333,7 +377,7 @@
       this.mountains.material.color.copy(col(0x3d5a49)).multiplyScalar(lerp(0.05, 1, dayF));
 
       // ambiente: mas difuso y mas azul con nubes
-      this.hemi.intensity = (0.02 + 0.2 * dayF) * lerp(0.9, 1.4, cloud);
+      this.hemi.intensity = (0.075 + 0.145 * dayF) * lerp(0.9, 1.4, cloud);      // piso nocturno: la escena nunca queda negra
       this.hemi.color.copy(col(0xbcd6ff)); this.hemi.groundColor.copy(col(0x6b665c));
       for (const m of T.registry) m.envMapIntensity = (m.userData.baseEnv || 1) * (0.05 + 0.95 * dayF) * lerp(1.0, 0.8, cloud);
 
@@ -341,7 +385,7 @@
       this.stars.material.opacity = clamp((0.35 - dayF) * 2.4, 0, 1) * (1 - cloud * 0.9);
       const nightL = 1 - smoothstep(-8, 2, el);
       this.lamps.forEach((l) => { l.material.emissiveIntensity = 2.2 * nightL; });
-      this.windowMats.forEach((m) => { m.emissiveIntensity = 1.1 * nightL; m.emissive.copy(col(0xffd27a)); });
+      this.windowMats.forEach((m) => { m.emissiveIntensity = 0.8 * nightL; m.emissive.copy(col(0xffd27a)); });
       this.lampLights.forEach((l) => { l.intensity = 1.6 * nightL; });
 
       // mapa de entorno para reflejos (limitado en frecuencia)

@@ -1754,5 +1754,10 @@
  "admin.confirmar_ack": "Acknowledge the alarm? Only do this after checking the cause; the tracker will be able to move again.",
  "admin.confirmar_stow": "Send the bench to its safe position? Control is taken from the current operator and the fault must be acknowledged to continue.",
  "admin.confirmar_estop": "Trigger the software EMERGENCY STOP? Only on-site staff can reset it with the key.",
- "admin.el_banco_rechazo": "The bench rejected the request"
+ "admin.el_banco_rechazo": "The bench rejected the request",
+ "world.sign_title": "REMOTE SOLAR LABORATORY",
+ "world.sign_place": "Tuxtla Gutiérrez, Chiapas, Mexico",
+ "world.sign_org": "Universidad Autónoma de Chiapas · EU-COLMEV WP3",
+ "world.view_building": "Building",
+ "app.edificio": "Building"
 }

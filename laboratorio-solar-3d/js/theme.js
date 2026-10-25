@@ -16,7 +16,7 @@
   T.current = initial();
   const paint = () => {
     document.documentElement.setAttribute('data-theme', T.current);
-    const m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', T.current === 'light' ? '#e9eff8' : '#05080c');
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', T.current === 'light' ? '#e9eff8' : '#04122a');
     document.querySelectorAll('[data-theme-toggle]').forEach((b) => {
       b.setAttribute('aria-pressed', T.current === 'light' ? 'true' : 'false');
       const label = LAB.t ? LAB.t('ui.theme.toggle') : 'Cambiar tema claro/oscuro';

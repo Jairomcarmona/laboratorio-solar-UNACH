@@ -1754,5 +1754,10 @@
  "admin.confirmar_ack": "¿Reconocer la alarma? Solo procede si ya revisaste la causa; el seguidor podrá volver a moverse.",
  "admin.confirmar_stow": "¿Mandar el banco a posición segura? Se retira el control a quien opere y habrá que reconocer la falla para continuar.",
  "admin.confirmar_estop": "¿Disparar el PARO DE EMERGENCIA por software? Solo el personal en sitio puede restablecerlo con la llave.",
- "admin.el_banco_rechazo": "El banco rechazó la orden"
+ "admin.el_banco_rechazo": "El banco rechazó la orden",
+ "world.sign_title": "LABORATORIO SOLAR REMOTO",
+ "world.sign_place": "Tuxtla Gutiérrez, Chiapas, México",
+ "world.sign_org": "Universidad Autónoma de Chiapas · EU-COLMEV WP3",
+ "world.view_building": "Edificio",
+ "app.edificio": "Edificio"
 }
