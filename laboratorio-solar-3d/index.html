@@ -8,6 +8,7 @@
   <meta name="color-scheme" content="dark">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/real.css">
   <script src="js/theme.js"></script>
 </head>
 <body>
@@ -61,7 +62,6 @@
   </nav>
   <aside id="left" class="col">
       <div id="linkBanner" class="robanner linklost" role="status" hidden><b>⚠</b> <span id="linkTxt" data-i18n="index.linkBanner.enlace_con_el_banco">Enlace con el banco cortado (simulado). Lo que ves es el estado de la simulación local, no telemetría recibida del banco. Si el enlace sigue cortado, el watchdog llevará el seguidor a posición segura y bloqueará la operación.</span></div>
-      <div id="fakeBanner" class="robanner fakebench" role="status" hidden><b>⚠</b> <span id="fakeTxt"></span></div>
       <div id="roBanner" class="robanner" role="status" hidden><b>🔒</b> <span id="roTxt"></span></div>
       <p class="robanner" id="twinCtlNote" role="status" hidden data-i18n="index.twinCtlNote.gemelo_solo_observacion">Modo Gemelo: solo observación. Los controles están atenuados porque aquí no se opera el banco; para operarlo usa «Banco real».</p>
       <section class="panel glass" id="pTracker">
@@ -72,6 +72,15 @@
             <div><label data-i18n="index.pTracker.inclinacion">Inclinación</label><b id="trTilt">—</b><small id="trTiltT">objetivo —</small></div>
           </div>
           <div id="trState" class="statebar"></div>
+          <div id="trConsole" class="console" hidden>
+            <div class="stepper" data-axis="az"><label for="stAz" data-i18n="real.az_obj">Azimut objetivo</label>
+              <div class="stepbtns"><button type="button" class="btn" data-d="-5" aria-label="Azimut menos 5 grados" data-i18n-attr="aria-label:real.az_m5">−5</button><button type="button" class="btn" data-d="-1" aria-label="Azimut menos 1 grado" data-i18n-attr="aria-label:real.az_m1">−1</button><output id="stAz">—</output><button type="button" class="btn" data-d="1" aria-label="Azimut más 1 grado" data-i18n-attr="aria-label:real.az_p1">+1</button><button type="button" class="btn" data-d="5" aria-label="Azimut más 5 grados" data-i18n-attr="aria-label:real.az_p5">+5</button></div></div>
+            <div class="stepper" data-axis="tilt"><label for="stTilt" data-i18n="real.incl_obj">Inclinación objetivo</label>
+              <div class="stepbtns"><button type="button" class="btn" data-d="-5" aria-label="Inclinación menos 5 grados" data-i18n-attr="aria-label:real.incl_m5">−5</button><button type="button" class="btn" data-d="-1" aria-label="Inclinación menos 1 grado" data-i18n-attr="aria-label:real.incl_m1">−1</button><output id="stTilt">—</output><button type="button" class="btn" data-d="1" aria-label="Inclinación más 1 grado" data-i18n-attr="aria-label:real.incl_p1">+1</button><button type="button" class="btn" data-d="5" aria-label="Inclinación más 5 grados" data-i18n-attr="aria-label:real.incl_p5">+5</button></div></div>
+            <button type="button" class="btn accent wide" id="btnMove">Mover</button>
+            <div class="movebar" id="moveBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-labelledby="moveTxt"><i></i></div>
+            <p class="movetxt" id="moveTxt" role="status"></p>
+          </div>
           <label class="lbl" data-i18n="index.pTracker.modo_de_control">Modo de control</label>
           <div class="seg wide" id="trModes">
             <button data-mode="manual" data-i18n="index.trModes.manual">Manual</button><button data-mode="astro" data-i18n="index.trModes.astronomico">Astronómico</button><button data-mode="sensor" data-i18n="index.trModes.sensores">Sensores</button><button data-mode="fixed" data-i18n="index.trModes.fijo">Fijo</button>
@@ -131,7 +140,7 @@
       <nav id="viewbar" class="glass">
       <div class="seg" id="viewSeg"></div>
       <span class="sep"></span>
-      <button class="btn" id="btnCam1" data-i18n="index.btnCam1.camara_1">Cámara 1</button><button class="btn" id="btnCam2" data-i18n="index.btnCam2.camara_2">Cámara 2</button>
+      <button class="btn" id="btnCam1" data-i18n="index.btnCam1.camara_1">Cámara 1</button><button class="btn" id="btnCam2" data-i18n="index.btnCam2.camara_2">Cámara 2</button><button class="btn" id="btnIpCam" hidden data-i18n="real.camaras_ip">Cámaras IP</button>
       <span class="sep"></span>
       <div id="tools" role="group" aria-label="Herramientas de vista" data-i18n-attr="aria-label:index.tools.herramientas_de_vista">
         <button class="tbtn" id="btnPip" title="Imagen de la cámara 2 en un recuadro" data-i18n-attr="title:index.btnPip.imagen_de_la_camara"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg></button>
@@ -162,6 +171,19 @@
     </div>
     </div>
     
+    <section id="camPanel" class="glass" hidden aria-label="Cámaras IP" data-i18n-attr="aria-label:real.camaras_ip">
+      <header>
+        <b data-i18n="real.camaras_ip">Cámaras IP</b>
+        <div class="seg" id="camTabs" role="group" aria-label="Cámara" data-i18n-attr="aria-label:real.camara"><button type="button" data-cam="cam1" data-i18n="real.cam1">Cám 1 · módulos</button><button type="button" data-cam="cam2" data-i18n="real.cam2">Cám 2 · seguidor</button></div>
+        <button type="button" class="x" id="camClose" aria-label="Cerrar" data-i18n-attr="aria-label:index.infocard.cerrar">×</button>
+      </header>
+      <div class="camview" id="camView">
+        <video id="camVideo" muted playsinline autoplay></video>
+        <div class="camstatus" id="camStatus" role="status"></div>
+        <span class="camlive" id="camLive" hidden data-i18n="real.en_vivo">EN VIVO</span>
+        <span class="cammove" id="camMove" hidden data-i18n="real.seguidor_moviendose">SEGUIDOR EN MOVIMIENTO</span>
+      </div>
+    </section>
     <div id="povOverlay" hidden>
       <div class="rec"><i></i><b id="povName" data-i18n="app.cam_1_vista_general">CÁM 1</b><span id="povTime">—</span></div>
       <button class="btn" id="povExit" data-i18n="index.povExit.salir_de_la_camara">Salir de la cámara</button>
@@ -448,6 +470,7 @@
   <script src="js/ui/practices.js"></script>
   <script src="js/ui/connections.js"></script>
   <script src="js/ui/onboarding.js"></script>
+  <script src="js/ui/camviewer.js"></script>
   <script src="js/ui/app.js"></script>
 
   <script src="js/main.js"></script>

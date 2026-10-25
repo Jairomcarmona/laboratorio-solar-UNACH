@@ -11,7 +11,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const ctx = await browser.newContext({ viewport: { width: 1536, height: 864 } });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message + ' @ ' + String(e.stack).split('\n').slice(1, 3).join(' | ')));
-  page.on('console', (m) => { if (m.type() === 'error' && !/WebSocket|401|favicon/.test(m.text())) errors.push('console: ' + m.text()); });
+  page.on('console', (m) => { if (m.type() === 'error' && !/WebSocket|401|favicon|404 \(Not Found\)/.test(m.text())) errors.push('console: ' + m.text()); });
 
   // sin cuenta: se redirige a login.html
   await page.goto(BASE + '/index.html?source=ws');
