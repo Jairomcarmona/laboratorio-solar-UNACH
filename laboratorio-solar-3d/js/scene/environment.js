@@ -221,7 +221,7 @@
         pos.setY(i, top ? 40 + Math.floor((n + 0.7) * 5) * 18 : -60);
       }
       geo.computeVertexNormals();
-      const mtn = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col(0x2c4c4a), side: THREE.BackSide, fog: true }));
+      const mtn = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col(0x3a6b3f), side: THREE.BackSide, fog: true }));
       mtn.position.y = gy; g.add(mtn);
       this.mountains = mtn;
     }
@@ -258,7 +258,20 @@
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
       const flat = geo.toNonIndexed(); flat.computeVertexNormals();
-      this.canyonMat = new THREE.MeshStandardMaterial({ color: col(0x2c4c4a), roughness: 0.95, metalness: 0, flatShading: true, fog: false, side: THREE.DoubleSide });
+      // color por cara: selva verde en cimas y laderas suaves, roca caliza estratificada (ocre/gris) en las paredes verticales
+      const fp = flat.attributes.position, fn = flat.attributes.normal, fc = new Float32Array(fp.count * 3), tc = new THREE.Color();
+      for (let i = 0; i < fp.count; i += 3) {
+        const yy = (fp.getY(i) + fp.getY(i + 1) + fp.getY(i + 2)) / 3, ny = fn.getY(i);
+        const cliff = smoothstep(0.82, 0.35, ny);                                  // 0 plano .. 1 pared
+        const band = Math.sin(yy * 0.55) * 0.5 + Math.sin(yy * 1.7 + 1.3) * 0.25;   // estratos
+        const jit = (r() - 0.5) * 0.12;
+        const rock = new THREE.Color().setHSL(0.09 + band * 0.015, 0.22 + band * 0.08, 0.5 + band * 0.1 + jit);
+        const jungle = new THREE.Color().setHSL(0.27 + jit * 0.4, 0.5, 0.22 + 0.1 * smoothstep(0, 200, yy) + jit * 0.5);
+        tc.copy(jungle).lerp(rock, cliff * 0.85).convertSRGBToLinear();
+        for (let k = 0; k < 3; k++) fc.set([tc.r, tc.g, tc.b], (i + k) * 3);
+      }
+      flat.setAttribute('color', new THREE.BufferAttribute(fc, 3));
+      this.canyonMat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.95, metalness: 0, flatShading: true, fog: false, side: THREE.DoubleSide });
       const mesh = new THREE.Mesh(flat, this.canyonMat); g.add(mesh);
       // aristas luminosas (estilo digital)
       this.canyonWire = new THREE.LineSegments(new THREE.WireframeGeometry(geo), new THREE.LineBasicMaterial({ color: col(0x3fd8e6), transparent: true, opacity: 0.12, fog: false, depthWrite: false }));
@@ -428,10 +441,10 @@
       const fogCol = skyCol.clone().multiplyScalar(0.9);
       this.scene.fog.color.copy(fogCol.convertSRGBToLinear ? fogCol.convertSRGBToLinear() : fogCol);
       this.scene.fog.density = 0.0010 + 0.0012 * cloud + 0.0006 * (env.rainLevel || 0);
-      this.mountains.material.color.copy(col(0x2c4c4a)).multiplyScalar(lerp(0.05, 1, dayF));
+      this.mountains.material.color.copy(col(0x3a6b3f)).multiplyScalar(lerp(0.05, 1, dayF));
       // canon: roca mas oscura de noche, aristas y rio algo mas vivos al oscurecer (sobrio de dia)
-      this.canyonMat.color.copy(col(0x143a33)).multiplyScalar(lerp(0.35, 1, dayF)).lerp(this.scene.fog.color, 0.12);   // bruma atmosferica propia (sin niebla del motor)
-      this.canyonWire.material.opacity = lerp(0.16, 0.14, dayF);
+      this.canyonMat.color.setScalar(lerp(0.3, 1, dayF)).lerp(this.scene.fog.color, 0.12);   // bruma atmosferica propia (sin niebla del motor)
+      this.canyonWire.material.opacity = lerp(0.12, 0.07, dayF);
       this.canyonRiver.material.color.copy(col(0x2aa9d8)).multiplyScalar(lerp(0.4, 1, dayF) * lerp(1, 0.85, cloud));
 
       // ambiente: mas difuso y mas azul con nubes
