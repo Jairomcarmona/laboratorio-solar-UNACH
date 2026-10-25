@@ -48,6 +48,7 @@
             <div class="seg" id="langSwitch" role="group" aria-label="Idioma de la interfaz" data-i18n-attr="aria-label:ui.lang.label"><button type="button" data-lang="es" lang="es" title="Español" aria-pressed="true">ES</button><button type="button" data-lang="en" lang="en" title="English" aria-pressed="false">EN</button></div>
       <button class="chip" id="sessionBtn"><i class="led off"></i><span id="sessionTxt">Sin sesión</span></button>
       <button class="btn accent" id="btnPractices" data-i18n="index.btnPractices.practicas">Prácticas</button>
+      <button class="btn" id="btnMeter" data-i18n="index.btnMeter.multimetro" data-i18n-attr="title:index.btnMeter.title" title="Multímetro virtual y conexiones del módulo: mide Voc e Isc">Multímetro</button>
       <button class="btn" id="btnLog"><span data-i18n="index.btnLog.bitacora">Bitácora</span> <em id="logCount">0</em></button>
       <button class="btn icon" id="btnHelp" title="Ayuda y atajos (?)" aria-label="Ayuda y atajos de teclado" data-i18n-attr="title:index.btnHelp.ayuda_y_atajos;aria-label:index.btnHelp.ayuda_y_atajos_de">?</button>
       <button class="btn icon" id="btnFull" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-attr="title:index.btnFull.pantalla_completa;aria-label:index.btnFull.pantalla_completa">⛶</button>
@@ -60,6 +61,7 @@
   </nav>
   <aside id="left" class="col">
       <div id="linkBanner" class="robanner linklost" role="status" hidden><b>⚠</b> <span id="linkTxt" data-i18n="index.linkBanner.enlace_con_el_banco">Enlace con el banco cortado (simulado). Lo que ves es el estado de la simulación local, no telemetría recibida del banco. Si el enlace sigue cortado, el watchdog llevará el seguidor a posición segura y bloqueará la operación.</span></div>
+      <div id="fakeBanner" class="robanner fakebench" role="status" hidden><b>⚠</b> <span id="fakeTxt"></span></div>
       <div id="roBanner" class="robanner" role="status" hidden><b>🔒</b> <span id="roTxt"></span></div>
       <p class="robanner" id="twinCtlNote" role="status" hidden data-i18n="index.twinCtlNote.gemelo_solo_observacion">Modo Gemelo: solo observación. Los controles están atenuados porque aquí no se opera el banco; para operarlo usa «Banco real».</p>
       <section class="panel glass" id="pTracker">

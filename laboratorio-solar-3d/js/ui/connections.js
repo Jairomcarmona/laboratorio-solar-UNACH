@@ -20,7 +20,9 @@
   function init() {
     if (inited || !$('#connDlg')) return; inited = true;
     const dlg = $('#connDlg');
-    $('#btnConn').addEventListener('click', () => { ui.showModal(dlg); render(); });
+    const openDlg = () => { ui.showModal(dlg); render(); };
+    $('#btnConn').addEventListener('click', openDlg);
+    const bm = $('#btnMeter'); if (bm) bm.addEventListener('click', openDlg);
     $('.x', dlg).addEventListener('click', () => { if (meas) meas.cancel(); ui.hideModal(dlg); });
     dlg.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (meas) meas.cancel(); ui.hideModal(dlg); } });
     $$('#connMod button').forEach((b) => b.addEventListener('click', () => { mod = b.dataset.m; red = mod + '+'; black = mod + '-'; last = null; render(); }));

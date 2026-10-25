@@ -274,7 +274,7 @@
  "app.mediciones_del_banco_fisico": "Mediciones del banco físico a través de la pasarela del laboratorio.",
  "app.banco_mixto": "BANCO MIXTO",
  "app.banco_mixto_desc": "PLC o adquisición simulados: solo parte de los datos viene del banco físico.",
- "app.banco_virtual": "BANCO VIRTUAL",
+ "app.banco_virtual": "SIMULADO · BANCO VIRTUAL",
  "app.el_puente_esta_conectado": "El puente está conectado a un banco VIRTUAL de pruebas, no a hardware: los datos no son mediciones físicas.",
  "app.modelo_del_simulador_alimentado": "Modelo del simulador alimentado con el ambiente medido; compara lo esperado con lo medido.",
  "app.reproduccion": "REPRODUCCIÓN",
@@ -1844,5 +1844,9 @@
  "conn.r_stale": "Sin datos recientes del banco: no se mide.",
  "conn.r_sweep": "Hay un barrido I-V en curso: espera a que termine.",
  "conn.r_timeout": "La carga no confirmó el cambio a tiempo; se canceló y se restituyó el modo anterior.",
- "conn.r_changed": "Alguien cambió la carga durante la medida; se canceló."
+ "conn.r_changed": "Alguien cambió la carga durante la medida; se canceló.",
+ "app.banner_banco_virtual": "Banco virtual de pruebas: las cifras, la escena 3D y la telemetría son SIMULADAS por el puente, no son mediciones del banco físico. No hay hardware conectado.",
+ "app.control_banco_virtual": "Control del banco VIRTUAL de pruebas: los comandos se aplican a una simulación, no a equipo físico.",
+ "index.btnMeter.multimetro": "Multímetro",
+ "index.btnMeter.title": "Multímetro virtual y conexiones del módulo: mide Voc e Isc (necesita una sesión con control)"
 }
