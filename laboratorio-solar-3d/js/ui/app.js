@@ -352,11 +352,52 @@
       const r = send({ type: 'tracker.target', az: consoleState.az, tilt: consoleState.tilt });
       if (r.ok) { const T = tel.tracker; consoleState.dirty = false; consoleState.last = consoleState.az + '/' + consoleState.tilt; consoleState.maxDiff = Math.max(Math.abs(T.az - consoleState.az) || 0, Math.abs(T.tilt - consoleState.tilt) || 0); ui.announce(LAB.t('real.orden_enviada', { az: consoleState.az, tilt: consoleState.tilt })); updateConsole(); }
     });
-    ui.camviewer.open('cam2');
-    $('#btnCam1').hidden = true; $('#btnCam2').hidden = true; $('#btnPip').hidden = true; $('#btnIpCam').hidden = false;
+    $('#btnCam1').hidden = true; $('#btnCam2').hidden = true; $('#btnPip').hidden = true;
+    $('#realViews').hidden = false;
+    [['eGhi', 'pyr'], ['eWind', 'anemo']].forEach(([id, part]) => {           // sin escena 3D, las fichas del piranómetro y el anemómetro se abren desde sus datos
+      const tile = $('#' + id).parentNode; tile.classList.add('sensortile'); tile.tabIndex = 0; tile.setAttribute('role', 'button'); tile.title = LAB.t('real.ficha_sensor');
+      const open = () => ui.showPart(part);
+      tile.addEventListener('click', open); tile.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    });
+    $('#btnEstopCard').addEventListener('click', () => $('#btnEstop').click());
+    $$('#left > .panel > h3').forEach((h) => h.addEventListener('click', (e) => {          // pantalla ancha: carga, seguridad y modos se abren como ventana sobre el video
+      if (document.body.dataset.layout !== 'wide' || e.target.closest('.fold')) return;
+      const p = h.parentNode, on = !p.classList.contains('pop');
+      $$('#left > .panel').forEach((x) => x.classList.remove('pop')); p.classList.toggle('pop', on);
+    }));
+    $('#realViews').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) realView(b.dataset.rv); });
+    realView('cam2');                       // la cámara del seguidor es la vista principal: confirma que el panel de verdad se movió
+  }
+  /** Pantalla ancha: el panel 3D de control y los controles numéricos van en una tarjeta junto al video; en las demás, se quedan en el panel del seguidor. */
+  const consoleOrigin = [];
+  let pose = null;
+  function placeConsole() {
+    const wide = document.body.dataset.layout === 'wide', card = $('#ctlCard'), slot = $('#ctlSlot');
+    if (wide && card.hidden) {
+      const nodes = [$('#pTracker .stat'), $('#trConsole'), $('#trPresets')];
+      nodes.forEach((n) => { consoleOrigin.push({ n, parent: n.parentNode, next: n.nextSibling }); slot.appendChild(n); });
+      card.hidden = false;
+      if (!pose) pose = ui.pose3d.create($('#poseHost'), { onTarget: (az, tilt) => consoleStage(az, tilt) });
+    } else if (!wide && !card.hidden) {
+      while (consoleOrigin.length) { const o = consoleOrigin.pop(); o.parent.insertBefore(o.n, o.next); }
+      card.hidden = true;
+    }
+  }
+  /** Vista principal del banco real: cámara 1, cámara 2 o escena 3D (con la cámara en miniatura). */
+  let realCur = null;
+  function realView(v) {
+    if (v === realCur) return;
+    if (ui.practices && realCur === 'cam1') ui.practices.notify('pov', { id: 'cam1', phase: 'exit' });       // la práctica 1 pide entrar a la cámara 1 y salir de ella
+    if (ui.practices && v === 'cam1') ui.practices.notify('pov', { id: 'cam1', phase: 'enter' });
+    realCur = v;
+    $$('#realViews button').forEach((b) => { const on = b.dataset.rv === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    document.body.classList.toggle('camfull', v !== '3d');
+    $('#camPanel').classList.toggle('full', v !== '3d');
+    ui.camviewer.open(v === '3d' ? undefined : v);
   }
   function updateConsole() {
     if (!isReal() || !tel) return;
+    placeConsole();
     const T = tel.tracker, hasData = Number.isFinite(T.az) && Number.isFinite(T.tilt) && !tel.quality.includes('stale');
     if (!consoleState.dirty) { consoleState.az = Math.round(T.targetAz); consoleState.tilt = Math.round(T.targetTilt); }
     const az = consoleState.az, tilt = consoleState.tilt;
@@ -377,6 +418,8 @@
     bar.className = 'movebar ' + (!hasData ? 'off' : pct < 100 ? 'run' : 'done');
     setText('moveTxt', !hasData ? LAB.t('real.sin_datos') : pct < 100 ? LAB.t('real.moviendo', { n: fmt(diff, 0), pct }) : LAB.t('real.en_posicion', { az: Math.round(T.targetAz), tilt: Math.round(T.targetTilt) }));
     ui.camviewer.setMoving(hasData && pct < 100);
+    $('#btnEstopCard').disabled = $('#btnEstop').disabled;
+    if (pose) { pose.setCurrent(hasData ? T.az : NaN, hasData ? T.tilt : NaN); pose.setTarget(az, tilt); pose.setEnabled(can); }
   }
 
   // --------------------------------------------------------------------- carga
@@ -476,8 +519,8 @@
       const lvl = ((tel.env.rainLevel || 0) + 1) % LAB.sim.RAIN_LEVELS.length; send({ type: 'sim.rain', level: lvl });
     });
 
-    $('#btnCam1').addEventListener('click', () => togglePov('cam1'));
-    $('#btnCam2').addEventListener('click', () => togglePov('cam2'));
+    $('#btnCam1').addEventListener('click', () => (isReal() ? realView('cam1') : togglePov('cam1')));     // en el banco real, «Cámara 1/2» (también desde la guía de práctica) abren el video IP
+    $('#btnCam2').addEventListener('click', () => (isReal() ? realView('cam2') : togglePov('cam2')));
     $('#btnIpCam').addEventListener('click', () => ui.camviewer.toggle());
     $('#povExit').addEventListener('click', exitPov);
     $('#btnPip').addEventListener('click', () => { const on = !app.pip.on; app.setPip(on, 'cam2'); $('#btnPip').classList.toggle('on', on); });

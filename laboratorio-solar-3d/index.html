@@ -138,6 +138,7 @@
     <div id="stage"></div>
     <div id="overlay">
       <nav id="viewbar" class="glass">
+      <div class="seg" id="realViews" role="group" aria-label="Vista principal" data-i18n-attr="aria-label:real.vista_principal" hidden><button type="button" data-rv="cam1" data-i18n="index.btnCam1.camara_1">Cámara 1</button><button type="button" data-rv="cam2" data-i18n="index.btnCam2.camara_2">Cámara 2</button></div>
       <div class="seg" id="viewSeg"></div>
       <span class="sep"></span>
       <button class="btn" id="btnCam1" data-i18n="index.btnCam1.camara_1">Cámara 1</button><button class="btn" id="btnCam2" data-i18n="index.btnCam2.camara_2">Cámara 2</button><button class="btn" id="btnIpCam" hidden data-i18n="real.camaras_ip">Cámaras IP</button>
@@ -260,6 +261,12 @@
       <div id="practiceHolder"></div>
       <div id="practiceEmpty" class="panel glass emptyp"><h3>Práctica guiada</h3><div class="body"><p class="hint" data-i18n="index.practiceEmpty.no_hay_una_guia">No hay una guía abierta. Abre el listado para empezar, continuar o consultar una práctica.</p><button class="btn accent" id="btnPracticesSide" data-i18n="index.btnPracticesSide.abrir_listado_de_practicas">Abrir listado de prácticas</button></div></div>
     </section>
+  <aside id="ctlCard" class="glass" hidden aria-label="Control del seguidor" data-i18n-attr="aria-label:real.control_seguidor">
+    <h3><span data-i18n="index.pTracker.seguidor_modulo_b">Seguidor · Módulo B</span><button type="button" class="btn danger" id="btnEstopCard" data-i18n="index.btnEstop.paro_de_emergencia">Paro de emergencia</button></h3>
+    <div id="poseHost" role="group" aria-label="Panel 3D del seguidor: arrastra para preparar el objetivo" data-i18n-attr="aria-label:real.pose_aria"></div>
+    <p class="hint" data-i18n="real.pose_hint">Arrastra el panel: izquierda y derecha cambian el azimut, arriba y abajo la inclinación. Nada se envía hasta pulsar «Mover».</p>
+    <div id="ctlSlot"></div>
+  </aside>
   <footer id="dock" class="glass">
       <div class="grp" id="gTime">
         <button class="btn icon" id="btnPlay" title="Pausar / reanudar" aria-label="Pausar">❚❚</button>
@@ -471,6 +478,7 @@
   <script src="js/ui/connections.js"></script>
   <script src="js/ui/onboarding.js"></script>
   <script src="js/ui/camviewer.js"></script>
+  <script src="js/ui/pose3d.js"></script>
   <script src="js/ui/app.js"></script>
 
   <script src="js/main.js"></script>

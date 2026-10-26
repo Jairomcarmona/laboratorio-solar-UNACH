@@ -31,3 +31,101 @@ body.src-ws #pTracker .slider, body.src-ws #trNum { display: none; }       /* el
 .cammove { right: 8px; background: var(--col-b); color: #1a1000; }
 .camlive[hidden], .cammove[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { .movebar i { transition: none; } }
+
+/* ---- vista principal: cámara 1, cámara 2 o escena 3D (esta con la cámara en miniatura) ---- */
+#realViews[hidden] { display: none; }
+body.src-ws #btnIpCam { display: none !important; }
+body.camfull #viewSeg, body.camfull #tools, body.camfull #viewbar > .sep { display: none; }
+#camPanel.full { inset: 0; width: auto; padding: 0; border-radius: 0; border: 0; background: #000; z-index: 0; box-shadow: none; display: flex; }
+#camPanel.full header { display: none; }
+#camPanel.full .camview { flex: 1; aspect-ratio: auto; border-radius: 0; border: 0; }
+#camPanel.full .camview video { object-fit: contain; }
+#camPanel.full.hot .camview { box-shadow: inset 0 0 0 4px var(--col-b), inset 0 0 40px rgba(255, 176, 32, .35); }
+#camPanel.full .camstatus { font-size: 16px; }
+#camPanel.full .camlive, #camPanel.full .cammove { top: auto; bottom: 12px; font-size: 12px; padding: 4px 10px; }
+#camPanel.full .camlive { left: 12px; } #camPanel.full .cammove { right: 12px; }
+
+/* ---- pantalla ancha: escena/cámara arriba, consola de operación abajo, datos a la derecha ---- */
+body.src-ws[data-layout="wide"] #app { grid-template-columns: minmax(0, 1fr) 10px var(--wR); grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "top top top" "stage sepR right" "left sepR right" "dock dock dock"; }
+body.src-ws[data-layout="wide"] #sepL { display: none; }
+body.src-ws[data-layout="wide"] #left { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: start; align-content: start;
+  margin-top: var(--gap); max-height: min(310px, 40vh); overflow-y: auto; }
+body.src-ws[data-layout="wide"] #left > .robanner, body.src-ws[data-layout="wide"] #left > p { grid-column: 1 / -1; margin: 0; }
+body.src-ws[data-layout="wide"] #pTracker .body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 6px 14px; align-items: start; }
+body.src-ws[data-layout="wide"] #pTracker .body > * { grid-column: 1; }
+body.src-ws[data-layout="wide"] #pTracker .body > #trConsole { grid-column: 2; grid-row: 1 / span 6; margin: 0; }
+body.src-ws[data-layout="wide"] #pTracker .body > #trPresets, body.src-ws[data-layout="wide"] #pTracker .body > #trHint { grid-column: 1 / -1; }
+body.src-ws[data-layout="wide"] #pTracker .stat b { font-size: 24px; }
+body.src-ws[data-layout="wide"] #sidePractice { grid-area: left; }
+body.src-ws[data-layout="wide"] #left { max-height: min(330px, 42vh); }
+body.src-ws[data-layout="wide"] #pTracker .body > #trHint { display: none; }
+body.src-ws[data-layout="wide"] #pTracker .stat > div { min-width: 0; padding: 6px 8px; }
+body.src-ws[data-layout="wide"] #pTracker .stat b { font-size: 20px; }
+body.src-ws[data-layout="wide"] #pTracker .stat small { font-size: 10.5px; }
+body.src-ws[data-layout="wide"] #pTracker .seg button { padding: 0 6px; font-size: 12px; }
+body.src-ws[data-layout="wide"] #topbar { gap: 8px; }
+body.src-ws[data-layout="wide"] #btnFull, body.src-ws[data-layout="wide"] #btnHelp { display: none; }
+body.src-ws[data-layout="wide"] #left { grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr) minmax(0, 1fr); }
+body.src-ws[data-layout="wide"] #pTracker .body { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+body.src-ws[data-layout="wide"] #pTracker .seg button { padding: 0 3px; font-size: 11.5px; min-width: 0; white-space: nowrap; }
+body.src-ws[data-layout="wide"] #pTracker .movetxt { font-size: 11.5px; line-height: 1.3; }
+body.src-ws[data-layout="wide"] #pSafety .row3 { grid-template-columns: 1fr; }
+body.src-ws[data-layout="wide"] #pTracker .stat { grid-template-columns: 1fr 1fr; }
+body.src-ws[data-layout="wide"] #pTracker .seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+body.src-ws[data-layout="wide"] #pTracker .seg button { overflow: hidden; text-overflow: ellipsis; }
+body.src-ws[data-layout="wide"] #pSafety .row3 button { white-space: normal; min-height: 34px; }
+
+/* ---- tarjeta de control con panel 3D (pantalla ancha) ---- */
+body.src-ws #btnMeter { display: none; }            /* el multímetro virtual mide el modelo del simulador, no el banco físico */
+#ctlCard[hidden] { display: none; }
+#ctlCard { grid-area: ctl; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; min-height: 0; overflow-y: auto; border-radius: 14px; }
+#ctlCard h3 { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--tx-2); }
+#poseHost { position: relative; flex: 0 0 auto; height: clamp(150px, 26vh, 260px); border-radius: 10px; border: 1px solid var(--line-2); overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 0, #14336a 0, #07142b 75%); }
+#poseHost canvas { width: 100%; height: 100%; display: block; }
+#ctlCard .hint { margin: 0; font-size: 11px; color: var(--tx-3); }
+#ctlSlot { display: flex; flex-direction: column; gap: 8px; }
+#ctlSlot .console { margin: 0; }
+body.src-ws[data-layout="wide"] #app { grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 380px) 10px var(--wR);
+  grid-template-areas: "top top top top" "stage ctl sepR right" "left left sepR right" "dock dock dock dock"; }
+body.src-ws[data-layout="wide"] #left { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: min(250px, 32vh); }
+body.src-ws[data-layout="wide"] #pTracker .body { display: block; }
+body.src-ws[data-layout="wide"] #app { grid-template-areas: "top top top top" "stage ctl sepR right" "left ctl sepR right" "dock dock dock dock"; }
+body.src-ws[data-layout="wide"] #poseHost { height: clamp(150px, 28vh, 300px); }
+body.src-ws[data-layout="wide"] #poseHost { height: clamp(140px, 24vh, 280px); }
+body.src-ws[data-layout="wide"] #ctlSlot .stepper label { margin-bottom: 2px; }
+body.src-ws[data-layout="wide"] #ctlCard { gap: 6px; }
+body.src-ws[data-layout="wide"] #pTracker .lbl { display: block; margin: 8px 0 3px; }
+
+/* ---- equilibrio: el video del banco manda; lo demás se compacta ---- */
+body.src-ws #rlNote { display: none; }
+#btnEstopCard { margin-left: auto; min-height: 28px; padding: 0 10px; font-size: 11px; letter-spacing: 0; text-transform: none; }
+#ctlCard h3 { display: flex; align-items: center; }
+body.src-ws[data-layout="wide"] #app { grid-template-columns: minmax(0, 1fr) clamp(250px, 19vw, 300px) 8px clamp(250px, 21vw, 300px); }
+body.src-ws[data-layout="wide"] #poseHost { height: clamp(120px, 19vh, 200px); }
+body.src-ws[data-layout="wide"] #ctlCard .hint { display: none; }
+body.src-ws[data-layout="wide"] #ctlSlot { gap: 6px; }
+body.src-ws[data-layout="wide"] #ctlSlot .stat b { font-size: 18px; }
+body.src-ws[data-layout="wide"] #ctlSlot .stat small { font-size: 10px; }
+body.src-ws[data-layout="wide"] #ctlSlot .stepbtns output { font-size: 17px; }
+body.src-ws[data-layout="wide"] #btnMove { min-height: 40px; font-size: 14px; }
+/* barra inferior: cada panel es una pestaña y su contenido se abre como ventana encima */
+body.src-ws[data-layout="wide"] #left { position: relative; display: flex; flex-wrap: wrap; gap: 8px; overflow: visible; max-height: none; margin-top: 6px; align-items: stretch; }
+body.src-ws[data-layout="wide"] #left > .robanner, body.src-ws[data-layout="wide"] #left > p { flex: 1 1 100%; order: -1; }
+body.src-ws[data-layout="wide"] #left > .panel { flex: 0 0 auto; position: static; }
+body.src-ws[data-layout="wide"] #left > .panel > h3 { margin: 0; cursor: pointer; min-height: 38px; padding: 0 12px; }
+body.src-ws[data-layout="wide"] #left > .panel .fold { display: none; }
+body.src-ws[data-layout="wide"] #left > .panel > .body { display: none; }
+body.src-ws[data-layout="wide"] #left > .panel.pop > h3 { box-shadow: inset 0 -3px 0 var(--col-b); }
+body.src-ws[data-layout="wide"] #left > .panel.pop > .body { display: block; position: absolute; left: 0; bottom: calc(100% + 6px); width: min(440px, 100%); max-height: 55vh; overflow: auto; z-index: 9;
+  padding: 12px; background: rgba(6, 16, 32, .97); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
+body.src-ws[data-layout="wide"] #pTracker .body { display: block; }
+body.src-ws[data-layout="wide"] #left > .panel { width: auto; }
+body.src-ws[data-layout="wide"] #left > .panel > h3 { white-space: nowrap; }
+body.src-ws[data-layout="wide"] #left { flex-direction: row; z-index: 20; }
+body.src-ws[data-layout="wide"] #left > .panel.pop > .body { width: 400px; max-width: 60vw; }
+body.src-ws[data-layout="wide"] #left > #pSafety.pop > .body { left: auto; right: 0; width: 360px; }
+.sensortile { cursor: pointer; }
+.sensortile:hover, .sensortile:focus-visible { border-color: var(--brand-hi); }
+body.src-ws #icFocus { display: none; }

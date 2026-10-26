@@ -1875,5 +1875,10 @@
  "real.cam_sin_flujo": "Sin flujo de video. La cámara no está conectada o aún no se configura.",
  "real.cam_reintento": "Se reintenta cada {s} s.",
  "real.cam_sin_soporte": "Este navegador no reproduce video HLS.",
- "real.mover_en_curso": "Moviéndose…"
+ "real.mover_en_curso": "Moviéndose…",
+ "real.vista_principal": "Vista principal",
+ "real.control_seguidor": "Control del seguidor",
+ "real.pose_aria": "Panel 3D del seguidor: arrastra para preparar el objetivo",
+ "real.pose_hint": "Arrastra el panel para preparar el objetivo; se envía con «Mover».",
+ "real.ficha_sensor": "Ver la ficha del sensor"
 }
